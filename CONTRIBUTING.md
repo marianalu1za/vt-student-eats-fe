@@ -16,7 +16,7 @@ You should **never commit directly to `main`**.
 ### Branch naming convention
 Branches should describe the work being done using this format:
 
-<type>/<short-but-clear-description>
+`<type>/<short-but-clear-description>`
 
 
 **Examples:**
