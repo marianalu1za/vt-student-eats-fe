@@ -4,8 +4,8 @@ Welcome to **VT Student Eats** 👋
 This guide explains exactly how our team (Gargantua Gang) works on the project codebase.
 
 The rules below apply to **both repositories**:
-- [`vt-student-eats-fe`](https://github.com/your-org/vt-student-eats-fe) – Frontend (React)
-- [`vt-student-eats-be`](https://github.com/your-org/vt-student-eats-be) – Backend (Django)
+- [`vt-student-eats-fe`](https://github.com/marianalu1za/vt-student-eats-fe) – Frontend (React)
+- [`vt-student-eats-be`](https://github.com/marianalu1za//vt-student-eats-be) – Backend (Django)
 
 ---
 
