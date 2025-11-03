@@ -5,10 +5,12 @@ document.getElementById('ask').onclick = () => {
     });
 };
 
+const API_KEY = window.APP_CONFIG?.GOOGLE_API_KEY;
+const DEFAULT_LOC = { lat: 38.83787365277667, lng: -77.04866272510975 }; // VT Innovation Campus
+
 // Task 1: Implement location access to determine user's current position
 function getUserLocation() {
     // location format = obj --> {lat: cord, lng: cord}
-    const DEFAULT_LOC = { lat: 38.83787365277667, lng: -77.04866272510975 }; // VT Innovation Campus
 
     // If Geolocation doesnt work just use Default VT
     // Geolcation DOCS: https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/getCurrentPosition
@@ -38,6 +40,8 @@ function getUserLocation() {
 // Task 2: Calculate distance from user's location to each restaurant
 function getNearbyRestaurants(user_loc){
     console.log("Here is the user: ", user_loc);
+    // if user location is VT (or nearby?), then just give preset list of nearby restaurants
+    // Call api for places and return the list
 }
 
 function getRestaurantDistances(restaurants) {

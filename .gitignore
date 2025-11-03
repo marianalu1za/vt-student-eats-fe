@@ -5,6 +5,8 @@
 
 
 # Env & secrets
-
+# local API config
+LukeWorkspace/Testing/config.local.js
+LukeWorkspace/Testing/config.*.jss
 
 # IDEs
