@@ -1,7 +1,7 @@
 document.getElementById('ask').onclick = () => {
     getUserLocation().then(loc => {
         // console.log("Done", loc);
-        getNearbyRestaurants(loc)
+        console.log(getNearbyRestaurants(loc))
     });
 };
 
@@ -38,14 +38,80 @@ function getUserLocation() {
 }
 
 // Task 2: Calculate distance from user's location to each restaurant
-function getNearbyRestaurants(user_loc){
+// Function: Check if user location is near or at Virginia Tech (within 150 meters) using haversine formula
+function isNearVT(userLoc) {
+    // Earth radius in meters
+    const R = 6371000;
+
+    // degrees → radians
+    const toRad = (deg) => deg * Math.PI / 180;
+
+    // Great-circle distance in meters between two {lat,lng} points
+    function haversineMeters(a, b) {
+        const φ1 = toRad(a.lat), φ2 = toRad(b.lat);
+        const Δφ = toRad(b.lat - a.lat);
+        const Δλ = toRad(b.lng - a.lng);
+
+        const s = Math.sin(Δφ / 2) ** 2 +
+            Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+
+        return 2 * R * Math.asin(Math.sqrt(s));
+    }
+
+    const dist = haversineMeters(userLoc, DEFAULT_LOC);
+
+    return dist <= 150; // meters
+}
+// Function: Get Restaurants for User: If at or near VT, then no need for API call, else do API call on user location
+function getNearbyRestaurants(user_loc) {
     console.log("Here is the user: ", user_loc);
     // if user location is VT (or nearby?), then just give preset list of nearby restaurants
-    // Call api for places and return the list
+    if (isNearVT(user_loc)) {
+        return VT_RESTAURANTS
+    } else {
+        return findPlacesNearby(user_loc)
+    }
 }
 
-function getRestaurantDistances(restaurants) {
+// Function: make a Nearby Search API call and log results
+// Documentation here: https://developers.google.com/maps/documentation/places/web-service/op-overview
+async function findPlacesNearby(user_loc) {
+    const url = "https://places.googleapis.com/v1/places:searchNearby";
+    const body = {
+        includedTypes: ["restaurant"],
+        maxResultCount: 20,
+        rankPreference: "DISTANCE",
+        locationRestriction: {
+            circle: {
+                center: { latitude: user_loc.lat, longitude: user_loc.lng },
+                radius: 800.0
+            }
+        }
+    };
 
+    try {
+        const res = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Goog-Api-Key": API_KEY,
+                "X-Goog-FieldMask": "places.displayName,places.formattedAddress,places.location,places.primaryType,places.priceLevel"
+            },
+            body: JSON.stringify(body)
+        });
+
+        if (!res.ok) {
+            console.error("HTTP error:", res.status, await res.text());
+            return null;
+        }
+
+        const data = await res.json();
+        console.log("Raw Places API response:", data);
+        return data; // <-- now you actually return the result
+    } catch (err) {
+        console.error("Fetch failed:", err);
+        return null;
+    }
 }
 
 // Task 3: Filter restaurant result based on calculated distance
