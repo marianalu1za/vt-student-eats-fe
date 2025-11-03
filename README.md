@@ -30,5 +30,5 @@ This repository contains the **React** frontend for the VT Student Eats project 
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-org/vt-student-eats-fe.git
+git clone https://github.com/marianalu1za/vt-student-eats-fe.git
 cd vt-student-eats-fe
