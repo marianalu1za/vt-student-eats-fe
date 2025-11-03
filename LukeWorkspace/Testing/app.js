@@ -1,10 +1,11 @@
 document.getElementById('ask').onclick = () => {
     getUserLocation().then(loc => {
         // console.log("Done", loc);
-        getRestaurantDistances(loc)
+        getNearbyRestaurants(loc)
     });
 };
 
+// Task 1: Implement location access to determine user's current position
 function getUserLocation() {
     // location format = obj --> {lat: cord, lng: cord}
     const DEFAULT_LOC = { lat: 38.83787365277667, lng: -77.04866272510975 }; // VT Innovation Campus
@@ -34,13 +35,16 @@ function getUserLocation() {
     });
 }
 
-function getRestaurantDistances(user_loc){
+// Task 2: Calculate distance from user's location to each restaurant
+function getNearbyRestaurants(user_loc){
     console.log("Here is the user: ", user_loc);
-    // How to get restaurant distances
-    // Google Legacy API or Routes with cloud project
-    
+}
+
+function getRestaurantDistances(restaurants) {
 
 }
+
+// Task 3: Filter restaurant result based on calculated distance
 
 
 
