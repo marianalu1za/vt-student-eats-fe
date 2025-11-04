@@ -1,0 +1,63 @@
+.restaurant-list-wrapper,
+.restaurant-list-page {
+  background-color: #ebcfca;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+/* 
+.restaurant-list-wrapper {
+  min-height: 100vh;
+} */
+
+.restaurant-list-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Find Your Next Meal Section */
+.find-meal-section {
+  margin: 0px 0;
+}
+
+.find-meal-section h2 {
+  margin: 0 0 20px 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: #333;
+  text-align: left;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Restaurant Grid */
+.restaurants-section {
+  margin: 40px 0;
+}
+
+.restaurant-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+/* Responsive Design */
+@media (max-width: 968px) {
+  .restaurant-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .restaurant-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-buttons {
+    flex-direction: column;
+  }
+}
+

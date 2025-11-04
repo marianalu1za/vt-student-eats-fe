@@ -1,0 +1,36 @@
+.filter-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 20px;
+  min-width: 200px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  user-select: none;
+}
+
+.filter-option input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.filter-option:hover {
+  color: #646cff;
+}
+

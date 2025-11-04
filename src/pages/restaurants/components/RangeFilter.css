@@ -1,0 +1,51 @@
+.filter-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 20px;
+  min-width: 200px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.price-display {
+  text-align: left;
+  font-size: 18px;
+  font-weight: 700;
+  color: #000;
+}
+
+.slider-with-button {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.go-btn {
+  padding: 10px 20px;
+  background-color: #646cff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  white-space: nowrap;
+  height: fit-content;
+}
+
+.go-btn:hover {
+  background-color: #535bf2;
+}
+
+.go-btn:active {
+  background-color: #4c54e0;
+}
+
