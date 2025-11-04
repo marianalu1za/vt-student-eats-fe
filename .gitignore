@@ -1,10 +1,52 @@
-# Node/React
+# Dependencies
+node_modules
+/.pnp
+.pnp.js
 
+# Testing
+/coverage
+
+# Production
+/build
+/dist
+
+# Misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # Python/Django
-
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
 
 # Env & secrets
+.env
+.env.local
+*.pem
+
 # local API config
 LukeWorkspace/Testing/config.local.js
 LukeWorkspace/Testing/config.*.jss
