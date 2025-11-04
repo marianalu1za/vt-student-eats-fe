@@ -1,0 +1,33 @@
+{
+  "name": "vt-student-eats-fe",
+  "version": "1.0.0",
+  "description": "A web application helping Virginia Tech Innovation Campus students find affordable, nearby restaurants offering student discounts.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^7.9.5"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.0.8"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marianalu1za/vt-student-eats-fe.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/marianalu1za/vt-student-eats-fe/issues"
+  },
+  "homepage": "https://github.com/marianalu1za/vt-student-eats-fe#readme"
+}
