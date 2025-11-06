@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Pagination } from '@mui/material'
 import './RestaurantList.css'
-import { restaurants } from '../../mock_data/restaurantData.js'
+import { fetchRestaurants, transformRestaurantData } from '../../api/restaurants.js'
 import SearchBar from './components/SearchBar.jsx'
 import RestaurantCard from './components/RestaurantCard.jsx'
 import Header from './components/Header.jsx'
@@ -16,6 +16,9 @@ import { useFilters } from './hooks/useFilters.js'
 const ITEMS_PER_PAGE = 6
 
 function RestaurantList() {
+  const [restaurants, setRestaurants] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   
@@ -78,6 +81,26 @@ function RestaurantList() {
     clearCuisineFilter()
   }
 
+  // Fetch restaurants from API on component mount
+  useEffect(() => {
+    const loadRestaurants = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const apiData = await fetchRestaurants()
+        const transformedData = transformRestaurantData(apiData)
+        setRestaurants(transformedData)
+      } catch (err) {
+        console.error('Failed to fetch restaurants:', err)
+        setError(err.message || 'Failed to load restaurants. Please try again later.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadRestaurants()
+  }, [])
+
   // Filter restaurants by name based on search query
   const filteredRestaurants = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -88,7 +111,7 @@ function RestaurantList() {
     return restaurants.filter(restaurant =>
       restaurant.name.toLowerCase().includes(query)
     )
-  }, [searchQuery])
+  }, [searchQuery, restaurants])
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -183,37 +206,59 @@ function RestaurantList() {
 
       {/* Restaurant Grid */}
       <section className="restaurants-section">
-        <div className="restaurant-grid">
-          {paginatedRestaurants.map((restaurant) => (
-            <RestaurantCard key={restaurant.id} restaurant={restaurant} />
-          ))}
-        </div>
-        
-        {totalPages > 1 && (
-          <div className="pagination-container">
-            <Pagination
-              count={totalPages}
-              page={currentPage}
-              onChange={handlePageChange}
-              shape="rounded"
-              size="large"
-              sx={{
-                '& .MuiPaginationItem-root': {
-                  color: '#333',
-                },
-                '& .MuiPaginationItem-root.Mui-selected': {
-                  backgroundColor: '#6a283c',
-                  color: '#fff',
-                  '&:hover': {
-                    backgroundColor: '#7a384c',
-                  },
-                },
-                '& .MuiPaginationItem-root:hover': {
-                  backgroundColor: '#f5f5f5',
-                },
-              }}
-            />
+        {loading && (
+          <div className="loading-container" style={{ textAlign: 'center', padding: '2rem' }}>
+            <p>Loading restaurants...</p>
           </div>
+        )}
+        
+        {error && (
+          <div className="error-container" style={{ textAlign: 'center', padding: '2rem', color: '#d32f2f' }}>
+            <p>Error: {error}</p>
+          </div>
+        )}
+        
+        {!loading && !error && (
+          <>
+            <div className="restaurant-grid">
+              {paginatedRestaurants.length > 0 ? (
+                paginatedRestaurants.map((restaurant) => (
+                  <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+                ))
+              ) : (
+                <div style={{ textAlign: 'center', padding: '2rem', gridColumn: '1 / -1' }}>
+                  <p>No restaurants found.</p>
+                </div>
+              )}
+            </div>
+            
+            {totalPages > 1 && (
+              <div className="pagination-container">
+                <Pagination
+                  count={totalPages}
+                  page={currentPage}
+                  onChange={handlePageChange}
+                  shape="rounded"
+                  size="large"
+                  sx={{
+                    '& .MuiPaginationItem-root': {
+                      color: '#333',
+                    },
+                    '& .MuiPaginationItem-root.Mui-selected': {
+                      backgroundColor: '#6a283c',
+                      color: '#fff',
+                      '&:hover': {
+                        backgroundColor: '#7a384c',
+                      },
+                    },
+                    '& .MuiPaginationItem-root:hover': {
+                      backgroundColor: '#f5f5f5',
+                    },
+                  }}
+                />
+              </div>
+            )}
+          </>
         )}
       </section>
       </div>
