@@ -14,3 +14,6 @@ export const DISTANCE_RANGE = {
   DEFAULT_MIN: 0,
   DEFAULT_MAX: 10
 }
+
+// VT Innovation Campus
+export const DEFAULT_LOC = { lat: 38.83787365277667, lng: -77.04866272510975 }; 
