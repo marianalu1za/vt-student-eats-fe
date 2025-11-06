@@ -44,6 +44,12 @@
   gap: 24px;
 }
 
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+}
+
 /* Responsive Design */
 @media (max-width: 968px) {
   .restaurant-grid {

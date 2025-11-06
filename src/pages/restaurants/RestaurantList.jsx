@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { Pagination } from '@mui/material'
 import './RestaurantList.css'
 import { restaurants } from '../../mock_data/restaurantData.js'
 import SearchBar from './components/SearchBar.jsx'
@@ -12,8 +13,11 @@ import { useDropdowns } from './hooks/useDropdowns.js'
 import { useFilters } from './hooks/useFilters.js'
 // import { PRICE_RANGE, DISTANCE_RANGE } from './constants'
 
+const ITEMS_PER_PAGE = 6
+
 function RestaurantList() {
   const [searchQuery, setSearchQuery] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
   
   // Custom hooks for dropdowns and filters
   const {
@@ -85,6 +89,25 @@ function RestaurantList() {
       restaurant.name.toLowerCase().includes(query)
     )
   }, [searchQuery])
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, appliedPriceMin, appliedPriceMax, appliedDistanceMax, appliedCuisines])
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredRestaurants.length / ITEMS_PER_PAGE)
+  const paginatedRestaurants = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+    const endIndex = startIndex + ITEMS_PER_PAGE
+    return filteredRestaurants.slice(startIndex, endIndex)
+  }, [filteredRestaurants, currentPage])
+
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value)
+    // Scroll to top of restaurant list when page changes
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   return (
     <div className="restaurant-list-wrapper">
@@ -161,10 +184,37 @@ function RestaurantList() {
       {/* Restaurant Grid */}
       <section className="restaurants-section">
         <div className="restaurant-grid">
-          {filteredRestaurants.map((restaurant) => (
+          {paginatedRestaurants.map((restaurant) => (
             <RestaurantCard key={restaurant.id} restaurant={restaurant} />
           ))}
         </div>
+        
+        {totalPages > 1 && (
+          <div className="pagination-container">
+            <Pagination
+              count={totalPages}
+              page={currentPage}
+              onChange={handlePageChange}
+              shape="rounded"
+              size="large"
+              sx={{
+                '& .MuiPaginationItem-root': {
+                  color: '#333',
+                },
+                '& .MuiPaginationItem-root.Mui-selected': {
+                  backgroundColor: '#6a283c',
+                  color: '#fff',
+                  '&:hover': {
+                    backgroundColor: '#7a384c',
+                  },
+                },
+                '& .MuiPaginationItem-root:hover': {
+                  backgroundColor: '#f5f5f5',
+                },
+              }}
+            />
+          </div>
+        )}
       </section>
       </div>
     </div>

@@ -41,6 +41,20 @@ export const restaurants = [
     rating: 4.4,
     tags: ['Pizza', 'Delivery', 'Group Orders'],
     image: '🍕'
+  },
+  {
+    id: 7,
+    name: 'Cafe Shop',
+    rating: 4.7,
+    tags: ['Healthy', 'Salads', 'Vegetarian'],
+    image: '🥗'
+  },
+  {
+    id: 8,
+    name: 'Chipotle',
+    rating: 4.4,
+    tags: ['Burritos', 'Delivery', 'Group Orders'],
+    image: '🍕'
   }
 ]
 
