@@ -1,14 +1,28 @@
 document.getElementById('ask').onclick = () => {
     getUserLocation().then(loc => {
         // console.log("Done", loc);
-        x = getNearbyRestaurants(loc)
-        console.log(x)
-        console.log(getRestaurantResults(x))
+        // x = getNearbyRestaurants(loc)
+        // console.log(x)
+        // console.log(getRestaurantResults(x))
         // x = getRestaurantResults(VT_RESTAURANTS)
         // console.log(x)
+        console.log("Done", loc);
+        // const a = { lat: 38.9072, lng: -77.0369 }; // Washington, DC
+        // const b = { lat: 40.7128, lng: -74.0060 }; // New York City
+        // const cava = {lat: 38.836838, lng: -77.0510996}
+        // console.log(haversineMiles(loc, cava))
 
+        console.log(getRestaurantDistances(test_json, loc));
     });
 };
+
+// | Restaurant                 | Latitude   | Longitude   |
+// | -------------------------- | ---------- | ----------- |
+// | **CAVA**                   | 38.836838  | -77.0510996 |
+// | **&pizza**                 | 38.8367118 | -77.0510403 |
+// | **Five Guys**              | 38.836664  | -77.0510453 |
+// | **IHOP**                   | 38.8359076 | -77.0511176 |
+// | **Chipotle Mexican Grill** | 38.835772  | -77.0512823 |
 
 const API_KEY = window.APP_CONFIG?.GOOGLE_API_KEY;
 const DEFAULT_LOC = { lat: 38.83787365277667, lng: -77.04866272510975 }; // VT Innovation Campus
@@ -389,6 +403,349 @@ function getRestaurantResults(data) {
 
   return restaurants;
 }
+
+
+function haversineMiles(a, b) {
+  const toRad = d => d * Math.PI / 180;
+  const R = 3958.7613; // miles
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const s = Math.sin(dLat/2)**2 +
+            Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLng/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(s)); // number of miles
+}
+
+function getRestaurantCoords(rows) {
+  const restaurants = {};
+  for (let i = 0; i < rows.length; i++) {
+    restaurants[rows[i].name] = {
+      lat: rows[i].Latitude, // y = latitude
+      lng: rows[i].Longitude, // x = longitude
+    };
+  }
+  return restaurants;
+}
+
+function getRestaurantDistances(rows, userLoc) {
+  const locations = getRestaurantCoords(rows);
+  const distances = [];
+  for (const [name, loc] of Object.entries(locations)) {
+    distances.push({ name, miles: haversineMiles(userLoc, loc) });
+  }
+  // sort nearest → farthest
+  distances.sort((a, b) => a.miles - b.miles);
+  return distances;
+}
+
+
+
+
+const test_json = 
+[
+  {
+    "id": 3,
+    "name": "Five Guys",
+    "address": "3525 Richmond Hwy, Alexandria, VA 22305, USA",
+    "phone_number": "+17037069547",
+    "distance": "0.28",
+    "walk_minutes": 5,
+    "description": "",
+    "website_link": "https://restaurants.fiveguys.com/3525-richmond-hwy",
+    "open_hours": {
+      "fri": [
+        {
+          "open": "11:00",
+          "close": "22:00"
+        }
+      ],
+      "mon": [
+        {
+          "open": "11:00",
+          "close": "22:00"
+        }
+      ],
+      "sat": [
+        {
+          "open": "11:00",
+          "close": "22:00"
+        }
+      ],
+      "sun": [
+        {
+          "open": "11:00",
+          "close": "22:00"
+        }
+      ],
+      "thu": [
+        {
+          "open": "11:00",
+          "close": "22:00"
+        }
+      ],
+      "tue": [
+        {
+          "open": "11:00",
+          "close": "22:00"
+        }
+      ],
+      "wed": [
+        {
+          "open": "11:00",
+          "close": "22:00"
+        }
+      ]
+    },
+    "owner_id": null,
+    "created_at": "2025-11-06T00:16:42.826961Z",
+    "updated_at": "2025-11-06T00:16:42.827020Z",
+    "Latitude": 38.836664,
+    "Longitude": -77.0510453,
+    "ratings": 4.2
+  },
+  {
+    "id": 4,
+    "name": "iHop",
+    "address": "3425-A Richmond Hwy, Alexandria, VA 22305",
+    "phone_number": "+17035194220",
+    "distance": "0.29",
+    "walk_minutes": 5,
+    "description": "",
+    "website_link": "https://restaurants.ihop.com/en-us/va/alexandria/breakfast-3425-a-richmond-hwy-578?utm_source=google&utm_medium=organic&utm_campaign=google_my_business&utm_term=578&utm_content=website",
+    "open_hours": {
+      "fri": [
+        {
+          "open": "00:00",
+          "close": "23:59"
+        }
+      ],
+      "mon": [
+        {
+          "open": "00:00",
+          "close": "23:59"
+        }
+      ],
+      "sat": [
+        {
+          "open": "00:00",
+          "close": "23:59"
+        }
+      ],
+      "sun": [
+        {
+          "open": "00:00",
+          "close": "23:59"
+        }
+      ],
+      "thu": [
+        {
+          "open": "00:00",
+          "close": "23:59"
+        }
+      ],
+      "tue": [
+        {
+          "open": "00:00",
+          "close": "23:59"
+        }
+      ],
+      "wed": [
+        {
+          "open": "00:00",
+          "close": "23:59"
+        }
+      ]
+    },
+    "owner_id": null,
+    "created_at": "2025-11-06T00:18:55.788044Z",
+    "updated_at": "2025-11-06T00:18:55.788270Z",
+    "Latitude": 38.8359076,
+    "Longitude": -77.0511176,
+    "ratings": 4.1
+  },
+  {
+    "id": 5,
+    "name": "Chipotle",
+    "address": "3425 Richmond Hwy, Alexandria, VA 22305",
+    "phone_number": "+15712556044",
+    "distance": "0.30",
+    "walk_minutes": 5,
+    "description": "",
+    "website_link": "https://locations.chipotle.com/va/alexandria/3425-richmond-hwy?utm_source=google&utm_medium=yext&utm_campaign=yext_listings",
+    "open_hours": {
+      "fri": [
+        {
+          "open": "10:00",
+          "close": "23:00"
+        }
+      ],
+      "mon": [
+        {
+          "open": "10:00",
+          "close": "23:00"
+        }
+      ],
+      "sat": [
+        {
+          "open": "10:00",
+          "close": "23:00"
+        }
+      ],
+      "sun": [
+        {
+          "open": "10:00",
+          "close": "23:00"
+        }
+      ],
+      "thu": [
+        {
+          "open": "10:00",
+          "close": "23:00"
+        }
+      ],
+      "tue": [
+        {
+          "open": "10:00",
+          "close": "23:00"
+        }
+      ],
+      "wed": [
+        {
+          "open": "10:00",
+          "close": "23:00"
+        }
+      ]
+    },
+    "owner_id": null,
+    "created_at": "2025-11-06T00:20:35.542343Z",
+    "updated_at": "2025-11-06T00:20:35.542443Z",
+    "Latitude": 38.835772,
+    "Longitude": -77.0512823,
+    "ratings": 3.4
+  },
+  {
+    "id": 1,
+    "name": "CAVA",
+    "address": "3525 Richmond Hwy, Alexandria, VA 22305",
+    "phone_number": "+17032782193",
+    "distance": "0.25",
+    "walk_minutes": 5,
+    "description": "",
+    "website_link": "https://cava.com/locations/potomac-yard-va",
+    "open_hours": {
+      "fri": [
+        {
+          "open": "10:00",
+          "close": "22:30"
+        }
+      ],
+      "mon": [
+        {
+          "open": "10:00",
+          "close": "22:30"
+        }
+      ],
+      "sat": [
+        {
+          "open": "10:00",
+          "close": "22:30"
+        }
+      ],
+      "sun": [
+        {
+          "open": "10:00",
+          "close": "22:30"
+        }
+      ],
+      "thu": [
+        {
+          "open": "10:00",
+          "close": "22:30"
+        }
+      ],
+      "tue": [
+        {
+          "open": "10:00",
+          "close": "22:30"
+        }
+      ],
+      "wed": [
+        {
+          "open": "10:00",
+          "close": "22:30"
+        }
+      ]
+    },
+    "owner_id": null,
+    "created_at": "2025-11-05T19:24:24.087327Z",
+    "updated_at": "2025-11-05T19:24:24.087377Z",
+    "Latitude": 38.836838,
+    "Longitude": -77.0510996,
+    "ratings": 4.4
+  },
+  {
+    "id": 2,
+    "name": "&pizza",
+    "address": "3525 Richmond Hwy, Alexandria, VA 22305, USA",
+    "phone_number": "(703)997-7353",
+    "distance": "0.27",
+    "walk_minutes": 4,
+    "description": "",
+    "website_link": "https://andpizza.com/locations/alexandria-va-potomac-yard/",
+    "open_hours": {
+      "fri": [
+        {
+          "open": "10:00",
+          "close": "23:00"
+        }
+      ],
+      "mon": [
+        {
+          "open": "10:00",
+          "close": "23:00"
+        }
+      ],
+      "sat": [
+        {
+          "open": "10:00",
+          "close": "23:00"
+        }
+      ],
+      "sun": [
+        {
+          "open": "10:00",
+          "close": "23:00"
+        }
+      ],
+      "thu": [
+        {
+          "open": "10:00",
+          "close": "23:00"
+        }
+      ],
+      "tue": [
+        {
+          "open": "10:00",
+          "close": "23:00"
+        }
+      ],
+      "wed": [
+        {
+          "open": "10:00",
+          "close": "23:00"
+        }
+      ]
+    },
+    "owner_id": null,
+    "created_at": "2025-11-06T00:13:49.677153Z",
+    "updated_at": "2025-11-06T00:13:49.677240Z",
+    "Latitude": 38.8367118,
+    "Longitude": -77.0510403,
+    "ratings": 4.4
+  }
+]
+
+
+
 
 
 
