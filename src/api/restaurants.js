@@ -71,6 +71,7 @@ export function transformRestaurantData(apiRestaurants) {
     image: restaurant.image || '🍽️', // Default emoji if no image
     images: restaurant.images || [restaurant.image || '🍽️'],
     imageUrl: restaurant.image_url || null,
+    promo_tag: restaurant.promo_tag || restaurant.offer || '20% discount', // Promo tag/offer badge
   }))
 }
 

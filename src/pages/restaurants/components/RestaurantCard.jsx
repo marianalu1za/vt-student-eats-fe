@@ -17,6 +17,8 @@ function RestaurantCard({ restaurant }) {
   const restaurantSlug = getRestaurantSlug(restaurant.name)
   const imageUrl = restaurant.imageUrl || null
   const images = restaurant.images || [restaurant.image]
+  const promoTag = restaurant.promo_tag || restaurant.offer || null
+  const distance = restaurant.distance
   
   const handleCarouselClick = (e) => {
     // Prevent navigation to restaurant detail when clicking on carousel controls
@@ -32,6 +34,18 @@ function RestaurantCard({ restaurant }) {
     <Link to={`/restaurants/${restaurantSlug}`} className="restaurant-card-link">
       <div className="restaurant-card">
         <div className="restaurant-image" onClick={handleCarouselClick}>
+          {/* Promo Tag - Top Left */}
+          {promoTag && (
+            <div className="promo-tag">
+              <span className="promo-text">{promoTag}</span>
+            </div>
+          )}
+          {/* Distance Tag - Top Right */}
+          {distance && (
+            <div className="distance-tag">
+              <span className="distance-text">{distance} mi</span>
+            </div>
+          )}
           {images.length > 1 ? (
             <Swiper 
               pagination={{
