@@ -11,6 +11,7 @@ import RangeFilter from './components/RangeFilter.jsx'
 import { useDropdowns } from './hooks/useDropdowns.js'
 import { useFilters } from './hooks/useFilters.js'
 // import { PRICE_RANGE, DISTANCE_RANGE } from './constants'
+import { getUserLocation } from './services/location.js';
 
 function RestaurantList() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -54,10 +55,17 @@ function RestaurantList() {
     toggleDropdown('price')
   }
 
-  const handleApplyDistance = () => {
+  const handleApplyDistance = async () => {
+    const loc = await getUserLocation();
+    console.log("User location:", loc);
     applyDistanceFilter()
     toggleDropdown('distance')
   }
+
+  // const handleApplyDistance = () => { 
+  //   applyDistanceFilter() 
+  //   toggleDropdown('distance') 
+  // }
 
   const handleClearPriceFilter = (e) => {
     e.stopPropagation()
