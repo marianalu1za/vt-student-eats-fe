@@ -31,7 +31,7 @@ function RestaurantCard({ restaurant }) {
   }
 
   return (
-    <Link to={`/restaurants/${restaurantSlug}`} className="restaurant-card-link">
+    <Link to={`/restaurants/${restaurant.id}`} className="restaurant-card-link">
       <div className="restaurant-card">
         <div className="restaurant-image" onClick={handleCarouselClick}>
           {/* Promo Tag - Top Left */}
