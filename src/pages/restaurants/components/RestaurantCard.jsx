@@ -99,7 +99,7 @@ function RestaurantCard({ restaurant }) {
         <div className="restaurant-info">
           <div className="restaurant-header">
             <h3 className="restaurant-name">{restaurant.name}</h3>
-            <div className="rating-badge">{restaurant.rating} ⭐</div>
+            <div className="rating-badge">{restaurant.ratings} ⭐</div>
           </div>
           <div className="restaurant-details">
             <div className="tags">
