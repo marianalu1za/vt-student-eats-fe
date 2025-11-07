@@ -52,26 +52,29 @@ export async function fetchRestaurants() {
  */
 export function transformRestaurantData(apiRestaurants) {
   return apiRestaurants.map((restaurant) => ({
-    // Keep all original API fields
     id: restaurant.id,
     name: restaurant.name,
     address: restaurant.address,
-    phone_number: restaurant.phone_number,
+    phoneNumber: restaurant.phone_number,
     distance: restaurant.distance,
-    // walk_minutes: restaurant.walk_minutes,
-    // description: restaurant.description,
-    // website_link: restaurant.website_link,
-    // open_hours: restaurant.open_hours,
-    // owner_id: restaurant.owner_id,
-    // created_at: restaurant.created_at,
-    // updated_at: restaurant.updated_at,
-    // Add component-expected fields with defaults
-    rating: restaurant.rating || 4.0, // Default rating if not provided
-    tags: restaurant.tags || [], // Default empty tags array
-    image: restaurant.image || '🍽️', // Default emoji if no image
-    images: restaurant.images || [restaurant.image || '🍽️'],
-    imageUrl: restaurant.image_url || null,
-    promo_tag: restaurant.promo_tag || restaurant.offer || '20% discount', // Promo tag/offer badge
-  }))
+    walkMinutes: restaurant.walk_minutes,
+    description: restaurant.description,
+    websiteLink: restaurant.website_link,
+    openHours: restaurant.open_hours,
+    ownerId: restaurant.owner,
+    createdAt: restaurant.created_at,
+    updatedAt: restaurant.updated_at,
+    xCoordinate: restaurant.x_coordinate,
+    yCoordinate: restaurant.y_coordinate,
+    ratings: restaurant.ratings,
+    tags: restaurant.tags ? restaurant.tags.map(tag => tag.name) : [],
+    images: restaurant.images
+      ? restaurant.images
+          .slice()
+          .sort((a, b) => a.sort_order - b.sort_order)
+          .map(img => img.image_url)
+      : [],
+  }));
 }
+
 
