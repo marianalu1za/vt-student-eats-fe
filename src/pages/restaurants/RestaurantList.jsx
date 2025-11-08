@@ -13,7 +13,7 @@ import { useDropdowns } from './hooks/useDropdowns.js'
 import { useFilters } from './hooks/useFilters.js'
 // import { PRICE_RANGE, DISTANCE_RANGE } from './constants'
 import { getUserLocation } from './services/location.js';
-import {changeTransormedData } from './services/distance.js'
+import {changeTransformedData } from './services/distance.js'
 
 const ITEMS_PER_PAGE = 6
 
@@ -94,7 +94,7 @@ function RestaurantList() {
 
         // Luke: Distance Changes go here
         const userLoc = await getUserLocation();
-        changeTransormedData(transformedData, userLoc);
+        changeTransformedData(transformedData, userLoc);
 
         // Now that correct distances are in we can set the data on the page
         setRestaurants(transformedData)
