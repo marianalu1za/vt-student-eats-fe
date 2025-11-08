@@ -68,11 +68,6 @@ function RestaurantList() {
     toggleDropdown('distance')
   }
 
-  // const handleApplyDistance = () => { 
-  //   applyDistanceFilter() 
-  //   toggleDropdown('distance') 
-  // }
-
   const handleClearPriceFilter = (e) => {
     e.stopPropagation()
     clearPriceFilter()

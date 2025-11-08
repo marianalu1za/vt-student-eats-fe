@@ -21,7 +21,6 @@ function haversineMiles(a, b) {
 // Using transformed data from API and user location, get the right distances to display
 function changeTransormedData(data, userLoc) {
   for (let i = 0; i < data.length; i++) {
-    console.log(data[i])
     // user to restaurant in miles
     let coords = {"lat": data[i].yCoordinate,"lng": data[i].xCoordinate}
     let correct_distance = haversineMiles(userLoc, coords);
