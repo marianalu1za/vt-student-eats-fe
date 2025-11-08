@@ -5,19 +5,27 @@ import { divIcon } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import './RestaurantMap.css'
 import RestaurantCard from './components/RestaurantCard'
-import { fetchRestaurants, transformRestaurantData } from '../../api/restaurants.js'
+import {
+  fetchRestaurants,
+  transformRestaurantData,
+  getRestaurantTags
+} from '../../api/restaurants.js'
 import SearchBar from './components/SearchBar.jsx'
 import FilterButton from './components/FilterButton.jsx'
 import CuisineFilter from './components/CuisineFilter.jsx'
+import PriceLevelFilter from './components/PriceLevelFilter.jsx'
 import RangeFilter from './components/RangeFilter.jsx'
 import { useDropdowns } from './hooks/useDropdowns.js'
 import { useFilters } from './hooks/useFilters.js'
+import { getUserLocation } from './services/location.js'
+import { changeTransformedData } from './services/distance.js'
 
 function RestaurantMap() {
   // Arlington, VA coordinates
   const VTCampus = [38.837553, -77.048676]
   const [restaurants, setRestaurants] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
+  const [cuisineTypes, setCuisineTypes] = useState([])
   const navigate = useNavigate()
 
   const {
@@ -28,13 +36,8 @@ function RestaurantMap() {
   } = useDropdowns()
 
   const {
-    priceMin,
-    priceMax,
-    setPriceMin,
-    setPriceMax,
-    appliedPriceMin,
-    appliedPriceMax,
-    applyPriceFilter,
+    appliedPriceLevels,
+    handlePriceLevelChange,
     clearPriceFilter,
     isPriceFilterApplied,
     distanceMax,
@@ -48,11 +51,6 @@ function RestaurantMap() {
     clearCuisineFilter,
     isCuisineFilterApplied
   } = useFilters()
-
-  const handleApplyPrice = () => {
-    applyPriceFilter()
-    toggleDropdown('price')
-  }
 
   const handleApplyDistance = () => {
     applyDistanceFilter()
@@ -79,9 +77,11 @@ function RestaurantMap() {
       try {
         const apiData = await fetchRestaurants()
         const transformedData = transformRestaurantData(apiData)
+        const userLocation = await getUserLocation()
+        changeTransformedData(transformedData, userLocation)
         const withCoordinates = transformedData.filter((restaurant) => {
-          const lat = restaurant.y
-          const lon = restaurant.x
+          const lat = restaurant.yCoordinate
+          const lon = restaurant.xCoordinate
           return typeof lat === 'number' && typeof lon === 'number'
         })
         setRestaurants(withCoordinates)
@@ -94,6 +94,20 @@ function RestaurantMap() {
     loadRestaurants()
   }, [])
 
+  useEffect(() => {
+    const loadCuisineTypes = async () => {
+      try {
+        const tags = await getRestaurantTags()
+        setCuisineTypes(tags)
+      } catch (error) {
+        console.error('Failed to fetch restaurant tags for map:', error)
+        setCuisineTypes([])
+      }
+    }
+
+    loadCuisineTypes()
+  }, [])
+
   const filteredRestaurants = useMemo(() => {
     let results = [...restaurants]
 
@@ -104,7 +118,16 @@ function RestaurantMap() {
       )
     }
 
-    if (appliedCuisines.length > 0) {
+    if (isDistanceFilterApplied && appliedDistanceMax != null) {
+      results = results
+        .filter(
+          (restaurant) =>
+            typeof restaurant.distance === 'number' && restaurant.distance <= appliedDistanceMax
+        )
+        .sort((a, b) => a.distance - b.distance)
+    }
+
+    if (isCuisineFilterApplied && appliedCuisines.length > 0) {
       results = results.filter((restaurant) => {
         const restaurantTags = restaurant.tags || []
         return appliedCuisines.some((cuisine) =>
@@ -115,9 +138,28 @@ function RestaurantMap() {
       })
     }
 
-    // TODO: Wire price and distance filters once data includes these attributes
+    if (isPriceFilterApplied && appliedPriceLevels.length > 0) {
+      results = results.filter((restaurant) => {
+        if (restaurant.priceLevel == null) {
+          return false
+        }
+
+        const priceLevelSymbol = '$'.repeat(restaurant.priceLevel)
+        return appliedPriceLevels.includes(priceLevelSymbol)
+      })
+    }
+
     return results
-  }, [restaurants, searchQuery, appliedCuisines])
+  }, [
+    restaurants,
+    searchQuery,
+    appliedCuisines,
+    appliedPriceLevels,
+    appliedDistanceMax,
+    isCuisineFilterApplied,
+    isPriceFilterApplied,
+    isDistanceFilterApplied
+  ])
 
   // Function to get icon class based on restaurant tags/name
   const getRestaurantIcon = (restaurant) => {
@@ -210,6 +252,7 @@ function RestaurantMap() {
           >
             {showCuisineDropdown && (
               <CuisineFilter
+                cuisineTypes={cuisineTypes}
                 appliedCuisines={appliedCuisines}
                 onCuisineChange={handleCuisineChange}
               />
@@ -224,20 +267,14 @@ function RestaurantMap() {
             }
             isActive={showPriceDropdown}
             isApplied={isPriceFilterApplied}
-            appliedRange={isPriceFilterApplied ? `$${appliedPriceMin} - $${appliedPriceMax}` : null}
+            appliedRange={appliedPriceLevels.length > 0 ? appliedPriceLevels.join(', ') : null}
             onToggle={() => toggleDropdown('price')}
             onClear={handleClearPriceFilter}
           >
             {showPriceDropdown && (
-              <RangeFilter
-                type="price"
-                valueMin={priceMin}
-                valueMax={priceMax}
-                onChangeMin={setPriceMin}
-                onChangeMax={setPriceMax}
-                onApply={handleApplyPrice}
-                formatDisplay={(min, max) => `$${min} - $${max}`}
-                formatSliderValue={(val) => `$${val}`}
+              <PriceLevelFilter
+                appliedPriceLevels={appliedPriceLevels}
+                onPriceLevelChange={handlePriceLevelChange}
               />
             )}
           </FilterButton>
@@ -310,8 +347,8 @@ function RestaurantMap() {
         {/* Restaurant Markers */}
         {filteredRestaurants.map((restaurant) => {
           const restaurantIcon = createRestaurantIcon(restaurant)
-          const lat = restaurant.y
-          const lon = restaurant.x
+          const lat = restaurant.yCoordinate
+          const lon = restaurant.xCoordinate
 
           if (typeof lat !== 'number' || typeof lon !== 'number') {
             return null
