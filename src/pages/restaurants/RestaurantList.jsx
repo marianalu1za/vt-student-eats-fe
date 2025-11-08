@@ -13,7 +13,7 @@ import { useDropdowns } from './hooks/useDropdowns.js'
 import { useFilters } from './hooks/useFilters.js'
 // import { PRICE_RANGE, DISTANCE_RANGE } from './constants'
 import { getUserLocation } from './services/location.js';
-import {changeTransformedData } from './services/distance.js'
+import { changeTransformedData } from './services/distance.js'
 
 const ITEMS_PER_PAGE = 6
 
@@ -23,7 +23,7 @@ function RestaurantList() {
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  
+
   // Custom hooks for dropdowns and filters
   const {
     showCuisineDropdown,
@@ -109,17 +109,33 @@ function RestaurantList() {
     loadRestaurants()
   }, [])
 
-  // Filter restaurants by name based on search query
   const filteredRestaurants = useMemo(() => {
-    if (!searchQuery.trim()) {
-      return restaurants
+    let result = [...restaurants];
+
+    // 1) Search by name
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter(r =>
+        r.name.toLowerCase().includes(query)
+      );
     }
-    
-    const query = searchQuery.toLowerCase().trim()
-    return restaurants.filter(restaurant =>
-      restaurant.name.toLowerCase().includes(query)
-    )
-  }, [searchQuery, restaurants])
+
+    // 2) Distance filter: keep within appliedDistanceMax and sort by distance ASC
+    if (isDistanceFilterApplied && appliedDistanceMax != null) {
+      result = result
+        .filter(r => typeof r.distance === 'number' && r.distance <= appliedDistanceMax)
+        .sort((a, b) => a.distance - b.distance);
+    }
+
+    // (later you can plug price + cuisine here)
+
+    return result;
+  }, [
+    restaurants,
+    searchQuery,
+    isDistanceFilterApplied,
+    appliedDistanceMax,
+  ]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -146,129 +162,129 @@ function RestaurantList() {
       <AboutSection />
       <div className="restaurant-list-page">
 
-      {/* Find Your Next Meal Section */}
-      <section className="find-meal-section">
-        <h2>Find your next meal</h2>
-        <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-        <div className="filter-buttons">
-          <FilterButton
-            label="Filter by cuisine type"
-            isActive={showCuisineDropdown}
-            isApplied={isCuisineFilterApplied}
-            appliedRange={appliedCuisines.length > 0 ? appliedCuisines.join(', ') : null}
-            onToggle={() => toggleDropdown('cuisine')}
-            onClear={handleClearCuisineFilter}
-          >
-            {showCuisineDropdown && (
-              <CuisineFilter
-                appliedCuisines={appliedCuisines}
-                onCuisineChange={handleCuisineChange}
-              />
-            )}
-          </FilterButton>
+        {/* Find Your Next Meal Section */}
+        <section className="find-meal-section">
+          <h2>Find your next meal</h2>
+          <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+          <div className="filter-buttons">
+            <FilterButton
+              label="Filter by cuisine type"
+              isActive={showCuisineDropdown}
+              isApplied={isCuisineFilterApplied}
+              appliedRange={appliedCuisines.length > 0 ? appliedCuisines.join(', ') : null}
+              onToggle={() => toggleDropdown('cuisine')}
+              onClear={handleClearCuisineFilter}
+            >
+              {showCuisineDropdown && (
+                <CuisineFilter
+                  appliedCuisines={appliedCuisines}
+                  onCuisineChange={handleCuisineChange}
+                />
+              )}
+            </FilterButton>
 
-          <FilterButton
-            label="Filter by price"
-            isActive={showPriceDropdown}
-            isApplied={isPriceFilterApplied}
-            appliedRange={isPriceFilterApplied ? `$${appliedPriceMin} - $${appliedPriceMax}` : null}
-            onToggle={() => toggleDropdown('price')}
-            onClear={handleClearPriceFilter}
-          >
-            {showPriceDropdown && (
-              <RangeFilter
-                type="price"
-                valueMin={priceMin}
-                valueMax={priceMax}
-                onChangeMin={setPriceMin}
-                onChangeMax={setPriceMax}
-                onApply={handleApplyPrice}
-                formatDisplay={(min, max) => `$${min} - $${max}`}
-                formatSliderValue={(val) => `$${val}`}
-              />
-            )}
-          </FilterButton>
+            <FilterButton
+              label="Filter by price"
+              isActive={showPriceDropdown}
+              isApplied={isPriceFilterApplied}
+              appliedRange={isPriceFilterApplied ? `$${appliedPriceMin} - $${appliedPriceMax}` : null}
+              onToggle={() => toggleDropdown('price')}
+              onClear={handleClearPriceFilter}
+            >
+              {showPriceDropdown && (
+                <RangeFilter
+                  type="price"
+                  valueMin={priceMin}
+                  valueMax={priceMax}
+                  onChangeMin={setPriceMin}
+                  onChangeMax={setPriceMax}
+                  onApply={handleApplyPrice}
+                  formatDisplay={(min, max) => `$${min} - $${max}`}
+                  formatSliderValue={(val) => `$${val}`}
+                />
+              )}
+            </FilterButton>
 
-          <FilterButton
-            label="Filter by distance"
-            isActive={showDistanceDropdown}
-            isApplied={isDistanceFilterApplied}
-            appliedRange={isDistanceFilterApplied ? `Up to ${appliedDistanceMax} miles` : null}
-            onToggle={() => toggleDropdown('distance')}
-            onClear={handleClearDistanceFilter}
-          >
-            {showDistanceDropdown && (
-              <RangeFilter
-                type="distance"
-                valueMax={distanceMax}
-                onChangeMax={setDistanceMax}
-                onApply={handleApplyDistance}
-                formatDisplay={(max) => `Up to ${max} miles`}
-                formatSliderValue={(val) => `${val} miles`}
-                singleHandle={true}
-              />
-            )}
-          </FilterButton>
-        </div>
-      </section>
-
-      {/* Restaurant Grid */}
-      <section className="restaurants-section">
-        {loading && (
-          <div className="loading-container" style={{ textAlign: 'center', padding: '2rem' }}>
-            <p>Loading restaurants...</p>
+            <FilterButton
+              label="Filter by distance"
+              isActive={showDistanceDropdown}
+              isApplied={isDistanceFilterApplied}
+              appliedRange={isDistanceFilterApplied ? `Up to ${appliedDistanceMax} miles` : null}
+              onToggle={() => toggleDropdown('distance')}
+              onClear={handleClearDistanceFilter}
+            >
+              {showDistanceDropdown && (
+                <RangeFilter
+                  type="distance"
+                  valueMax={distanceMax}
+                  onChangeMax={setDistanceMax}
+                  onApply={handleApplyDistance}
+                  formatDisplay={(max) => `Up to ${max} miles`}
+                  formatSliderValue={(val) => `${val} miles`}
+                  singleHandle={true}
+                />
+              )}
+            </FilterButton>
           </div>
-        )}
-        
-        {error && (
-          <div className="error-container" style={{ textAlign: 'center', padding: '2rem', color: '#d32f2f' }}>
-            <p>Error: {error}</p>
-          </div>
-        )}
-        
-        {!loading && !error && (
-          <>
-            <div className="restaurant-grid">
-              {paginatedRestaurants.length > 0 ? (
-                paginatedRestaurants.map((restaurant) => (
-                  <RestaurantCard key={restaurant.id} restaurant={restaurant} />
-                ))
-              ) : (
-                <div style={{ textAlign: 'center', padding: '2rem', gridColumn: '1 / -1' }}>
-                  <p>No restaurants found.</p>
+        </section>
+
+        {/* Restaurant Grid */}
+        <section className="restaurants-section">
+          {loading && (
+            <div className="loading-container" style={{ textAlign: 'center', padding: '2rem' }}>
+              <p>Loading restaurants...</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="error-container" style={{ textAlign: 'center', padding: '2rem', color: '#d32f2f' }}>
+              <p>Error: {error}</p>
+            </div>
+          )}
+
+          {!loading && !error && (
+            <>
+              <div className="restaurant-grid">
+                {paginatedRestaurants.length > 0 ? (
+                  paginatedRestaurants.map((restaurant) => (
+                    <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+                  ))
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '2rem', gridColumn: '1 / -1' }}>
+                    <p>No restaurants found.</p>
+                  </div>
+                )}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="pagination-container">
+                  <Pagination
+                    count={totalPages}
+                    page={currentPage}
+                    onChange={handlePageChange}
+                    shape="rounded"
+                    size="large"
+                    sx={{
+                      '& .MuiPaginationItem-root': {
+                        color: '#333',
+                      },
+                      '& .MuiPaginationItem-root.Mui-selected': {
+                        backgroundColor: '#6a283c',
+                        color: '#fff',
+                        '&:hover': {
+                          backgroundColor: '#7a384c',
+                        },
+                      },
+                      '& .MuiPaginationItem-root:hover': {
+                        backgroundColor: '#f5f5f5',
+                      },
+                    }}
+                  />
                 </div>
               )}
-            </div>
-            
-            {totalPages > 1 && (
-              <div className="pagination-container">
-                <Pagination
-                  count={totalPages}
-                  page={currentPage}
-                  onChange={handlePageChange}
-                  shape="rounded"
-                  size="large"
-                  sx={{
-                    '& .MuiPaginationItem-root': {
-                      color: '#333',
-                    },
-                    '& .MuiPaginationItem-root.Mui-selected': {
-                      backgroundColor: '#6a283c',
-                      color: '#fff',
-                      '&:hover': {
-                        backgroundColor: '#7a384c',
-                      },
-                    },
-                    '& .MuiPaginationItem-root:hover': {
-                      backgroundColor: '#f5f5f5',
-                    },
-                  }}
-                />
-              </div>
-            )}
-          </>
-        )}
-      </section>
+            </>
+          )}
+        </section>
       </div>
     </div>
   )

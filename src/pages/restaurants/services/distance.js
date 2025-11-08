@@ -1,6 +1,6 @@
 export {
   haversineMiles,
-  changeTransormedData,
+  changeTransformedData,
 };
 
 
