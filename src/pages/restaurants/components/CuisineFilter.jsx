@@ -1,10 +1,21 @@
-import { CUISINE_TYPES } from '../constants'
-import './CuisineFilter.css'
+// import { CUISINE_TYPES } from '../constants'
+import { getRestaurantTags } from "../../../api/restaurants";
+import React, { useState, useEffect } from 'react';
+import "./CuisineFilter.css";
 
 function CuisineFilter({ appliedCuisines, onCuisineChange }) {
+  const [cuisineTypes, setCuisineTypes] = useState([]);
+
+  useEffect(() => {
+    const fetchCuisineTypes = async () => {
+      const data = await getRestaurantTags();
+      setCuisineTypes(data);
+    };
+    fetchCuisineTypes();
+  }, []);
   return (
     <div className="filter-dropdown">
-      {CUISINE_TYPES.map((cuisine) => (
+      {cuisineTypes.map((cuisine) => (
         <label key={cuisine} className="filter-option">
           <input
             type="checkbox"
@@ -15,8 +26,7 @@ function CuisineFilter({ appliedCuisines, onCuisineChange }) {
         </label>
       ))}
     </div>
-  )
+  );
 }
 
-export default CuisineFilter
-
+export default CuisineFilter;

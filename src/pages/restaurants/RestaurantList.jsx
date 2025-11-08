@@ -128,6 +128,11 @@ function RestaurantList() {
     }
 
     // (later you can plug price + cuisine here)
+    if (isCuisineFilterApplied && appliedCuisines.length > 0) {
+      result = result.filter(r =>
+        appliedCuisines.some(cuisine => r.tags.includes(cuisine))
+      );
+    }
 
     return result;
   }, [
@@ -135,6 +140,7 @@ function RestaurantList() {
     searchQuery,
     isDistanceFilterApplied,
     appliedDistanceMax,
+    appliedCuisines
   ]);
 
   // Reset to page 1 when filters change
