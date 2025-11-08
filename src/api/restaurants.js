@@ -74,6 +74,7 @@ export function transformRestaurantData(apiRestaurants) {
           .sort((a, b) => a.sort_order - b.sort_order)
           .map(img => img.image_url)
       : [],
+    priceLevel: restaurant.price_level,
   }));
 }
 

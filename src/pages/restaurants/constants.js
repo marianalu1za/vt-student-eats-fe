@@ -8,6 +8,8 @@ export const PRICE_RANGE = {
   DEFAULT_MAX: 150
 }
 
+export const PRICE_LEVELS = ['$', '$$', '$$$', '$$$$', '$$$$$'];
+
 export const DISTANCE_RANGE = {
   MIN: 0,
   MAX: 10,

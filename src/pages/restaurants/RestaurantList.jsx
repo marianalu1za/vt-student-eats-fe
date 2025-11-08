@@ -8,6 +8,7 @@ import Header from './components/Header.jsx'
 import AboutSection from './components/AboutSection.jsx'
 import FilterButton from './components/FilterButton.jsx'
 import CuisineFilter from './components/CuisineFilter.jsx'
+import PriceLevelFilter from './components/PriceLevelFilter.jsx'
 import RangeFilter from './components/RangeFilter.jsx'
 import { useDropdowns } from './hooks/useDropdowns.js'
 import { useFilters } from './hooks/useFilters.js'
@@ -34,13 +35,8 @@ function RestaurantList() {
 
   const {
     // Price
-    priceMin,
-    priceMax,
-    setPriceMin,
-    setPriceMax,
-    appliedPriceMin,
-    appliedPriceMax,
-    applyPriceFilter,
+    appliedPriceLevels,
+    handlePriceLevelChange,
     clearPriceFilter,
     isPriceFilterApplied,
     // Distance
@@ -134,19 +130,27 @@ function RestaurantList() {
       );
     }
 
+    if (isPriceFilterApplied && appliedPriceLevels.length > 0) {
+      debugger;
+      result = result.filter(r =>
+        appliedPriceLevels.some(price => '$'.repeat(r.priceLevel) === price)
+      );
+    }
+
     return result;
   }, [
     restaurants,
     searchQuery,
     isDistanceFilterApplied,
     appliedDistanceMax,
-    appliedCuisines
+    appliedCuisines,
+    appliedPriceLevels,
   ]);
 
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchQuery, appliedPriceMin, appliedPriceMax, appliedDistanceMax, appliedCuisines])
+  }, [searchQuery, appliedPriceLevels, appliedDistanceMax, appliedCuisines])
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredRestaurants.length / ITEMS_PER_PAGE)
@@ -193,20 +197,14 @@ function RestaurantList() {
               label="Filter by price"
               isActive={showPriceDropdown}
               isApplied={isPriceFilterApplied}
-              appliedRange={isPriceFilterApplied ? `$${appliedPriceMin} - $${appliedPriceMax}` : null}
+              appliedRange={appliedPriceLevels.length > 0 ? appliedPriceLevels.join(', ') : null}
               onToggle={() => toggleDropdown('price')}
               onClear={handleClearPriceFilter}
             >
               {showPriceDropdown && (
-                <RangeFilter
-                  type="price"
-                  valueMin={priceMin}
-                  valueMax={priceMax}
-                  onChangeMin={setPriceMin}
-                  onChangeMax={setPriceMax}
-                  onApply={handleApplyPrice}
-                  formatDisplay={(min, max) => `$${min} - $${max}`}
-                  formatSliderValue={(val) => `$${val}`}
+                <PriceLevelFilter
+                  appliedPriceLevels={appliedPriceLevels}
+                  onPriceLevelChange={handlePriceLevelChange}
                 />
               )}
             </FilterButton>
