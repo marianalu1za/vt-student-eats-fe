@@ -64,8 +64,8 @@ export function transformRestaurantData(apiRestaurants) {
     ownerId: restaurant.owner,
     createdAt: restaurant.created_at,
     updatedAt: restaurant.updated_at,
-    xCoordinate: restaurant.x_coordinate,
-    yCoordinate: restaurant.y_coordinate,
+    x: restaurant.x_coordinate ?? restaurant.longitude ?? null,
+    y: restaurant.y_coordinate ?? restaurant.latitude ?? null,
     ratings: restaurant.ratings,
     tags: restaurant.tags ? restaurant.tags.map(tag => tag.name) : [],
     images: restaurant.images

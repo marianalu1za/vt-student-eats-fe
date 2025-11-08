@@ -1,13 +1,35 @@
+import { useEffect, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import { divIcon } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import './RestaurantMap.css'
-import { restaurants } from '../../mock_data/restaurantData.js'
 import RestaurantCard from './components/RestaurantCard'
+import { fetchRestaurants, transformRestaurantData } from '../../api/restaurants.js'
 
 function RestaurantMap() {
   // Arlington, VA coordinates
   const VTCampus = [38.837553, -77.048676]
+  const [restaurants, setRestaurants] = useState([])
+
+  useEffect(() => {
+    const loadRestaurants = async () => {
+      try {
+        const apiData = await fetchRestaurants()
+        const transformedData = transformRestaurantData(apiData)
+        const withCoordinates = transformedData.filter((restaurant) => {
+          const lat = restaurant.y
+          const lon = restaurant.x
+          return typeof lat === 'number' && typeof lon === 'number'
+        })
+        setRestaurants(withCoordinates)
+      } catch (error) {
+        console.error('Failed to fetch restaurants for map:', error)
+        setRestaurants([])
+      }
+    }
+
+    loadRestaurants()
+  }, [])
 
   // Function to get icon class based on restaurant tags/name
   const getRestaurantIcon = (restaurant) => {
@@ -114,11 +136,17 @@ function RestaurantMap() {
         {/* Restaurant Markers */}
         {restaurants.map((restaurant) => {
           const restaurantIcon = createRestaurantIcon(restaurant)
-          
+          const lat = restaurant.y
+          const lon = restaurant.x
+
+          if (typeof lat !== 'number' || typeof lon !== 'number') {
+            return null
+          }
+
           return (
             <Marker 
               key={restaurant.id} 
-              position={[restaurant.latitude, restaurant.longitude]} 
+              position={[lat, lon]} 
               icon={restaurantIcon}
             >
               <Popup className="restaurant-card-popup">
