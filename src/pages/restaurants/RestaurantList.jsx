@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Pagination } from '@mui/material'
 import './RestaurantList.css'
 import { fetchRestaurants, transformRestaurantData, getRestaurantTags } from '../../api/restaurants.js'
@@ -25,6 +26,7 @@ function RestaurantList() {
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [cuisineTypes, setCuisineTypes] = useState([]);
+  const navigate = useNavigate()
 
   // Custom hooks for dropdowns and filters
   const {
@@ -184,11 +186,24 @@ function RestaurantList() {
 
         {/* Find Your Next Meal Section */}
         <section className="find-meal-section">
-          <h2>Find your next meal</h2>
+        <div className="find-meal-header">
+            <h2>Find your next meal</h2>
+          <button
+            type="button"
+            className="view-toggle-button"
+            onClick={() => navigate('/restaurants/map')}
+          >
+            View on map
+          </button>
+        </div>
           <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
           <div className="filter-buttons">
             <FilterButton
-              label="Filter by cuisine type"
+              label={
+              <span className="filter-icon" title="Filter by cuisine type">
+                <i className="fa-solid fa-bowl-food" aria-hidden="true"></i>
+              </span>
+            }
               isActive={showCuisineDropdown}
               isApplied={isCuisineFilterApplied}
               appliedRange={appliedCuisines.length > 0 ? appliedCuisines.join(', ') : null}
@@ -205,7 +220,11 @@ function RestaurantList() {
             </FilterButton>
 
             <FilterButton
-              label="Filter by price"
+              label={
+              <span className="filter-icon" title="Filter by price">
+                <i className="fa-solid fa-dollar-sign" aria-hidden="true"></i>
+              </span>
+            }
               isActive={showPriceDropdown}
               isApplied={isPriceFilterApplied}
               appliedRange={appliedPriceLevels.length > 0 ? appliedPriceLevels.join(', ') : null}
@@ -221,7 +240,11 @@ function RestaurantList() {
             </FilterButton>
 
             <FilterButton
-              label="Filter by distance"
+              label={
+              <span className="filter-icon" title="Filter by distance">
+                <i className="fa-solid fa-location-dot" aria-hidden="true"></i>
+              </span>
+            }
               isActive={showDistanceDropdown}
               isApplied={isDistanceFilterApplied}
               appliedRange={isDistanceFilterApplied ? `Up to ${appliedDistanceMax} miles` : null}

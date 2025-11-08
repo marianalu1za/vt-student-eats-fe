@@ -1,15 +1,78 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import { divIcon } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import './RestaurantMap.css'
 import RestaurantCard from './components/RestaurantCard'
 import { fetchRestaurants, transformRestaurantData } from '../../api/restaurants.js'
+import SearchBar from './components/SearchBar.jsx'
+import FilterButton from './components/FilterButton.jsx'
+import CuisineFilter from './components/CuisineFilter.jsx'
+import RangeFilter from './components/RangeFilter.jsx'
+import { useDropdowns } from './hooks/useDropdowns.js'
+import { useFilters } from './hooks/useFilters.js'
 
 function RestaurantMap() {
   // Arlington, VA coordinates
   const VTCampus = [38.837553, -77.048676]
   const [restaurants, setRestaurants] = useState([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const navigate = useNavigate()
+
+  const {
+    showCuisineDropdown,
+    showPriceDropdown,
+    showDistanceDropdown,
+    toggleDropdown
+  } = useDropdowns()
+
+  const {
+    priceMin,
+    priceMax,
+    setPriceMin,
+    setPriceMax,
+    appliedPriceMin,
+    appliedPriceMax,
+    applyPriceFilter,
+    clearPriceFilter,
+    isPriceFilterApplied,
+    distanceMax,
+    setDistanceMax,
+    appliedDistanceMax,
+    applyDistanceFilter,
+    clearDistanceFilter,
+    isDistanceFilterApplied,
+    appliedCuisines,
+    handleCuisineChange,
+    clearCuisineFilter,
+    isCuisineFilterApplied
+  } = useFilters()
+
+  const handleApplyPrice = () => {
+    applyPriceFilter()
+    toggleDropdown('price')
+  }
+
+  const handleApplyDistance = () => {
+    applyDistanceFilter()
+    toggleDropdown('distance')
+  }
+
+  const handleClearCuisineFilter = (event) => {
+    event?.stopPropagation?.()
+    clearCuisineFilter()
+  }
+
+  const handleClearPriceFilter = (event) => {
+    event?.stopPropagation?.()
+    clearPriceFilter()
+  }
+
+  const handleClearDistanceFilter = (event) => {
+    event?.stopPropagation?.()
+    clearDistanceFilter()
+  }
 
   useEffect(() => {
     const loadRestaurants = async () => {
@@ -30,6 +93,31 @@ function RestaurantMap() {
 
     loadRestaurants()
   }, [])
+
+  const filteredRestaurants = useMemo(() => {
+    let results = [...restaurants]
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim()
+      results = results.filter((restaurant) =>
+        restaurant.name.toLowerCase().includes(query)
+      )
+    }
+
+    if (appliedCuisines.length > 0) {
+      results = results.filter((restaurant) => {
+        const restaurantTags = restaurant.tags || []
+        return appliedCuisines.some((cuisine) =>
+          restaurantTags.some((tag) =>
+            tag.toLowerCase().includes(cuisine.toLowerCase())
+          )
+        )
+      })
+    }
+
+    // TODO: Wire price and distance filters once data includes these attributes
+    return results
+  }, [restaurants, searchQuery, appliedCuisines])
 
   // Function to get icon class based on restaurant tags/name
   const getRestaurantIcon = (restaurant) => {
@@ -103,6 +191,92 @@ function RestaurantMap() {
 
   return (
     <div className="restaurant-map-wrapper">
+      <div className="map-toolbar">
+        <div className="map-search">
+          <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        </div>
+        <div className="map-filter-buttons">
+          <FilterButton
+            label={
+              <span className="filter-icon" title="Filter by cuisine type">
+                <i className="fa-solid fa-bowl-food" aria-hidden="true"></i>
+              </span>
+            }
+            isActive={showCuisineDropdown}
+            isApplied={isCuisineFilterApplied}
+            appliedRange={appliedCuisines.length > 0 ? appliedCuisines.join(', ') : null}
+            onToggle={() => toggleDropdown('cuisine')}
+            onClear={handleClearCuisineFilter}
+          >
+            {showCuisineDropdown && (
+              <CuisineFilter
+                appliedCuisines={appliedCuisines}
+                onCuisineChange={handleCuisineChange}
+              />
+            )}
+          </FilterButton>
+
+          <FilterButton
+            label={
+              <span className="filter-icon" title="Filter by price">
+                <i className="fa-solid fa-dollar-sign" aria-hidden="true"></i>
+              </span>
+            }
+            isActive={showPriceDropdown}
+            isApplied={isPriceFilterApplied}
+            appliedRange={isPriceFilterApplied ? `$${appliedPriceMin} - $${appliedPriceMax}` : null}
+            onToggle={() => toggleDropdown('price')}
+            onClear={handleClearPriceFilter}
+          >
+            {showPriceDropdown && (
+              <RangeFilter
+                type="price"
+                valueMin={priceMin}
+                valueMax={priceMax}
+                onChangeMin={setPriceMin}
+                onChangeMax={setPriceMax}
+                onApply={handleApplyPrice}
+                formatDisplay={(min, max) => `$${min} - $${max}`}
+                formatSliderValue={(val) => `$${val}`}
+              />
+            )}
+          </FilterButton>
+
+          <FilterButton
+            label={
+              <span className="filter-icon" title="Filter by distance">
+                <i className="fa-solid fa-location-dot" aria-hidden="true"></i>
+              </span>
+            }
+            isActive={showDistanceDropdown}
+            isApplied={isDistanceFilterApplied}
+            appliedRange={isDistanceFilterApplied ? `Up to ${appliedDistanceMax} miles` : null}
+            onToggle={() => toggleDropdown('distance')}
+            onClear={handleClearDistanceFilter}
+          >
+            {showDistanceDropdown && (
+              <RangeFilter
+                type="distance"
+                valueMax={distanceMax}
+                onChangeMax={setDistanceMax}
+                onApply={handleApplyDistance}
+                formatDisplay={(max) => `Up to ${max} miles`}
+                formatSliderValue={(val) => `${val} miles`}
+                singleHandle={true}
+              />
+            )}
+          </FilterButton>
+        </div>
+      </div>
+      <div className="map-controls">
+        <button
+          type="button"
+          className="view-toggle-button"
+          onClick={() => navigate('/restaurants')}
+        >
+          View on list
+        </button>
+      </div>
       <MapContainer
         center={VTCampus}
         zoom={13}
@@ -134,7 +308,7 @@ function RestaurantMap() {
         </Marker>
 
         {/* Restaurant Markers */}
-        {restaurants.map((restaurant) => {
+        {filteredRestaurants.map((restaurant) => {
           const restaurantIcon = createRestaurantIcon(restaurant)
           const lat = restaurant.y
           const lon = restaurant.x
