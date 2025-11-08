@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Pagination } from '@mui/material'
 import './RestaurantList.css'
-import { fetchRestaurants, transformRestaurantData } from '../../api/restaurants.js'
+import { fetchRestaurants, transformRestaurantData, getRestaurantTags } from '../../api/restaurants.js'
 import SearchBar from './components/SearchBar.jsx'
 import RestaurantCard from './components/RestaurantCard.jsx'
 import Header from './components/Header.jsx'
@@ -24,6 +24,7 @@ function RestaurantList() {
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+  const [cuisineTypes, setCuisineTypes] = useState([]);
 
   // Custom hooks for dropdowns and filters
   const {
@@ -104,6 +105,15 @@ function RestaurantList() {
 
     loadRestaurants()
   }, [])
+
+  useEffect(() => {
+    const fetchCuisineTypes = async () => {
+      const data = await getRestaurantTags();
+    debugger
+      setCuisineTypes(data);
+    };
+    fetchCuisineTypes();
+  }, []);
 
   const filteredRestaurants = useMemo(() => {
     let result = [...restaurants];
@@ -187,6 +197,7 @@ function RestaurantList() {
             >
               {showCuisineDropdown && (
                 <CuisineFilter
+                  cuisineTypes={cuisineTypes}
                   appliedCuisines={appliedCuisines}
                   onCuisineChange={handleCuisineChange}
                 />
