@@ -30,6 +30,7 @@
   border-bottom: 1px solid #e0e0e0;
   position: relative;
   overflow: hidden;
+  overscroll-behavior-x: none; /* Prevent browser navigation */
 }
 
 /* Promo Tag Badge Styles - Top Left */
@@ -85,10 +86,13 @@
   position: absolute;
   top: 0;
   left: 0;
+  overscroll-behavior-x: none; /* Prevent browser navigation */
+  touch-action: pan-x pan-y; /* Allow horizontal panning */
 }
 
 .restaurant-image .swiper-wrapper {
   height: 100%;
+  overscroll-behavior-x: none; /* Prevent browser navigation */
 }
 
 .restaurant-image .swiper-slide {
@@ -105,6 +109,11 @@
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+/* Hide Swiper pagination dots */
+.restaurant-image .swiper-pagination {
+  display: none;
 }
 
 .image-placeholder {
