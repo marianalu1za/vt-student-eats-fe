@@ -98,40 +98,40 @@
   gap: 12px;
 }
 
-.login-btn {
+.login-btn,
+.create-account-btn {
   padding: 8px 16px;
-  background-color: transparent;
-  color: #f0dcd7;
-  border: 1px solid #f0dcd7;
-  background-color: #d0431a;
   border-radius: 6px;
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s;
+  text-decoration: none;
+  display: inline-block;
+  border: 1px solid;
+}
+
+.login-btn {
+  background-color: #d0431a;
+  color: #f0dcd7;
+  border-color: #f0dcd7;
 }
 
 .login-btn:hover {
   background-color: #f0dcd7;
   color: #d0431a;
-  border: #d0431a;
+  border-color: #d0431a;
 }
 
 .create-account-btn {
-  padding: 8px 16px;
   background-color: white;
   color: #d0431a;
-  border: 1px solid white;
-  border-radius: 6px;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.3s;
+  border-color: white;
 }
 
 .create-account-btn:hover {
   color: white;
   background-color: #d0431a;
-  border: 1px solid white;
+  border-color: white;
 }
 

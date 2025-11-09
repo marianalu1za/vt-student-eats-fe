@@ -2,7 +2,7 @@
  * API utility for fetching restaurant data from the backend
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 /**
  * Fetches all restaurants from the backend API
