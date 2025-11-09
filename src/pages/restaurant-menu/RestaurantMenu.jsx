@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import './RestaurantMenu.css'
+import '../restaurants/components/Skeleton.css'
 import Header from '../restaurants/components/Header.jsx'
 import { fetchRestaurant, fetchMenuItems } from '../../api/restaurants.js'
 import { getDetailImage } from '../../utils/imageUtils.js'
+import { MenuItemSkeleton, PopularItemSkeleton } from '../restaurants/components/skeletons'
 
 // Format open hours for display
 function formatOpenHours(openHours) {
@@ -45,7 +47,7 @@ function RestaurantMenu() {
   const [menuError, setMenuError] = useState(null)
 
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('Hamburger')
+  const [selectedCategory, setSelectedCategory] = useState('All')
 
   useEffect(() => {
     if (!id) {
@@ -91,19 +93,154 @@ function RestaurantMenu() {
     fetchData()
   }, [id])
 
+  const getTagNames = (item) => {
+    const tagNames = []
+    
+    // Check for tags array
+    if (item.tags && Array.isArray(item.tags)) {
+      item.tags.forEach(tag => {
+        const tagName = typeof tag === 'string' ? tag : (tag.name || tag)
+        if (tagName) tagNames.push(tagName.toLowerCase())
+      })
+    }
+    // Check single tag field
+    if (item.tags) {
+      const tagName = typeof item.tags === 'string' ? item.tags : (item.tags.name || item.tags)
+      if (tagName) tagNames.push(tagName.toLowerCase())
+    }
+    // Check category field
+    if (item.category) {
+      const categoryName = typeof item.category === 'string' ? item.category : (item.category.name || item.category)
+      if (categoryName) tagNames.push(categoryName.toLowerCase())
+    }
+    // Check for category_name field
+    if (item.category_name) {
+      tagNames.push(item.category_name.toLowerCase())
+    }
+    // Check for categoryName field
+    if (item.categoryName) {
+      tagNames.push(item.categoryName.toLowerCase())
+    }
+    // Check for type field
+    if (item.type) {
+      const typeName = typeof item.type === 'string' ? item.type : (item.type.name || item.type)
+      if (typeName) tagNames.push(typeName.toLowerCase())
+    }
+    
+    return tagNames
+  }
+
+  const filteredMenuItems = useMemo(() => {
+    let results = [...(menuItems ?? [])]
+    const lowerSearchQuery = (searchQuery ?? '').toLowerCase()
+    results = (menuItems ?? []).filter(item => (item.name ?? '').toLowerCase().includes(lowerSearchQuery) 
+        || (item.description ?? '').toLowerCase().includes(lowerSearchQuery) 
+        || (getTagNames(item).some(tag => tag.includes(lowerSearchQuery)))
+      )
+
+    if (selectedCategory && selectedCategory !== 'All') {
+      results = results.filter(item => getTagNames(item).includes(selectedCategory.toLowerCase()))
+    }
+    return results;
+  }, [menuItems, searchQuery, selectedCategory])
+
+  const categories = useMemo(() => {
+    let results = [...(menuItems ?? [])]
+    const resultSet = new Set()
+    for (const item of results) {
+      const tagNames = getTagNames(item)
+      for (const tagName of tagNames) {
+        resultSet.add(tagName)
+      }
+    }
+
+    return ['All'].concat(Array.from(resultSet).sort());
+  }, [menuItems])
+
   // Loading state
   if (restaurantLoading || menuLoading) {
     return (
       <div className="restaurant-menu-wrapper">
         <Header />
-        <div className="restaurant-menu-page">
-          <Link to="/" className="back-button">
-            <i className="fa-solid fa-arrow-left"></i>
-          </Link>
-          <div className="loading-message">
-            <p>Loading restaurant...</p>
+        <main className="restaurant-menu-page">
+          {/* Top Container with Gray Background */}
+          <div className="restaurant-top-container">
+            <div className="restaurant-top-content">
+              {/* Back Button */}
+              <Link to="/" className="back-button">
+                <i className="fa-solid fa-arrow-left"></i>
+              </Link>
+
+              {/* Restaurant Header Skeleton */}
+              <section className="restaurant-header-section">
+                <div className="restaurant-image-container">
+                  <div className="skeleton skeleton-image"></div>
+                </div>
+                
+                <div className="restaurant-main-info">
+                  <div className="restaurant-name-rating">
+                    <div className="skeleton skeleton-title"></div>
+                    <div className="skeleton skeleton-badge"></div>
+                  </div>
+                  <div className="skeleton-tags">
+                    <div className="skeleton skeleton-tag"></div>
+                    <div className="skeleton skeleton-tag"></div>
+                    <div className="skeleton skeleton-tag"></div>
+                  </div>
+                  <div className="restaurant-details">
+                    <div className="skeleton skeleton-text"></div>
+                    <div className="skeleton skeleton-text"></div>
+                    <div className="skeleton skeleton-text"></div>
+                    <div className="action-buttons-section">
+                      <div className="skeleton skeleton-button"></div>
+                      <div className="skeleton skeleton-button"></div>
+                      <div className="skeleton skeleton-button"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <aside className="open-hours-card">
+                  <div className="skeleton skeleton-hours-title"></div>
+                  <div className="skeleton skeleton-hours-item"></div>
+                  <div className="skeleton skeleton-hours-item"></div>
+                  <div className="skeleton skeleton-hours-item"></div>
+                </aside>
+              </section>
+            </div>
           </div>
-        </div>
+
+          {/* Popular Items Section Skeleton */}
+          <section className="popular-items-section">
+            <div className="search-section">
+              <div className="menu-search-container">
+                <div className="skeleton skeleton-search"></div>
+              </div>
+            </div>
+            <div className="skeleton skeleton-section-title"></div>
+            <div className="popular-items-scroll">
+              {[1, 2, 3].map((i) => (
+                <PopularItemSkeleton key={i} />
+              ))}
+            </div>
+          </section>
+
+          {/* Menu Section Skeleton */}
+          <section className="menu-section">
+            <div className="skeleton skeleton-section-title"></div>
+            <div className="category-filter-container">
+              <div className="categories-scroll">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="skeleton skeleton-category-button"></div>
+                ))}
+              </div>
+            </div>
+            <div className="menu-items-scroll">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <MenuItemSkeleton key={i} />
+              ))}
+            </div>
+          </section>
+        </main>
       </div>
     )
   }
@@ -126,8 +263,6 @@ function RestaurantMenu() {
       </div>
     )
   }
-
-  const categories = ['Hamburger', 'Salad', 'Soft Drinks', 'Coffee', 'Grain Bowl']
   
   // Mock data - replace with actual data later
   const popularItems = [
@@ -156,83 +291,6 @@ function RestaurantMenu() {
     { id: 14, restaurantId: 4, name: 'Belgian Waffle', description: 'Crispy golden waffle', price: '$8.29', image: '🧇' },
     { id: 15, restaurantId: 4, name: 'Breakfast Platter', description: 'Eggs, bacon, and hash browns', price: '$9.50', image: '🍳' }
   ];
-  
-
-  // Helper function to extract all tag names from a menu item
-  const getTagNames = (item) => {
-    const tagNames = []
-    
-    // Check for tags array
-    if (item.tags && Array.isArray(item.tags)) {
-      item.tags.forEach(tag => {
-        const tagName = typeof tag === 'string' ? tag : (tag.name || tag)
-        if (tagName) tagNames.push(tagName.toLowerCase())
-      })
-    }
-    // Check single tag field
-    if (item.tag) {
-      const tagName = typeof item.tag === 'string' ? item.tag : (item.tag.name || item.tag)
-      if (tagName) tagNames.push(tagName.toLowerCase())
-    }
-    // Check category field
-    if (item.category) {
-      const categoryName = typeof item.category === 'string' ? item.category : (item.category.name || item.category)
-      if (categoryName) tagNames.push(categoryName.toLowerCase())
-    }
-    // Check for category_name field
-    if (item.category_name) {
-      tagNames.push(item.category_name.toLowerCase())
-    }
-    // Check for categoryName field
-    if (item.categoryName) {
-      tagNames.push(item.categoryName.toLowerCase())
-    }
-    // Check for type field
-    if (item.type) {
-      const typeName = typeof item.type === 'string' ? item.type : (item.type.name || item.type)
-      if (typeName) tagNames.push(typeName.toLowerCase())
-    }
-    
-    return tagNames
-  }
-
-  // Helper function to check if item matches selected category
-  const matchesCategory = (item) => {
-    if (!selectedCategory || selectedCategory === 'All') return true
-    
-    const tagNames = getTagNames(item)
-    return tagNames.includes(selectedCategory.toLowerCase())
-  }
-
-  // Helper function to check if item matches search query
-  const matchesSearch = (item) => {
-    if (!searchQuery.trim()) return true
-    
-    const query = searchQuery.toLowerCase().trim()
-    
-    // Search in name
-    if (item.name && item.name.toLowerCase().includes(query)) {
-      return true
-    }
-    
-    // Search in description
-    if (item.description && item.description.toLowerCase().includes(query)) {
-      return true
-    }
-    
-    // Search in tags
-    const tagNames = getTagNames(item)
-    if (tagNames.some(tag => tag.includes(query))) {
-      return true
-    }
-    
-    return false
-  }
-
-  // Filter menu items by selected category and search query
-  const filteredMenuItems = menuItems
-    ? menuItems.filter(item => matchesCategory(item) && matchesSearch(item))
-    : null
 
   // Helper function to format price with $ prefix
   const formatPrice = (price) => {
@@ -546,18 +604,22 @@ function RestaurantMenu() {
 
           {/* Menu Items */}
           <div className="menu-items-scroll">
-            {menuItems && menuItems.map((item) => (
-              <article key={item.id} className="menu-item-card">
-                <div className="item-image-placeholder">
-                  <span className="item-image-icon">{getItemEmoji(item)}</span>
-                </div>
-                <div className="item-info">
-                  <h4 className="item-name">{item.name}</h4>
-                  <p className="item-description">{item.description}</p>
-                  <p className="item-price">{formatPrice(item.price)}</p>
-                </div>
-              </article>
-            ))}
+            {!menuLoading && !menuError && (
+              <>
+              {filteredMenuItems && filteredMenuItems.map((item) => (
+                <article key={item.id} className="menu-item-card">
+                  <div className="item-image-placeholder">
+                    <span className="item-image-icon">{getItemEmoji(item)}</span>
+                  </div>
+                  <div className="item-info">
+                    <h4 className="item-name">{item.name}</h4>
+                    <p className="item-description">{item.description}</p>
+                    <p className="item-price">{formatPrice(item.price)}</p>
+                  </div>
+                </article>
+              ))}
+              </>
+            )}
           </div>
         </section>
       </main>

@@ -339,6 +339,7 @@
   gap: 0.75rem;
   margin-top: 1rem;
   margin-bottom: 0;
+  align-items: stretch;
 }
 
 .action-button {
@@ -352,6 +353,9 @@
   text-decoration: none;
   display: inline-block;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .action-button:hover {
@@ -557,6 +561,7 @@
   overflow-x: auto;
   scroll-behavior: smooth;
   padding-bottom: 0.5rem;
+  max-width: 89.5%;
 }
 
 .categories-scroll::-webkit-scrollbar {
@@ -794,6 +799,9 @@
     text-align: center;
     padding: 0.625rem 1.25rem;
     font-size: 0.8125rem;
+    box-sizing: border-box;
+    flex: 1 1 100%;
+    min-width: 0;
   }
 
   .menu-search-container {
@@ -849,6 +857,7 @@
     font-size: 0.8125rem;
   }
 }
+
 
 /* Tablet and medium screens */
 @media (min-width: 768px) and (max-width: 1023px) {
