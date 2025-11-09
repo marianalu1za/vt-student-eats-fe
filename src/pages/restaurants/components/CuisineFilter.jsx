@@ -1,10 +1,10 @@
-import { CUISINE_TYPES } from '../constants'
-import './CuisineFilter.css'
+import "./CuisineFilter.css";
 
-function CuisineFilter({ appliedCuisines, onCuisineChange }) {
+function CuisineFilter({ cuisineTypes, appliedCuisines, onCuisineChange }) {
+  debugger
   return (
     <div className="filter-dropdown">
-      {CUISINE_TYPES.map((cuisine) => (
+      {cuisineTypes.map((cuisine) => (
         <label key={cuisine} className="filter-option">
           <input
             type="checkbox"
@@ -15,8 +15,7 @@ function CuisineFilter({ appliedCuisines, onCuisineChange }) {
         </label>
       ))}
     </div>
-  )
+  );
 }
 
-export default CuisineFilter
-
+export default CuisineFilter;

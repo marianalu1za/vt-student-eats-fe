@@ -3,10 +3,7 @@ import { PRICE_RANGE, DISTANCE_RANGE } from '../constants'
 
 export function useFilters() {
   // Price range state
-  const [priceMin, setPriceMin] = useState(PRICE_RANGE.DEFAULT_MIN)
-  const [priceMax, setPriceMax] = useState(PRICE_RANGE.DEFAULT_MAX)
-  const [appliedPriceMin, setAppliedPriceMin] = useState(PRICE_RANGE.DEFAULT_MIN)
-  const [appliedPriceMax, setAppliedPriceMax] = useState(PRICE_RANGE.DEFAULT_MAX)
+  const [appliedPriceLevels, setAppliedPriceLevels] = useState([])
 
   // Distance state (only max, min is always 0)
   const [distanceMax, setDistanceMax] = useState(DISTANCE_RANGE.DEFAULT_MAX)
@@ -16,9 +13,12 @@ export function useFilters() {
   const [appliedCuisines, setAppliedCuisines] = useState([])
 
   // Apply price filter
-  const applyPriceFilter = () => {
-    setAppliedPriceMin(priceMin)
-    setAppliedPriceMax(priceMax)
+  const handlePriceLevelChange = (priceLevel) => {
+    const newSelectedPriceLevels = appliedPriceLevels.includes(priceLevel)
+      ? appliedPriceLevels.filter((c) => c !== priceLevel)
+      : [...appliedPriceLevels, priceLevel]
+    
+    setAppliedPriceLevels(newSelectedPriceLevels)
   }
 
   // Apply distance filter
@@ -41,10 +41,7 @@ export function useFilters() {
   }
 
   const clearPriceFilter = () => {
-    setAppliedPriceMin(PRICE_RANGE.DEFAULT_MIN)
-    setAppliedPriceMax(PRICE_RANGE.DEFAULT_MAX)
-    setPriceMin(PRICE_RANGE.DEFAULT_MIN)
-    setPriceMax(PRICE_RANGE.DEFAULT_MAX)
+    setAppliedPriceLevels([])
   }
 
   const clearDistanceFilter = () => {
@@ -53,19 +50,14 @@ export function useFilters() {
   }
 
   // Check if filters are applied
-  const isPriceFilterApplied = appliedPriceMin !== PRICE_RANGE.DEFAULT_MIN || appliedPriceMax !== PRICE_RANGE.DEFAULT_MAX
+  const isPriceFilterApplied = appliedPriceLevels.length > 0
   const isDistanceFilterApplied = appliedDistanceMax !== DISTANCE_RANGE.DEFAULT_MAX
   const isCuisineFilterApplied = appliedCuisines.length > 0
 
   return {
     // Price state
-    priceMin,
-    priceMax,
-    setPriceMin,
-    setPriceMax,
-    appliedPriceMin,
-    appliedPriceMax,
-    applyPriceFilter,
+    appliedPriceLevels,
+    handlePriceLevelChange,
     clearPriceFilter,
     isPriceFilterApplied,
     
