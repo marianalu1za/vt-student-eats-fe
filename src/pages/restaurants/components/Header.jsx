@@ -11,10 +11,12 @@ function Header() {
       <header className="header">
         <div className="header-content">
         <div className="header-left">
+          <Link to="/" className="header-logo-link">
             <div className="logo">
               <img src="/images/logo.png" alt="VT Student Eats Logo" />
             </div>
             <span className="site-title">VT Student Eats</span>
+          </Link>
         </div>
         <div className="header-right">
             {isLoggedIn ? (
