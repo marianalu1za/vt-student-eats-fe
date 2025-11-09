@@ -25,6 +25,7 @@ function RestaurantMap() {
   const VTCampus = [38.837553, -77.048676]
   const [restaurants, setRestaurants] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
+  const [userLocation, setUserLocation] = useState(null)
   const [cuisineTypes, setCuisineTypes] = useState([])
   const navigate = useNavigate()
 
@@ -77,8 +78,13 @@ function RestaurantMap() {
       try {
         const apiData = await fetchRestaurants()
         const transformedData = transformRestaurantData(apiData)
-        const userLocation = await getUserLocation()
-        changeTransformedData(transformedData, userLocation)
+        const locationResult = await getUserLocation()
+        changeTransformedData(transformedData, locationResult)
+        if (locationResult?.source === 'browser') {
+          setUserLocation([locationResult.lat, locationResult.lng])
+        } else {
+          setUserLocation(null)
+        }
         const withCoordinates = transformedData.filter((restaurant) => {
           const lat = restaurant.yCoordinate
           const lon = restaurant.xCoordinate
@@ -231,6 +237,14 @@ function RestaurantMap() {
     })
   }
 
+  const userLocationIcon = divIcon({
+    className: 'custom-user-location-icon',
+    html: '<div class="user-location-icon"><div class="user-location-inner"></div></div>',
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    popupAnchor: [0, -18]
+  })
+
   return (
     <div className="restaurant-map-wrapper">
       <div className="map-toolbar">
@@ -343,6 +357,11 @@ function RestaurantMap() {
             </div>
           </Popup>
         </Marker>
+
+        {userLocation && (
+          <Marker position={userLocation} icon={userLocationIcon}>
+          </Marker>
+        )}
 
         {/* Restaurant Markers */}
         {filteredRestaurants.map((restaurant) => {
