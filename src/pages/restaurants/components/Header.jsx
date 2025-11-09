@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import './Header.css'
 
 function Header() {
@@ -23,8 +24,8 @@ function Header() {
               </>
             ) : (
               <div className="auth-buttons">
-                <button className="login-btn">Login</button>
-                <button className="create-account-btn">Create Account</button>
+                <Link to="/login" className="login-btn">Login</Link>
+                <Link to="/create-account" className="create-account-btn">Create Account</Link>
               </div>
             )}
           </div>
