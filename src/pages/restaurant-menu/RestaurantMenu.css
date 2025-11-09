@@ -454,25 +454,9 @@
 
 .popular-items-scroll {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
-  overflow-x: auto;
-  scroll-behavior: smooth;
   padding-bottom: 0.5rem;
-  -webkit-overflow-scrolling: touch;
-}
-
-.popular-items-scroll::-webkit-scrollbar {
-  height: 6px;
-}
-
-.popular-items-scroll::-webkit-scrollbar-track {
-  background: #f0f0f0;
-  border-radius: 3px;
-}
-
-.popular-items-scroll::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 3px;
 }
 
 .popular-item-card {
@@ -619,25 +603,9 @@
 
 .menu-items-scroll {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
-  overflow-x: auto;
-  scroll-behavior: smooth;
   padding-bottom: 0.5rem;
-  -webkit-overflow-scrolling: touch;
-}
-
-.menu-items-scroll::-webkit-scrollbar {
-  height: 6px;
-}
-
-.menu-items-scroll::-webkit-scrollbar-track {
-  background: #f0f0f0;
-  border-radius: 3px;
-}
-
-.menu-items-scroll::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 3px;
 }
 
 .menu-item-card {

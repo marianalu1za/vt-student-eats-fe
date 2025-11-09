@@ -46,6 +46,102 @@ export async function fetchRestaurants() {
 }
 
 /**
+ * Fetches a single restaurant by ID from the backend API
+ * @param {string|number} id - The restaurant ID
+ * @returns {Promise<Object>} Restaurant object
+ * @throws {Error} If the restaurant is not found (404) or other HTTP errors occur
+ */
+export async function fetchRestaurant(id) {
+  const url = `${API_BASE_URL}/api/restaurants/${id}/`
+  
+  try {
+    console.log('Fetching restaurant from:', url)
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('API Error Response:', errorText)
+      
+      if (response.status === 404) {
+        throw new Error(`Restaurant not found: ${errorText}`)
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
+    }
+
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error('Error fetching restaurant:', error)
+    
+    // Provide more specific error messages
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error(
+        `Failed to connect to backend API at ${url}. ` +
+        `Please ensure the backend server is running at http://localhost:8000. ` +
+        `This might be a CORS issue or the server is not running.`
+      )
+    }
+    
+    throw error
+  }
+}
+
+/**
+ * Fetches menu items for a specific restaurant from the backend API
+ * @param {string|number} restaurantId - The restaurant ID to fetch menu items for
+ * @returns {Promise<Array>} Array of menu item objects
+ * @throws {Error} If menu items are not found (404) or other HTTP errors occur
+ */
+export async function fetchMenuItems(restaurantId) {
+  const url = `${API_BASE_URL}/api/menu-items?restaurant_id=${restaurantId}`
+  
+  try {
+    console.log('Fetching menu items from:', url)
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('API Error Response:', errorText)
+      
+      if (response.status === 404) {
+        throw new Error(`Menu items not found: ${errorText}`)
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
+    }
+
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error('Error fetching menu items:', error)
+    
+    // Provide more specific error messages
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error(
+        `Failed to connect to backend API at ${url}. ` +
+        `Please ensure the backend server is running at http://localhost:8000. ` +
+        `This might be a CORS issue or the server is not running.`
+      )
+    }
+    
+    throw error
+  }
+}
+
+/**
  * Transforms API restaurant data to match component expectations
  * @param {Array} apiRestaurants - Array of restaurants from API
  * @returns {Array} Transformed array of restaurants
