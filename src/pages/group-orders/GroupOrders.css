@@ -1,0 +1,281 @@
+html,
+body {
+  height: 100%;
+  background-color: #ebcfca;
+}
+
+.group-orders-wrapper {
+  min-height: 100vh;
+  background-color: #ebcfca;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+.group-orders-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px 40px;
+}
+
+/* Hero / top section */
+
+.group-orders-hero {
+  background-color: transparent;
+  margin-bottom: 24px;
+}
+
+.group-orders-hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.group-orders-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: #333;
+}
+
+.group-orders-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.group-orders-pill-button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: none;
+  background-color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  color: #444;
+  cursor: pointer;
+}
+
+.group-orders-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background-color: #d9d9d9;
+}
+
+.group-orders-primary-button {
+  margin-top: 8px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  background-color: #6a283c;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.group-orders-primary-button:hover {
+  background-color: #7a384c;
+}
+
+.group-orders-primary-button:active {
+  transform: scale(0.98);
+}
+
+/* How it works section */
+
+.group-orders-how {
+  background-color: #e1b9b1;
+  border-radius: 12px;
+  padding: 16px 18px 14px;
+  margin-bottom: 24px;
+}
+
+.group-orders-how h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.group-orders-steps {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.group-orders-step {
+  max-width: 220px;
+  font-size: 12px;
+  color: #555;
+}
+
+.step-bar {
+  width: 80px;
+  height: 6px;
+  border-radius: 999px;
+  background-color: #d0a39a;
+  margin-bottom: 6px;
+}
+
+/* Summary pills */
+
+.group-orders-summary {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.summary-pill {
+  min-width: 140px;
+  padding: 12px 16px;
+  border-radius: 999px;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.summary-label {
+  font-size: 11px;
+  color: #777;
+}
+
+.summary-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Filter pills */
+
+.group-orders-filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.status-pill {
+  padding: 6px 18px;
+  border-radius: 999px;
+  border: none;
+  font-size: 13px;
+  background-color: #d3b4ad;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.status-pill-active {
+  background-color: #6a283c;
+  color: #ffffff;
+}
+
+/* Group cards grid */
+
+.group-orders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 320px));
+  gap: 18px;
+  margin-top: 4px;
+  justify-content: flex-start; /* keeps them aligned left instead of stretched */
+}
+
+.group-card {
+  background-color: #c7a39b;
+  border-radius: 8px;
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* optional: subtle shadow so they pop a bit more */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+
+.group-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.group-card-restaurant {
+  font-size: 22px;  /* was 16 */
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.group-card-body {
+  font-size: 15px;  /* was 12 */
+  line-height: 1.5;
+  color: #fdfdfd;
+}
+
+
+/* .group-card-label span {
+  font-weight: 500;
+} */
+
+.group-card-label {
+  margin: 0;
+  font-size: 15px;
+  color: #f5f5f5;
+  font-weight: 600;
+}
+
+.group-card-label span {
+  font-weight: 400;
+  color: #ffffff;
+  margin-left: 2px;
+}
+
+.spots-full {
+  color: #2b2b2b;
+  font-weight: 600;
+}
+
+.group-card-join-button {
+  margin-top: 8px;
+  align-self: flex-start;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  background-color: #ffffff;
+  color: #333;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.group-card-join-button:hover:not(:disabled) {
+  background-color: #f3e5e1;
+}
+
+.group-card-join-button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.group-card-join-button:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.group-orders-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 13px;
+  color: #555;
+  padding: 18px 0;
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .group-orders-grid {
+    grid-template-columns: 1fr;
+  }
+}
