@@ -1,3 +1,44 @@
+.auth-field-with-toggle {
+  position: relative;
+}
+
+.auth-password-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.auth-password-container input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.auth-toggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  z-index: 1;
+}
+
+.auth-toggle:hover {
+  color: #e68060;
+}
+
+.auth-eye-icon {
+  width: 20px;
+  height: 20px;
+}
 .auth-wrapper {
   background-color: #ebcfca;
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -45,10 +86,26 @@
   margin-top: 6px;
 }
 
+.auth-inline-fields {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.auth-inline-fields .auth-field {
+  flex: 1;
+  min-width: 140px;
+}
+
 .auth-field {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  position: relative;
+}
+
+.auth-field-compact {
+  margin-top: -6px;
 }
 
 .auth-field label {
@@ -73,6 +130,39 @@
   border-color: #e68060;
   box-shadow: 0 0 0 3px rgba(230, 128, 96, 0.2);
   background: #ffffff;
+}
+
+.auth-field input:disabled {
+  background: #f3f3f3;
+  border-color: #dddddd;
+  color: #9a9a9a;
+  cursor: not-allowed;
+}
+
+.auth-field.has-success input {
+  border-color: #51a351;
+  box-shadow: 0 0 0 3px rgba(81, 163, 81, 0.18);
+}
+
+.auth-icon {
+  position: absolute;
+  top: 36px;
+  right: 12px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: #51a351;
+}
+
+.auth-field.has-success .auth-icon {
+  display: inline-flex;
+}
+
+.auth-check-icon {
+  width: 18px;
+  height: 18px;
 }
 
 /* Remember + Forgot row */
@@ -120,6 +210,44 @@
   transform: translateY(0);
   box-shadow: none;
   opacity: 0.93;
+}
+
+.auth-btn:disabled {
+  background: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+.auth-btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.auth-error {
+  margin-top: 0;
+  padding-top: 0px;
+  font-size: 0.78rem;
+  color: #d64545;
+  text-align: center;
+  min-height: 1.1em;
+  transition: opacity 0.16s ease;
+}
+
+.auth-error-inline {
+  text-align: left;
+  margin-bottom: 0;
+}
+
+.auth-error.is-hidden {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.auth-error.is-visible {
+  visibility: visible;
+  opacity: 1;
 }
 
 .auth-link {
