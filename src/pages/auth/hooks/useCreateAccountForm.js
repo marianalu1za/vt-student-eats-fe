@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createAccount } from '../../../api/auth'
 
 const passwordPattern = /^[A-Za-z0-9!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~]*$/
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -25,7 +26,7 @@ const validatePassword = (password) => {
   return ''
 }
 
-export function useCreateAccountForm() {
+export function useCreateAccountForm(onSuccess) {
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
@@ -35,6 +36,8 @@ export function useCreateAccountForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [passwordError, setPasswordError] = useState('')
   const [emailError, setEmailError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -43,6 +46,7 @@ export function useCreateAccountForm() {
       setForm((prev) => ({ ...prev, email: value }))
       const error = validateEmail(value)
       setEmailError(error)
+      if (submitError) setSubmitError('')
       return
     }
 
@@ -51,10 +55,12 @@ export function useCreateAccountForm() {
       setForm((prev) => ({ ...prev, password: sanitized }))
       const error = validatePassword(sanitized)
       setPasswordError(error)
+      if (submitError) setSubmitError('')
       return
     }
 
     setForm((prev) => ({ ...prev, [name]: value }))
+    if (submitError) setSubmitError('')
   }
 
   const isFormValid = () => {
@@ -63,16 +69,31 @@ export function useCreateAccountForm() {
     return emailValid && passwordValid
   }
 
-  const handleSubmit = (e, onSubmit) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     const emailValidationError = validateEmail(form.email)
     const passwordValidationError = validatePassword(form.password)
     setEmailError(emailValidationError)
     setPasswordError(passwordValidationError)
+    
     if (emailValidationError || passwordValidationError) {
       return
     }
-    onSubmit(form)
+
+    try {
+      setIsLoading(true)
+      setSubmitError('')
+      await createAccount(form)
+      // Call success callback if provided
+      if (onSuccess) {
+        onSuccess(form)
+      }
+    } catch (error) {
+      console.error('Error creating account:', error)
+      setSubmitError(error.message || 'Failed to create account. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return {
@@ -84,6 +105,8 @@ export function useCreateAccountForm() {
     handleChange,
     isFormValid,
     handleSubmit,
+    isLoading,
+    submitError,
   }
 }
 

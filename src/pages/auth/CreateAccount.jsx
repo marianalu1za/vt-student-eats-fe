@@ -13,12 +13,12 @@ function CreateAccount() {
     handleChange,
     isFormValid,
     handleSubmit,
-  } = useCreateAccountForm()
-
-  const onSubmit = (formData) => {
-    // TODO: Handle Create Account Submission Here
-    console.log('Create account form submitted:', formData)
-  }
+    isLoading,
+    submitError,
+  } = useCreateAccountForm(() => {
+    // Success callback - redirect to login page
+    navigate('/login')
+  })
 
   return (
     <div className="auth-wrapper">
@@ -31,7 +31,7 @@ function CreateAccount() {
             </p>
           </div>
 
-          <form className="auth-form" onSubmit={(e) => handleSubmit(e, onSubmit)}>
+          <form className="auth-form" onSubmit={handleSubmit}>
             <div className="auth-inline-fields">
               <div className="auth-field">
                 <label htmlFor="firstName">First name</label>
@@ -117,12 +117,18 @@ function CreateAccount() {
               </p>
             </div>
 
+            {submitError && (
+              <p className="auth-error is-visible" aria-live="polite">
+                {submitError}
+              </p>
+            )}
+
             <button
               type="submit"
               className="auth-btn"
-              disabled={!isFormValid()}
+              disabled={!isFormValid() || isLoading}
             >
-              Create account
+              {isLoading ? 'Creating account...' : 'Create account'}
             </button>
           </form>
 
