@@ -10,7 +10,7 @@ function AboutSection() {
           <p>VT Student Eats connects Virginia Tech Innovation Campus students with affordable dining options.</p>
           <p>Discover restaurants offering student discounts and special promotions near campus.</p>
           <p>
-            <Link to="/grouporders" className="group-orders-link-btn">
+            <Link to="/group-orders" className="group-orders-link-btn">
             Join group orders
             </Link>
             {' '}to save on delivery fees and enjoy meals with friends.
