@@ -25,7 +25,7 @@ export async function fetchGroupOrders() {
     }
 
     const data = await response.json()
-    console.log('Group orders data:', data) // <-- log the result
+    // console.log('Group orders data:', data) // <-- log the result
     return data
   } catch (error) {
     console.error('Error fetching group orders:', error)

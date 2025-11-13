@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Header from '../restaurants/components/Header.jsx'
 import './GroupOrders.css'
 import { fetchGroupOrders } from '../../api/groupOrders.js'
+import CreateGroupOrderForm from './GroupOrderForm.jsx'
 
 // helper: turn API object → card data
 function mapApiOrderToCard(order) {
@@ -30,6 +31,13 @@ function GroupOrders() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [filter, setFilter] = useState('open')    // 'open' | 'full' | 'all'
+  const [showCreateForm, setShowCreateForm] = useState(false)
+
+  const handleCreateSubmit = (data) => {
+    console.log('Create group order data from form:', data)
+    // later: call your POST API here with `data`
+    setShowCreateForm(false) // close form after "submit"
+  }
 
   useEffect(() => {
     async function loadGroupOrders() {
@@ -89,10 +97,22 @@ function GroupOrders() {
           <button
             type="button"
             className="group-orders-primary-button"
+            onClick={() => setShowCreateForm(true)}
           >
             + Create a group order
           </button>
         </section>
+
+
+        {showCreateForm && (
+          <section className="group-orders-create">
+            <CreateGroupOrderForm
+              onSubmit={handleCreateSubmit}
+              onCancel={() => setShowCreateForm(false)}
+            />
+          </section>
+        )}
+
 
         {/* How it works strip */}
         <section className="group-orders-how">
