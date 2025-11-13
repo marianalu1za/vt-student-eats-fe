@@ -13,18 +13,25 @@ let csrfToken = null
  */
 export async function getCsrfToken() {
   try {
+    console.log('Fetching CSRF token from:', `${API_BASE_URL}/api/csrf/`)
+
     const response = await fetch(`${API_BASE_URL}/api/csrf/`, {
       method: 'GET',
       credentials: 'include', // Include cookies for session-based CSRF
     })
-
+    
+    console.log('CSRF token response status:', response.status, response.statusText)
+    
     if (!response.ok) {
-      throw new Error(`Failed to fetch CSRF token: ${response.status}`)
+      const error = new Error('Failed to fetch CSRF token.')
+      error.statusCode = response.status
+      throw error
     }
 
     const data = await response.json()
-    csrfToken = data.csrf_token || data.csrfToken || data.token
-    return csrfToken
+
+    return data.csrfToken
+
   } catch (error) {
     console.error('Error fetching CSRF token:', error)
     throw error
@@ -56,8 +63,9 @@ export async function createAccount(formData) {
     })
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || errorData.error || `Failed to create account: ${response.status}`)
+      const error = new Error('Failed to create account.')
+      error.statusCode = response.status
+      throw error
     }
 
     return await response.json()
@@ -100,4 +108,3 @@ export async function login(credentials) {
     throw error
   }
 }
-
