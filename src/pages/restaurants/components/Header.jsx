@@ -1,10 +1,13 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import './Header.css'
 
 function Header() {
   // TODO: Replace with actual authentication state from context/API
   const [isLoggedIn] = useState(false) // Set to false to show visitor view by default
+  const location = useLocation()
+  const isLoginPage = location.pathname === '/login'
+  const isCreateAccountPage = location.pathname === '/create-account'
 
   return (
     <>
@@ -26,8 +29,12 @@ function Header() {
               </>
             ) : (
               <div className="auth-buttons">
-                <Link to="/login" className="login-btn">Login</Link>
-                <Link to="/create-account" className="create-account-btn">Create Account</Link>
+                {!isLoginPage && (
+                  <Link to="/login" className="login-btn">Login</Link>
+                )}
+                {!isCreateAccountPage && (
+                  <Link to="/create-account" className="create-account-btn">Create Account</Link>
+                )}
               </div>
             )}
           </div>
