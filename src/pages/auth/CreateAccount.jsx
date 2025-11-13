@@ -11,6 +11,8 @@ function CreateAccount() {
     setShowPassword,
     passwordError,
     emailError,
+    firstNameError,
+    lastNameError,
     handleChange,
     isFormValid,
     handleSubmit,
@@ -47,6 +49,14 @@ function CreateAccount() {
                   onChange={handleChange}
                   required
                 />
+                <p
+                  className={`auth-error auth-error-inline ${
+                    firstNameError ? 'is-visible' : 'is-hidden'
+                  }`}
+                  aria-live="polite"
+                >
+                  {firstNameError || '\u00A0'}
+                </p>
               </div>
 
               <div className="auth-field">
@@ -60,16 +70,41 @@ function CreateAccount() {
                   onChange={handleChange}
                   required
                 />
+                <p
+                  className={`auth-error auth-error-inline ${
+                    lastNameError ? 'is-visible' : 'is-hidden'
+                  }`}
+                  aria-live="polite"
+                >
+                  {lastNameError || '\u00A0'}
+                </p>
               </div>
             </div>
 
             <div className="auth-field">
-              <label htmlFor="email">Virginia Tech Email</label>
+              <label htmlFor="role">Role</label>
+              <select
+                id="role"
+                name="role"
+                value={form.role}
+                onChange={handleChange}
+                className="auth-select"
+                required
+              >
+                <option value="vt_staff_students">VT staff/students</option>
+                <option value="restaurant_owner">Restaurant manager</option>
+              </select>
+            </div>
+
+            <div className="auth-field">
+              <label htmlFor="email">
+                {form.role === 'restaurant_owner' ? 'Email' : 'Virginia Tech Email'}
+              </label>
               <input
                 id="email"
                 name="email"
                 type="email"
-                placeholder="student@vt.edu"
+                placeholder={form.role === 'restaurant_owner' ? 'your@email.com' : 'student@vt.edu'}
                 value={form.email}
                 onChange={handleChange}
                 required
