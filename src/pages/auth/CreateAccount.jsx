@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useCreateAccountForm } from './hooks/useCreateAccountForm'
+import ErrorPopup from './components/ErrorPopup'
 import './Auth.css'
 
 function CreateAccount() {
@@ -15,6 +16,8 @@ function CreateAccount() {
     handleSubmit,
     isLoading,
     submitError,
+    showErrorPopup,
+    closeErrorPopup,
   } = useCreateAccountForm(() => {
     // Success callback - redirect to login page
     navigate('/login')
@@ -117,12 +120,6 @@ function CreateAccount() {
               </p>
             </div>
 
-            {submitError && (
-              <p className="auth-error is-visible" aria-live="polite">
-                {submitError}
-              </p>
-            )}
-
             <button
               type="submit"
               className="auth-btn"
@@ -144,6 +141,13 @@ function CreateAccount() {
           </div>
         </div>
       </div>
+
+      {showErrorPopup && (
+        <ErrorPopup
+          message={submitError}
+          onClose={closeErrorPopup}
+        />
+      )}
     </div>
   )
 }

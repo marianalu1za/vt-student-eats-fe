@@ -38,6 +38,7 @@ export function useCreateAccountForm(onSuccess) {
   const [emailError, setEmailError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [showErrorPopup, setShowErrorPopup] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -46,7 +47,10 @@ export function useCreateAccountForm(onSuccess) {
       setForm((prev) => ({ ...prev, email: value }))
       const error = validateEmail(value)
       setEmailError(error)
-      if (submitError) setSubmitError('')
+      if (submitError) {
+        setSubmitError('')
+        setShowErrorPopup(false)
+      }
       return
     }
 
@@ -55,12 +59,18 @@ export function useCreateAccountForm(onSuccess) {
       setForm((prev) => ({ ...prev, password: sanitized }))
       const error = validatePassword(sanitized)
       setPasswordError(error)
-      if (submitError) setSubmitError('')
+      if (submitError) {
+        setSubmitError('')
+        setShowErrorPopup(false)
+      }
       return
     }
 
     setForm((prev) => ({ ...prev, [name]: value }))
-    if (submitError) setSubmitError('')
+    if (submitError) {
+      setSubmitError('')
+      setShowErrorPopup(false)
+    }
   }
 
   const isFormValid = () => {
@@ -83,6 +93,7 @@ export function useCreateAccountForm(onSuccess) {
     try {
       setIsLoading(true)
       setSubmitError('')
+      setShowErrorPopup(false)
       await createAccount(form)
       // Call success callback if provided
       if (onSuccess) {
@@ -90,10 +101,21 @@ export function useCreateAccountForm(onSuccess) {
       }
     } catch (error) {
       console.error('Error creating account:', error)
-      setSubmitError(error.message || 'Failed to create account. Please try again.')
+      const errorMessage = error.message || 'Failed to create account. Please try again.'
+
+      const errorWithStatus = error.statusCode 
+        ? `${error.statusCode}: ${errorMessage}`
+        : errorMessage
+      setSubmitError(errorWithStatus)
+      setShowErrorPopup(true)
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const closeErrorPopup = () => {
+    setShowErrorPopup(false)
+    setSubmitError('')
   }
 
   return {
@@ -107,6 +129,8 @@ export function useCreateAccountForm(onSuccess) {
     handleSubmit,
     isLoading,
     submitError,
+    showErrorPopup,
+    closeErrorPopup,
   }
 }
 
