@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useCreateAccountForm } from './hooks/useCreateAccountForm'
 import ErrorPopup from './components/ErrorPopup'
+import Header from '../restaurants/components/Header.jsx'
 import './Auth.css'
 
 function CreateAccount() {
@@ -26,7 +27,9 @@ function CreateAccount() {
   })
 
   return (
-    <div className="auth-wrapper">
+    <>
+      <Header />
+      <div className="auth-wrapper">
       <div className="auth-page">
         <div className="auth-card">
           <div className="auth-header">
@@ -184,6 +187,7 @@ function CreateAccount() {
         />
       )}
     </div>
+    </>
   )
 }
 
