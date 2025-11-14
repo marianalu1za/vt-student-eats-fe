@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { useRef, useEffect } from 'react'
 import './Sidebar.css'
+import Logo from './Logo'
 
 function Sidebar({ title = 'Admin Panel', menuItems = [], contentRef }) {
   const sidebarRef = useRef(null);
@@ -53,6 +54,14 @@ function Sidebar({ title = 'Admin Panel', menuItems = [], contentRef }) {
       />
       
       <div className="sidebar-header">
+        <Logo 
+          imageSize={48}
+          fontSize={24}
+          className="sidebar-brand" 
+          logoClassName="sidebar-logo" 
+          textClassName="sidebar-brand-title" 
+          link="/admin"
+        />
         <h2>{title}</h2>
       </div>
 

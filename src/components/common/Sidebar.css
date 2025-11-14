@@ -1,5 +1,5 @@
 .sidebar {
-  --sidebar-min-width: 180px;
+  --sidebar-min-width: 200px;
   --sidebar-max-width: 300px;
   width: 260px;
   min-width: var(--sidebar-min-width);
@@ -25,6 +25,43 @@
   font-size: 1.5rem;
   font-weight: 600;
   color: #ffffff;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 2vw, 12px);
+  margin-bottom: 12px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.sidebar-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.sidebar-logo img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+}
+
+.sidebar-brand-title {
+  font-size: clamp(0.85rem, 0.5rem + 1vw, 1.1rem);
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1 1 calc(100% - 60px);
+  word-break: break-word;
 }
 
 .sidebar-nav {
