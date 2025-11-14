@@ -1,0 +1,33 @@
+.logo-link {
+  display: inline-block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.app-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-logo-image {
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.app-logo-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.app-logo-text {
+  font-size: 25px;
+  font-weight: 600;
+  color: hsl(0, 0%, 100%);
+  white-space: nowrap;
+}
+
