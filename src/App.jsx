@@ -4,6 +4,7 @@ import RestaurantMap from './pages/restaurants/RestaurantMap'
 import RestaurantMenu from './pages/restaurant-menu/RestaurantMenu'
 import Login from './pages/auth/Login'
 import CreateAccount from './pages/auth/CreateAccount'
+import AdminDashboard from './pages/admin/AdminDashboard'
 import './App.css'
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
         <Route path="/restaurants/:id" element={<RestaurantMenu />} />
         <Route path="/login" element={<Login />} />
         <Route path="/create-account" element={<CreateAccount />} />
+        <Route path="/admin/*" element={<AdminDashboard />} />
       </Routes>
     </BrowserRouter>
   )
