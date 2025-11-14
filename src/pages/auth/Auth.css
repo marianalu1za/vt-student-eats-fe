@@ -78,6 +78,15 @@
   color: #555;
 }
 
+.required-note {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* Form */
 .auth-form {
   display: flex;
@@ -112,6 +121,11 @@
   font-size: 0.8rem;
   font-weight: 500;
   color: #444;
+}
+
+.required-asterisk {
+  color: #d64545;
+  margin-left: 2px;
 }
 
 .auth-field input,
