@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Header from '../restaurants/components/Header.jsx'
 import './Auth.css'
 
 function Login() {
@@ -16,7 +17,9 @@ function Login() {
   }
 
   return (
-    <div className="auth-wrapper">
+    <>
+      <Header />
+      <div className="auth-wrapper">
       <div className="auth-page">
         <div className="auth-card">
           <div className="auth-header">
@@ -86,6 +89,7 @@ function Login() {
         </div>
       </div>
     </div>
+    </>
   )
 }
 
