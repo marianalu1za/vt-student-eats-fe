@@ -68,7 +68,8 @@ function GroupOrders() {
           placeholder="Search group orders by host, restaurant, or meet place..."
         />
         <div className="admin-table-wrapper">
-          <table className="admin-table">
+          <div className="admin-table-scroll">
+          <table className="admin-table admin-table-restaurants">
           <thead>
             <tr>
               <th>ID</th>
@@ -80,7 +81,7 @@ function GroupOrders() {
               <th>Max Number of Users</th>
               <th>Current Number of Users</th>
               <th>Status</th>
-              <th>Actions</th>
+              <th className="admin-table-actions-header">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -106,7 +107,7 @@ function GroupOrders() {
                       {order.status === 'current' ? 'Current' : 'Ended'}
                     </span>
                   </td>
-                  <td>
+                <td className="admin-table-actions-cell">
                     <button 
                       className="admin-btn admin-btn-danger"
                       onClick={() => handleRemove(order.id)}
@@ -119,6 +120,7 @@ function GroupOrders() {
             )}
           </tbody>
         </table>
+        </div>
         </div>
         <AdminPagination
           page={page}

@@ -34,13 +34,20 @@
 
 .admin-table-wrapper {
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: #cbd5e0 #f1f1f1;
+  width: 100%;
+  position: relative;
 }
 
-.admin-table-wrapper::-webkit-scrollbar {
+.admin-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* .admin-table-wrapper::-webkit-scrollbar {
   height: 8px;
 }
 
@@ -56,12 +63,49 @@
 
 .admin-table-wrapper::-webkit-scrollbar-thumb:hover {
   background: #a0aec0;
-}
+} */
 
 .admin-table {
-  width: 100%;
-  min-width: 800px;
+  width: max(100%, 900px);
   border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.admin-table-restaurants td {
+  word-break: break-word;
+}
+
+/* Freeze the actions column on the right */
+.admin-table-actions-header {
+  position: sticky;
+  right: 0;
+  background-color: #f8f9fa;
+  z-index: 3;
+  box-shadow: -1px 0 0 #dee2e6;
+}
+
+.admin-table-actions-cell {
+  position: sticky;
+  right: 0;
+  background-color: #ffffff;
+  z-index: 2;
+  text-align: center;
+  box-shadow: -1px 0 0 #dee2e6;
+}
+
+.admin-table tbody .admin-table-actions-cell {
+  z-index: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  .admin-table-actions-header {
+    background: #2a2a2a;
+    box-shadow: -1px 0 0 rgba(255, 255, 255, 0.1);
+  }
+  .admin-table-actions-cell {
+    background: #1f1f1f;
+    box-shadow: -1px 0 0 rgba(255, 255, 255, 0.1);
+  }
 }
 
 .admin-table thead {
@@ -78,7 +122,7 @@
 }
 
 .admin-table td {
-  padding: 16px;
+  padding: 8px;
   border-bottom: 1px solid #dee2e6;
   font-size: 0.9rem;
   color: #212529;
@@ -90,6 +134,24 @@
 
 .admin-table tbody tr:last-child td {
   border-bottom: none;
+}
+
+/* Action button list inside sticky column */
+.admin-table-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+/* Ensure each action button spans the column width */
+.admin-table-actions .admin-btn {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.admin-table-actions .admin-btn:not(:last-child) {
+  margin-right: 0;
 }
 
 .admin-btn {

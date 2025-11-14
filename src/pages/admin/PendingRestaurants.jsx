@@ -71,7 +71,8 @@ function PendingRestaurants() {
           placeholder="Search pending restaurants by name, phone, or email..."
         />
         <div className="admin-table-wrapper">
-          <table className="admin-table">
+          <div className="admin-table-scroll">
+          <table className="admin-table admin-table-restaurants">
           <thead>
             <tr>
               <th>ID</th>
@@ -81,7 +82,7 @@ function PendingRestaurants() {
               <th>Link</th>
               <th>Submitted At</th>
               <th>Status</th>
-              <th>Actions</th>
+              <th className="admin-table-actions-header">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -116,26 +117,29 @@ function PendingRestaurants() {
                   <td>
                     <span className="admin-status admin-status-pending">Pending</span>
                   </td>
-                  <td>
-                    <button 
-                      className="admin-btn admin-btn-success" 
-                      style={{ marginRight: '8px' }}
-                      onClick={() => handleApprove(restaurant.id)}
-                    >
-                      Approve
-                    </button>
-                    <button 
-                      className="admin-btn admin-btn-danger"
-                      onClick={() => handleReject(restaurant.id)}
-                    >
-                      Reject
-                    </button>
+                  <td className="admin-table-actions-cell">
+                    <div className="admin-table-actions">
+                      <button 
+                        className="admin-btn admin-btn-success" 
+                        style={{ marginRight: '8px' }}
+                        onClick={() => handleApprove(restaurant.id)}
+                      >
+                        Approve
+                      </button>
+                      <button 
+                        className="admin-btn admin-btn-danger"
+                        onClick={() => handleReject(restaurant.id)}
+                      >
+                        Reject
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
+        </div>
         </div>
         <AdminPagination
           page={page}

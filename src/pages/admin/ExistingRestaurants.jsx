@@ -1,27 +1,72 @@
 import { useState, useMemo, useEffect } from 'react'
-import { existingRestaurants as mockRestaurants } from '../../mock_data/admin_portal'
+import { fetchRestaurants } from '../../api/restaurants'
 import './AdminDashboard.css'
 import AdminSearchBar from './components/AdminSearchBar.jsx'
 import AdminPagination from './components/AdminPagination.jsx'
 
 function ExistingRestaurants() {
-  const [restaurants] = useState(mockRestaurants)
+  const [restaurants, setRestaurants] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
+
+  // Rows per page for every admin page
   const [rowsPerPage, setRowsPerPage] = useState(() => {
     const saved = localStorage.getItem('adminRowsPerPage')
     return saved ? parseInt(saved, 10) : 10
   })
 
+  useEffect(() => {
+    let isMounted = true
+
+    const loadRestaurants = async () => {
+      try {
+        setIsLoading(true)
+        const data = await fetchRestaurants()
+        if (isMounted) {
+          setRestaurants(Array.isArray(data) ? data : [])
+          setFetchError(null)
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error('Failed to fetch restaurants', error)
+          setFetchError('Unable to load restaurants. Please try again later.')
+          setRestaurants([])
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadRestaurants()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
   const filteredRestaurants = useMemo(() => {
     if (!searchQuery.trim()) return restaurants
     
     const query = searchQuery.toLowerCase().trim()
-    return restaurants.filter(restaurant => 
-      restaurant.name.toLowerCase().includes(query) ||
-      restaurant.phoneNumber.toLowerCase().includes(query) ||
-      restaurant.email.toLowerCase().includes(query)
-    )
+    return restaurants.filter(restaurant => {
+      const name = (restaurant.name || '').toLowerCase()
+      const phone = (restaurant.phoneNumber || '').toLowerCase()
+      const email = (restaurant.email || '').toLowerCase()
+      const address = (restaurant.address || '').toLowerCase()
+      const website = (restaurant.website_link).toLowerCase()
+
+      return (
+        name.includes(query) ||
+        phone.includes(query) ||
+        email.includes(query) ||
+        address.includes(query) ||
+        website.includes(query)
+      )
+    })
   }, [restaurants, searchQuery])
 
   const paginatedRestaurants = useMemo(() => {
@@ -56,22 +101,40 @@ function ExistingRestaurants() {
         <AdminSearchBar 
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          placeholder="Search restaurants by name, phone, or email..."
+          placeholder="Search restaurants by name, phone, or address..."
         />
         <div className="admin-table-wrapper">
-          <table className="admin-table">
-          <thead>
+          <div className="admin-table-scroll">
+            <table className="admin-table admin-table-restaurants">
+            <thead>
             <tr>
               <th>ID</th>
               <th>Restaurant Name</th>
               <th>Phone Number</th>
-              <th>Email</th>
+              <th>Owner</th>
+              <th>Address</th>
+              <th>Website</th>
               <th>Created At</th>
-              <th>Actions</th>
+              <th>Xcoordinate</th>
+                <th>Ycoordinate</th>
+                <th className="admin-table-actions-header">Actions</th>
+
             </tr>
           </thead>
           <tbody>
-            {filteredRestaurants.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+                  Loading restaurants...
+                </td>
+              </tr>
+            ) : fetchError ? (
+              <tr>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: '#c1121f' }}>
+                  {fetchError}
+                </td>
+              </tr>
+            ) : filteredRestaurants.length === 0 ? (
               <tr>
                 <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
                   {searchQuery ? 'No restaurants found matching your search' : 'No restaurants'}
@@ -82,25 +145,47 @@ function ExistingRestaurants() {
               <tr key={restaurant.id}>
                 <td>{restaurant.id}</td>
                 <td>{restaurant.name}</td>
-                <td>{restaurant.phoneNumber}</td>
-                <td>{restaurant.email}</td>
-                <td>{restaurant.createdAt}</td>
+                <td>{restaurant.phone_number}</td>
+                <td>{restaurant.owner || 'N/A'}</td>
+                <td>{restaurant.address || 'N/A'}</td>
                 <td>
-                  <button className="admin-btn admin-btn-primary" style={{ marginRight: '8px' }}>
-                    View
-                  </button>
-                  <button className="admin-btn admin-btn-secondary" style={{ marginRight: '8px' }}>
-                    Edit
-                  </button>
-                  <button className="admin-btn admin-btn-danger">
-                    Remove
-                  </button>
+                  {restaurant.website_link ? (
+                    <a 
+                      href={restaurant.website_link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ color: '#007bff', textDecoration: 'none' }}
+                    >
+                      {restaurant.name}
+                    </a>
+                  ) : (
+                    'N/A'
+                  )}
                 </td>
+                <td>{restaurant.created_at}</td>
+                <td>{restaurant.x_coordinate}</td>
+                <td>{restaurant.y_coordinate}</td>
+
+                <td className="admin-table-actions-cell">
+                  <div className="admin-table-actions">
+                    <button className="admin-btn admin-btn-primary" style={{ marginRight: '8px' }}>
+                      Menu
+                    </button>
+                    <button className="admin-btn admin-btn-secondary" style={{ marginRight: '8px' }}>
+                      Edit Info
+                    </button>
+                    <button className="admin-btn admin-btn-danger">
+                      Remove
+                    </button>
+                  </div>
+                </td>
+
               </tr>
               ))
             )}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+          </div>
         </div>
         <AdminPagination
           page={page}

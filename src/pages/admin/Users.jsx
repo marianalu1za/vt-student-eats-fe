@@ -69,7 +69,8 @@ function Users() {
           placeholder="Search users by name, email, or role..."
         />
         <div className="admin-table-wrapper">
-          <table className="admin-table">
+          <div className="admin-table-scroll">
+          <table className="admin-table admin-table-restaurants">
           <thead>
             <tr>
               <th>ID</th>
@@ -79,7 +80,7 @@ function Users() {
               <th>Role</th>
               <th>Status</th>
               <th>Created At</th>
-              <th>Actions</th>
+              <th className="admin-table-actions-header">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -101,19 +102,22 @@ function Users() {
                   <span className="admin-status admin-status-approved">{user.status}</span>
                 </td>
                 <td>{user.createdAt}</td>
-                <td>
-                  <button className="admin-btn admin-btn-secondary" style={{ marginRight: '8px' }}>
-                    Edit
-                  </button>
-                  <button className="admin-btn admin-btn-danger">
-                    Delete
-                  </button>
+                <td className="admin-table-actions-cell">
+                  <div className="admin-table-actions">
+                    <button className="admin-btn admin-btn-secondary" style={{ marginRight: '8px' }}>
+                      Edit
+                    </button>
+                    <button className="admin-btn admin-btn-danger">
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
               ))
             )}
           </tbody>
         </table>
+        </div>
         </div>
         <AdminPagination
           page={page}
