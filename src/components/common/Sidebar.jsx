@@ -3,7 +3,13 @@ import { useRef, useEffect } from 'react'
 import './Sidebar.css'
 import Logo from './Logo'
 
-function Sidebar({ title = 'Admin Panel', menuItems = [], contentRef }) {
+function Sidebar({
+  title = 'Admin Panel',
+  menuItems = [],
+  contentRef,
+  showBrand = false,
+  brandLink = '/admin',
+}) {
   const sidebarRef = useRef(null);
   const dragging = useRef(false);
 
@@ -54,14 +60,16 @@ function Sidebar({ title = 'Admin Panel', menuItems = [], contentRef }) {
       />
       
       <div className="sidebar-header">
-        <Logo 
-          imageSize={48}
-          fontSize={24}
-          className="sidebar-brand" 
-          logoClassName="sidebar-logo" 
-          textClassName="sidebar-brand-title" 
-          link="/admin"
-        />
+        {showBrand && (
+          <Logo 
+            imageSize={48}
+            fontSize={24}
+            className="sidebar-brand" 
+            logoClassName="sidebar-logo" 
+            textClassName="sidebar-brand-title" 
+            link={brandLink}
+          />
+        )}
         <h2>{title}</h2>
       </div>
 

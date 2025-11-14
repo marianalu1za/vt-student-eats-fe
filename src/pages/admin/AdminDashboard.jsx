@@ -19,7 +19,7 @@ function AdminDashboard() {
 
   return (
     <div className="admin-dashboard">
-      <Sidebar title="Admin Panel" menuItems={adminMenuItems} contentRef={contentRef} />
+      <Sidebar title="Admin Panel" menuItems={adminMenuItems} contentRef={contentRef} showBrand={true}/>
       <div className="admin-content" ref={contentRef}>
         <Routes>
           <Route path="users" element={<Users />} />
