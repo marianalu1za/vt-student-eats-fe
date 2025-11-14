@@ -1,0 +1,87 @@
+.sidebar {
+  --sidebar-min-width: 180px;
+  --sidebar-max-width: 300px;
+  width: 260px;
+  min-width: var(--sidebar-min-width);
+  max-width: var(--sidebar-max-width);
+  height: 100vh;
+  background-color: #6a283c;
+  color: #ffffff;
+  position: fixed;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.sidebar-header {
+  padding: 24px 20px;
+}
+
+.sidebar-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 0;
+  overflow-y: auto;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 14px 20px;
+  color: #b0b0b0;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+}
+
+.nav-item:hover {
+  background-color: #ad6767;
+  color: #ffffff;
+}
+
+.nav-item.active {
+  background-color: #2d2d2d;
+  color: #ffffff;
+  border-left-color: #e68060;
+}
+
+.nav-icon {
+  font-size: 1.2rem;
+  margin-right: 12px;
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-text {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+
+/* Draggable area */
+.sidebar-resizer {
+  width: 5px;
+  cursor: ew-resize;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: transparent;
+}
+
+.sidebar-resizer:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
