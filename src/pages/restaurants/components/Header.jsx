@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import './Header.css'
 import Logo from '../../../components/common/Logo'
+import ProfileButton from '../../../components/common/ProfileButton'
 
 function Header() {
   // TODO: Replace with actual authentication state from context/API
@@ -25,27 +26,26 @@ function Header() {
           />
         </div>
         <div className="header-right">
-            {isLoggedIn ? (
-              <>
-          <span className="group-orders-text">Group Orders I joined</span>
-          <div className="profile-icon">👤</div>
-              </>
-            ) : (
-              <div className="auth-buttons">
-                {!isLoginPage && (
-                  <Link to="/login" className="login-btn">Login</Link>
-                )}
-                {!isCreateAccountPage && (
-                  <Link to="/create-account" className="create-account-btn">Create Account</Link>
-                )}
-              </div>
-            )}
-          </div>
+          {isLoggedIn ? (
+            <>
+              <ProfileButton
+                label="Open profile"
+                onClick={() => console.log('Open profile')}
+              />
+            </>
+          ) : (
+            <div className="auth-buttons">
+              {!isLoginPage && (
+                <Link to="/login" className="login-btn">Login</Link>
+              )}
+              {!isCreateAccountPage && (
+                <Link to="/create-account" className="create-account-btn">Create Account</Link>
+              )}
+            </div>
+          )}
+        </div>
         </div>
       </header>
-      {isLoggedIn && (
-      <button className="group-order-btn">Link to Group Order</button>
-      )}
     </>
   )
 }
