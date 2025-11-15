@@ -2,6 +2,21 @@
   display: flex;
   min-height: 100vh;
   background-color: #f5f5f5;
+  position: relative;
+}
+
+.admin-floating-profile {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 1100;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.admin-floating-profile.hidden {
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
 }
 
 .admin-content {
@@ -30,6 +45,13 @@
   padding: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   margin-bottom: 24px;
+}
+
+.admin-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 16px;
 }
 
 .admin-table-wrapper {

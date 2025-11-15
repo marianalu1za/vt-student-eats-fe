@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useRef } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import Sidebar from '../../components/common/Sidebar'
+import ProfileButton from '../../components/common/ProfileButton'
 import Users from './Users'
 import ExistingRestaurants from './ExistingRestaurants'
 import PendingRestaurants from './PendingRestaurants'
@@ -16,10 +17,26 @@ const adminMenuItems = [
 
 function AdminDashboard() {
   const contentRef = useRef(null)
+  const [showProfileButton, setShowProfileButton] = useState(true)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowProfileButton(window.scrollY <= 150)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   return (
-    <div className="admin-dashboard">
+      <div className="admin-dashboard">
       <Sidebar title="Admin Panel" menuItems={adminMenuItems} contentRef={contentRef} showBrand={true}/>
+        <div className={`admin-floating-profile ${showProfileButton ? '' : 'hidden'}`}>
+        <ProfileButton
+          label="Open profile"
+          onClick={() => console.log('Opening admin profile')}
+        />
+      </div>
       <div className="admin-content" ref={contentRef}>
         <Routes>
           <Route path="users" element={<Users />} />
