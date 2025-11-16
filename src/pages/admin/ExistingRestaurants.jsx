@@ -3,6 +3,7 @@ import { fetchRestaurants } from '../../api/restaurants'
 import './AdminDashboard.css'
 import AdminSearchBar from './components/AdminSearchBar.jsx'
 import AdminPagination from './components/AdminPagination.jsx'
+import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
 
 function ExistingRestaurants() {
   const [restaurants, setRestaurants] = useState([])
@@ -10,6 +11,8 @@ function ExistingRestaurants() {
   const [fetchError, setFetchError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null)
+  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false)
 
   // Rows per page for every admin page
   const [rowsPerPage, setRowsPerPage] = useState(() => {
@@ -90,6 +93,24 @@ function ExistingRestaurants() {
     setPage(1)
   }, [searchQuery])
 
+  const handleRemoveClick = (restaurant) => {
+    setSelectedRestaurant(restaurant)
+    setIsRemoveDialogOpen(true)
+  }
+
+  const handleRemoveConfirm = () => {
+    if (!selectedRestaurant) return
+    // TODO: Add API call to remove restaurant
+    console.log('Confirm remove restaurant (no local list change):', selectedRestaurant.id)
+    setIsRemoveDialogOpen(false)
+    setSelectedRestaurant(null)
+  }
+
+  const handleRemoveCancel = () => {
+    setIsRemoveDialogOpen(false)
+    setSelectedRestaurant(null)
+  }
+
   return (
     <div>
       <div className="admin-page-header">
@@ -165,7 +186,6 @@ function ExistingRestaurants() {
                 <td>{restaurant.created_at}</td>
                 <td>{restaurant.x_coordinate}</td>
                 <td>{restaurant.y_coordinate}</td>
-
                 <td className="admin-table-actions-cell">
                   <div className="admin-table-actions">
                     <button className="admin-btn admin-btn-primary" style={{ marginRight: '8px' }}>
@@ -174,12 +194,14 @@ function ExistingRestaurants() {
                     <button className="admin-btn admin-btn-secondary" style={{ marginRight: '8px' }}>
                       Edit Info
                     </button>
-                    <button className="admin-btn admin-btn-danger">
+                    <button
+                      className="admin-btn admin-btn-danger"
+                      onClick={() => handleRemoveClick(restaurant)}
+                    >
                       Remove
                     </button>
                   </div>
                 </td>
-
               </tr>
               ))
             )}
@@ -195,6 +217,19 @@ function ExistingRestaurants() {
           onRowsPerPageChange={handleRowsPerPageChange}
         />
       </div>
+      <ConfirmDialog
+        open={isRemoveDialogOpen}
+        title="Remove restaurant?"
+        message={
+          selectedRestaurant
+            ? `This will remove ${selectedRestaurant.name} from the approved list. This action cannot be undone.`
+            : ''
+        }
+        confirmLabel="Remove"
+        cancelLabel="Cancel"
+        onConfirm={handleRemoveConfirm}
+        onCancel={handleRemoveCancel}
+      />
     </div>
   )
 }

@@ -3,11 +3,14 @@ import './AdminDashboard.css'
 import { VTusers } from '../../mock_data/admin_portal'
 import AdminSearchBar from './components/AdminSearchBar'
 import AdminPagination from './components/AdminPagination'
+import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
 
 function Users() {
   const [users] = useState(VTusers)
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
+  const [selectedUser, setSelectedUser] = useState(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [rowsPerPage, setRowsPerPage] = useState(() => {
     const saved = localStorage.getItem('adminRowsPerPage')
     return saved ? parseInt(saved, 10) : 10
@@ -54,6 +57,24 @@ function Users() {
   useEffect(() => {
     setPage(1)
   }, [searchQuery])
+
+  const handleDeleteClick = (user) => {
+    setSelectedUser(user)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = () => {
+    if (!selectedUser) return
+    // TODO: Add API call to delete user
+    console.log('Confirm delete user (no local list change):', selectedUser.id)
+    setIsDeleteDialogOpen(false)
+    setSelectedUser(null)
+  }
+
+  const handleDeleteCancel = () => {
+    setIsDeleteDialogOpen(false)
+    setSelectedUser(null)
+  }
 
   return (
     <div>
@@ -107,7 +128,10 @@ function Users() {
                     <button className="admin-btn admin-btn-secondary" style={{ marginRight: '8px' }}>
                       Edit
                     </button>
-                    <button className="admin-btn admin-btn-danger">
+                    <button
+                      className="admin-btn admin-btn-danger"
+                      onClick={() => handleDeleteClick(user)}
+                    >
                       Delete
                     </button>
                   </div>
@@ -127,6 +151,19 @@ function Users() {
           onRowsPerPageChange={handleRowsPerPageChange}
         />
       </div>
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        title="Delete user?"
+        message={
+          selectedUser
+            ? `This will delete ${selectedUser.firstName} ${selectedUser.lastName} from the system. This action cannot be undone.`
+            : ''
+        }
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
     </div>
   )
 }

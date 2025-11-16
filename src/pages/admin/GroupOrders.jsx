@@ -3,11 +3,14 @@ import { groupOrders as mockGroupOrders } from '../../mock_data/admin_portal'
 import './AdminDashboard.css'
 import AdminSearchBar from './components/AdminSearchBar.jsx'
 import AdminPagination from './components/AdminPagination'
+import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
 
 function GroupOrders() {
-  const [orders, setOrders] = useState(mockGroupOrders)
+  const [orders] = useState(mockGroupOrders)
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
+  const [selectedOrder, setSelectedOrder] = useState(null)
+  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false)
   const [rowsPerPage, setRowsPerPage] = useState(() => {
     const saved = localStorage.getItem('adminRowsPerPage')
     return saved ? parseInt(saved, 10) : 10
@@ -46,12 +49,22 @@ function GroupOrders() {
     setPage(1)
   }, [searchQuery])
 
-  const handleRemove = (id) => {
-    if (window.confirm('Are you sure you want to remove this group order?')) {
-      setOrders(orders.filter(order => order.id !== id))
-      // TODO: Add API call to remove group order
-      console.log('Removing group order:', id)
-    }
+  const handleRemoveClick = (order) => {
+    setSelectedOrder(order)
+    setIsRemoveDialogOpen(true)
+  }
+
+  const handleRemoveConfirm = () => {
+    if (!selectedOrder) return
+    // TODO: Add API call to remove group order
+    console.log('Confirm remove group order (no local list change):', selectedOrder.id)
+    setIsRemoveDialogOpen(false)
+    setSelectedOrder(null)
+  }
+
+  const handleRemoveCancel = () => {
+    setIsRemoveDialogOpen(false)
+    setSelectedOrder(null)
   }
 
   return (
@@ -107,13 +120,15 @@ function GroupOrders() {
                       {order.status === 'current' ? 'Current' : 'Ended'}
                     </span>
                   </td>
-                <td className="admin-table-actions-cell">
-                    <button 
-                      className="admin-btn admin-btn-danger"
-                      onClick={() => handleRemove(order.id)}
-                    >
-                      Remove
-                    </button>
+                  <td className="admin-table-actions-cell">
+                    <div className="admin-table-actions">
+                      <button 
+                        className="admin-btn admin-btn-danger"
+                        onClick={() => handleRemoveClick(order)}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -130,6 +145,19 @@ function GroupOrders() {
           onRowsPerPageChange={handleRowsPerPageChange}
         />
       </div>
+      <ConfirmDialog
+        open={isRemoveDialogOpen}
+        title="Remove group order?"
+        message={
+          selectedOrder
+            ? `This will remove the group order hosted by ${selectedOrder.host}. This action cannot be undone.`
+            : ''
+        }
+        confirmLabel="Remove"
+        cancelLabel="Cancel"
+        onConfirm={handleRemoveConfirm}
+        onCancel={handleRemoveCancel}
+      />
     </div>
   )
 }

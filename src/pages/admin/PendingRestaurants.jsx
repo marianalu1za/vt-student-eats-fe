@@ -3,11 +3,15 @@ import { pendingRestaurants as mockRestaurants } from '../../mock_data/admin_por
 import './AdminDashboard.css'
 import AdminSearchBar from './components/AdminSearchBar.jsx'
 import AdminPagination from './components/AdminPagination.jsx'
+import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
 
 function PendingRestaurants() {
   const [restaurants, setRestaurants] = useState(mockRestaurants)
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null)
+  const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false)
+  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
   const [rowsPerPage, setRowsPerPage] = useState(() => {
     const saved = localStorage.getItem('adminRowsPerPage')
     return saved ? parseInt(saved, 10) : 10
@@ -45,16 +49,43 @@ function PendingRestaurants() {
     setPage(1)
   }, [searchQuery])
 
-  const handleApprove = (id) => {
-    setRestaurants(restaurants.filter(r => r.id !== id))
-    // TODO: Add API call to approve restaurant
-    console.log('Approving restaurant:', id)
+  const handleApproveClick = (restaurant) => {
+    setSelectedRestaurant(restaurant)
+    setIsApproveDialogOpen(true)
   }
 
-  const handleReject = (id) => {
-    setRestaurants(restaurants.filter(r => r.id !== id))
+  const handleApproveConfirm = () => {
+    if (!selectedRestaurant) return
+    // TODO: Add API call to approve restaurant (send email + publish)
+    console.log('Approving restaurant:', selectedRestaurant.id, 'email:', selectedRestaurant.email)
+    // Optionally remove from list
+    setRestaurants(prev => prev.filter(r => r.id !== selectedRestaurant.id))
+    setIsApproveDialogOpen(false)
+    setSelectedRestaurant(null)
+  }
+
+  const handleApproveCancel = () => {
+    setIsApproveDialogOpen(false)
+    setSelectedRestaurant(null)
+  }
+
+  const handleRejectClick = (restaurant) => {
+    setSelectedRestaurant(restaurant)
+    setIsRejectDialogOpen(true)
+  }
+
+  const handleRejectConfirm = () => {
+    if (!selectedRestaurant) return
     // TODO: Add API call to reject restaurant
-    console.log('Rejecting restaurant:', id)
+    console.log('Rejecting restaurant:', selectedRestaurant.id, 'email:', selectedRestaurant.email)
+    setRestaurants(prev => prev.filter(r => r.id !== selectedRestaurant.id))
+    setIsRejectDialogOpen(false)
+    setSelectedRestaurant(null)
+  }
+
+  const handleRejectCancel = () => {
+    setIsRejectDialogOpen(false)
+    setSelectedRestaurant(null)
   }
 
   return (
@@ -120,15 +151,22 @@ function PendingRestaurants() {
                   <td className="admin-table-actions-cell">
                     <div className="admin-table-actions">
                       <button 
+                          className="admin-btn admin-btn-primary" 
+                          style={{ marginRight: '8px' }}
+                          onClick={() => handleView(restaurant.id)}
+                        >
+                        View Menu
+                      </button>
+                      <button 
                         className="admin-btn admin-btn-success" 
                         style={{ marginRight: '8px' }}
-                        onClick={() => handleApprove(restaurant.id)}
+                        onClick={() => handleApproveClick(restaurant)}
                       >
                         Approve
                       </button>
                       <button 
                         className="admin-btn admin-btn-danger"
-                        onClick={() => handleReject(restaurant.id)}
+                        onClick={() => handleRejectClick(restaurant)}
                       >
                         Reject
                       </button>
@@ -149,6 +187,32 @@ function PendingRestaurants() {
           onRowsPerPageChange={handleRowsPerPageChange}
         />
       </div>
+      <ConfirmDialog
+        open={isApproveDialogOpen}
+        title="Send approval email?"
+        message={
+          selectedRestaurant
+            ? `This will send an approval email to ${selectedRestaurant.email} and publish their restaurant.`
+            : ''
+        }
+        confirmLabel="Send email"
+        cancelLabel="Cancel"
+        onConfirm={handleApproveConfirm}
+        onCancel={handleApproveCancel}
+      />
+      <ConfirmDialog
+        open={isRejectDialogOpen}
+        title="Send rejection email?"
+        message={
+          selectedRestaurant
+            ? `This will send a rejection email to ${selectedRestaurant.email} and remove their application.`
+            : ''
+        }
+        confirmLabel="Send email"
+        cancelLabel="Cancel"
+        onConfirm={handleRejectConfirm}
+        onCancel={handleRejectCancel}
+      />
     </div>
   )
 }
