@@ -4,6 +4,8 @@ import './AdminDashboard.css'
 import AdminSearchBar from './components/AdminSearchBar.jsx'
 import AdminPagination from './components/AdminPagination.jsx'
 import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
+import EditRestaurantModal from './components/EditRestaurantModal.jsx'
+import { VTusers } from '../../mock_data/admin_portal'
 
 function ExistingRestaurants() {
   const [restaurants, setRestaurants] = useState([])
@@ -13,6 +15,7 @@ function ExistingRestaurants() {
   const [page, setPage] = useState(1)
   const [selectedRestaurant, setSelectedRestaurant] = useState(null)
   const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 
   // Rows per page for every admin page
   const [rowsPerPage, setRowsPerPage] = useState(() => {
@@ -111,6 +114,23 @@ function ExistingRestaurants() {
     setSelectedRestaurant(null)
   }
 
+  const handleEditClick = (restaurant) => {
+    setSelectedRestaurant(restaurant)
+    setIsEditDialogOpen(true)
+  }
+
+  const handleEditSave = (updated) => {
+    // TODO: Add API call to save restaurant edits
+    console.log('Saving restaurant edits for', selectedRestaurant?.id, updated)
+    setIsEditDialogOpen(false)
+    setSelectedRestaurant(null)
+  }
+
+  const handleEditCancel = () => {
+    setIsEditDialogOpen(false)
+    setSelectedRestaurant(null)
+  }
+
   return (
     <div>
       <div className="admin-page-header">
@@ -135,10 +155,9 @@ function ExistingRestaurants() {
               <th>Owner</th>
               <th>Address</th>
               <th>Website</th>
-              <th>Created At</th>
               <th>Xcoordinate</th>
-                <th>Ycoordinate</th>
-                <th className="admin-table-actions-header">Actions</th>
+              <th>Ycoordinate</th>
+              <th className="admin-table-actions-header">Actions</th>
 
             </tr>
           </thead>
@@ -183,7 +202,6 @@ function ExistingRestaurants() {
                     'N/A'
                   )}
                 </td>
-                <td>{restaurant.created_at}</td>
                 <td>{restaurant.x_coordinate}</td>
                 <td>{restaurant.y_coordinate}</td>
                 <td className="admin-table-actions-cell">
@@ -191,7 +209,11 @@ function ExistingRestaurants() {
                     <button className="admin-btn admin-btn-primary" style={{ marginRight: '8px' }}>
                       Menu
                     </button>
-                    <button className="admin-btn admin-btn-secondary" style={{ marginRight: '8px' }}>
+                    <button
+                      className="admin-btn admin-btn-secondary"
+                      style={{ marginRight: '8px' }}
+                      onClick={() => handleEditClick(restaurant)}
+                    >
                       Edit Info
                     </button>
                     <button
@@ -229,6 +251,13 @@ function ExistingRestaurants() {
         cancelLabel="Cancel"
         onConfirm={handleRemoveConfirm}
         onCancel={handleRemoveCancel}
+      />
+      <EditRestaurantModal
+        open={isEditDialogOpen}
+        restaurant={selectedRestaurant}
+        onSave={handleEditSave}
+        users={VTusers}
+        onCancel={handleEditCancel}
       />
     </div>
   )
