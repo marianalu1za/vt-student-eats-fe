@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { pendingRestaurants as mockRestaurants } from '../../mock_data/admin_portal'
+import { pendingRestaurants as mockRestaurants, VTusers } from '../../mock_data/admin_portal'
 import './AdminDashboard.css'
 import AdminSearchBar from './components/AdminSearchBar.jsx'
 import AdminPagination from './components/AdminPagination.jsx'
@@ -21,11 +21,16 @@ function PendingRestaurants() {
     if (!searchQuery.trim()) return restaurants
     
     const query = searchQuery.toLowerCase().trim()
-    return restaurants.filter(restaurant => 
-      restaurant.name.toLowerCase().includes(query) ||
-      restaurant.phoneNumber.toLowerCase().includes(query) ||
-      restaurant.email.toLowerCase().includes(query)
-    )
+    return restaurants.filter(restaurant => {
+      const owner = VTusers.find(user => user.id === restaurant.ownerId)
+      const ownerName = owner ? `${owner.firstName} ${owner.lastName}`.toLowerCase() : ''
+      
+      return (
+        restaurant.name.toLowerCase().includes(query) ||
+        restaurant.phoneNumber.toLowerCase().includes(query) ||
+        ownerName.includes(query)
+      )
+    })
   }, [restaurants, searchQuery])
 
   const paginatedRestaurants = useMemo(() => {
@@ -99,7 +104,7 @@ function PendingRestaurants() {
         <AdminSearchBar 
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          placeholder="Search pending restaurants by name, phone, or email..."
+          placeholder="Search pending restaurants by name, owner name, or phone number..."
         />
         <div className="admin-table-wrapper">
           <div className="admin-table-scroll">
@@ -109,7 +114,8 @@ function PendingRestaurants() {
               <th>ID</th>
               <th>Restaurant Name</th>
               <th>Phone Number</th>
-              <th>Email</th>
+              <th>Owner ID</th>
+              <th>Owner Name</th>
               <th>Link</th>
               <th>Submitted At</th>
               <th>Status</th>
@@ -119,7 +125,7 @@ function PendingRestaurants() {
           <tbody>
             {filteredRestaurants.length === 0 ? (
               <tr>
-                <td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+                <td colSpan="9" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
                   {searchQuery ? 'No pending restaurants found matching your search' : 'No pending restaurants'}
                 </td>
               </tr>
@@ -129,7 +135,21 @@ function PendingRestaurants() {
                   <td>{restaurant.id}</td>
                   <td>{restaurant.name}</td>
                   <td>{restaurant.phoneNumber}</td>
-                  <td>{restaurant.email}</td>
+                  <td>
+                    {VTusers.find(
+                      (user) =>
+                        user.id === restaurant.ownerId
+                    )?.id ?? 'N/A'}
+                  </td>
+                  <td>
+                    {(() => {
+                      const owner = VTusers.find(
+                        (user) =>
+                          user.id === restaurant.ownerId
+                      )
+                      return owner ? `${owner.firstName} ${owner.lastName}` : 'N/A'
+                    })()}
+                  </td>
                   <td>
                     {restaurant.link ? (
                       <a 
@@ -192,7 +212,7 @@ function PendingRestaurants() {
         title="Send approval email?"
         message={
           selectedRestaurant
-            ? `This will send an approval email to ${selectedRestaurant.email} and publish their restaurant.`
+            ? `This will send an approval email to the owner of ${selectedRestaurant.name} (${selectedRestaurant.email}) and publish their restaurant.`
             : ''
         }
         confirmLabel="Send email"
@@ -205,7 +225,7 @@ function PendingRestaurants() {
         title="Send rejection email?"
         message={
           selectedRestaurant
-            ? `This will send a rejection email to ${selectedRestaurant.email} and remove their application.`
+            ? `This will send a rejection email to the owner of ${selectedRestaurant.name} (${selectedRestaurant.email}) and remove their application.`
             : ''
         }
         confirmLabel="Send email"

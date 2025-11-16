@@ -5,9 +5,9 @@ export const existingRestaurants = [
 ]
 
 export const pendingRestaurants = [
-  { id: 1, name: 'New Burger Place', phoneNumber: '(540) 555-0101', email: 'david@burger.com', link: 'https://newburgerplace', submittedAt: '2024-03-01' },
-  { id: 2, name: 'Taco Express', phoneNumber: '(540) 555-0102', email: 'sarah@taco.com', link: 'https://tacoexpress', submittedAt: '2024-03-05' },
-  { id: 3, name: 'Sushi House', phoneNumber: '(540) 555-0103', email: 'mike@sushi.com', link: 'https://sushihouse', submittedAt: '2024-03-10' },
+  { id: 1, name: 'New Burger Place', phoneNumber: '(540) 555-0101', email: 'david@burger.com', link: 'https://newburgerplace', submittedAt: '2024-03-01', ownerId: 3 },
+  { id: 2, name: 'Taco Express', phoneNumber: '(540) 555-0102', email: 'sarah@taco.com', link: 'https://tacoexpress', submittedAt: '2024-03-05', ownerId: 3 },
+  { id: 3, name: 'Sushi House', phoneNumber: '(540) 555-0103', email: 'mike@sushi.com', link: 'https://sushihouse', submittedAt: '2024-03-10', ownerId: 2 },
 ]
 
 export const VTusers = [
