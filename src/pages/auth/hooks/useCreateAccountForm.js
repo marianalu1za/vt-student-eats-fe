@@ -50,6 +50,8 @@ export function useCreateAccountForm(onSuccess) {
   const [isLoading, setIsLoading] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [showErrorPopup, setShowErrorPopup] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
+  const [showConfirmationPopup, setShowConfirmationPopup] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -157,8 +159,13 @@ export function useCreateAccountForm(onSuccess) {
       setIsLoading(true)
       setSubmitError('')
       setShowErrorPopup(false)
+      setSuccessMessage('')
+      setShowConfirmationPopup(false)
       await createAccount(form)
-      // Call success callback if provided
+      // Show success confirmation popup
+      setSuccessMessage('Thanks for creating an account! Please check your email for verification. The verification link will expire in 15 minutes.')
+      setShowConfirmationPopup(true)
+      // Call success callback if provided (after showing confirmation)
       if (onSuccess) {
         onSuccess(form)
       }
@@ -181,6 +188,11 @@ export function useCreateAccountForm(onSuccess) {
     setSubmitError('')
   }
 
+  const closeConfirmationPopup = () => {
+    setShowConfirmationPopup(false)
+    setSuccessMessage('')
+  }
+
   return {
     form,
     showPassword,
@@ -196,6 +208,9 @@ export function useCreateAccountForm(onSuccess) {
     submitError,
     showErrorPopup,
     closeErrorPopup,
+    successMessage,
+    showConfirmationPopup,
+    closeConfirmationPopup,
   }
 }
 

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useCreateAccountForm } from './hooks/useCreateAccountForm'
 import ErrorPopup from './components/ErrorPopup'
+import ConfirmationMessage from './components/ConfirmationMessage'
 import Header from '../restaurants/components/Header.jsx'
 import './Auth.css'
 
@@ -21,9 +22,12 @@ function CreateAccount() {
     submitError,
     showErrorPopup,
     closeErrorPopup,
+    successMessage,
+    showConfirmationPopup,
+    closeConfirmationPopup,
   } = useCreateAccountForm(() => {
-    // Success callback - redirect to login page
-    navigate('/login')
+    // Success callback - redirect to login page after confirmation is closed
+    // Navigation will happen when user closes the confirmation popup
   })
 
   return (
@@ -54,7 +58,7 @@ function CreateAccount() {
                 required
               >
                 <option value="vt_staff_students">VT staff/students</option>
-                <option value="restaurant_owner">Restaurant owner</option>
+                <option value="restaurant_manager">Restaurant Manager</option>
               </select>
             </div>
 
@@ -105,13 +109,13 @@ function CreateAccount() {
 
             <div className="auth-field">
               <label htmlFor="email">
-                {form.role === 'restaurant_owner' ? 'Email' : 'Virginia Tech Email'}<span className="required-asterisk">*</span>
+                {form.role === 'restaurant_manager' ? 'Email' : 'Virginia Tech Email'}<span className="required-asterisk">*</span>
               </label>
               <input
                 id="email"
                 name="email"
                 type="email"
-                placeholder={form.role === 'restaurant_owner' ? 'your@email.com' : 'student@vt.edu'}
+                placeholder={form.role === 'restaurant_manager' ? 'your@email.com' : 'student@vt.edu'}
                 value={form.email}
                 onChange={handleChange}
                 required
@@ -188,6 +192,16 @@ function CreateAccount() {
         <ErrorPopup
           message={submitError}
           onClose={closeErrorPopup}
+        />
+      )}
+
+      {showConfirmationPopup && (
+        <ConfirmationMessage
+          message={successMessage}
+          onClose={() => {
+            closeConfirmationPopup()
+            navigate('/login')
+          }}
         />
       )}
     </div>
