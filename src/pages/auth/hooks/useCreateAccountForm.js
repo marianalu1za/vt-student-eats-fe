@@ -38,7 +38,6 @@ export function useCreateAccountForm(onSuccess) {
   const [form, setForm] = useState({
     firstName: '',
     lastName: '',
-    restaurantName: '',
     role: 'vt_staff_students', // Default to VT staff/students
     email: '',
     password: '',
@@ -48,34 +47,22 @@ export function useCreateAccountForm(onSuccess) {
   const [emailError, setEmailError] = useState('')
   const [firstNameError, setFirstNameError] = useState('')
   const [lastNameError, setLastNameError] = useState('')
-  const [restaurantNameError, setRestaurantNameError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [showErrorPopup, setShowErrorPopup] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
+  const [showConfirmationPopup, setShowConfirmationPopup] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
 
     if (name === 'role') {
-      // Clear fields that are not relevant to the new role
-      if (value === 'restaurant') {
-        setForm((prev) => ({ 
-          ...prev, 
-          role: value,
-          firstName: '',
-          lastName: '',
-        }))
-        setFirstNameError('')
-        setLastNameError('')
-      } else {
-        setForm((prev) => ({ 
-          ...prev, 
-          role: value,
-          restaurantName: '',
-        }))
-        setRestaurantNameError('')
-      }
-      // Re-validate email when role changes
+      // Both roles require firstName and lastName, so just update the role
+      setForm((prev) => ({ 
+        ...prev, 
+        role: value,
+      }))
+      // Re-validate email when role changes (email constraints differ by role)
       if (form.email) {
         const error = validateEmail(form.email, value)
         setEmailError(error)
@@ -132,17 +119,6 @@ export function useCreateAccountForm(onSuccess) {
       return
     }
 
-    if (name === 'restaurantName') {
-      setForm((prev) => ({ ...prev, restaurantName: value }))
-      const error = validateName(value, 'Restaurant name')
-      setRestaurantNameError(error)
-      if (submitError) {
-        setSubmitError('')
-        setShowErrorPopup(false)
-      }
-      return
-    }
-
     setForm((prev) => ({ ...prev, [name]: value }))
     if (submitError) {
       setSubmitError('')
@@ -153,15 +129,10 @@ export function useCreateAccountForm(onSuccess) {
   const isFormValid = () => {
     const emailValid = form.email && !validateEmail(form.email, form.role)
     const passwordValid = form.password && !validatePassword(form.password)
-    
-    if (form.role === 'restaurant') {
-      const restaurantNameValid = form.restaurantName.trim().length > 0
-      return restaurantNameValid && emailValid && passwordValid
-    } else {
-      const firstNameValid = form.firstName.trim().length > 0
-      const lastNameValid = form.lastName.trim().length > 0
-      return firstNameValid && lastNameValid && emailValid && passwordValid
-    }
+    const firstNameValid = form.firstName.trim().length > 0
+    const lastNameValid = form.lastName.trim().length > 0
+
+    return firstNameValid && lastNameValid && emailValid && passwordValid
   }
 
   const handleSubmit = async (e) => {
@@ -170,21 +141,13 @@ export function useCreateAccountForm(onSuccess) {
     const passwordValidationError = validatePassword(form.password)
     
     let nameValidationErrors = false
-    if (form.role === 'restaurant') {
-      const restaurantNameValidationError = validateName(form.restaurantName, 'Restaurant name')
-      setRestaurantNameError(restaurantNameValidationError)
-      setFirstNameError('')
-      setLastNameError('')
-      nameValidationErrors = !!restaurantNameValidationError
-    } else {
-      const firstNameValidationError = validateName(form.firstName, 'First name')
-      const lastNameValidationError = validateName(form.lastName, 'Last name')
-      setFirstNameError(firstNameValidationError)
-      setLastNameError(lastNameValidationError)
-      setRestaurantNameError('')
-      nameValidationErrors = !!firstNameValidationError || !!lastNameValidationError
-    }
-    
+
+    const firstNameValidationError = validateName(form.firstName, 'First name')
+    const lastNameValidationError = validateName(form.lastName, 'Last name')
+    setFirstNameError(firstNameValidationError)
+    setLastNameError(lastNameValidationError)
+    nameValidationErrors = !!firstNameValidationError || !!lastNameValidationError
+
     setEmailError(emailValidationError)
     setPasswordError(passwordValidationError)
     
@@ -196,8 +159,13 @@ export function useCreateAccountForm(onSuccess) {
       setIsLoading(true)
       setSubmitError('')
       setShowErrorPopup(false)
+      setSuccessMessage('')
+      setShowConfirmationPopup(false)
       await createAccount(form)
-      // Call success callback if provided
+      // Show success confirmation popup
+      setSuccessMessage('Thanks for creating an account! Please check your email for verification. The verification link will expire in 15 minutes.')
+      setShowConfirmationPopup(true)
+      // Call success callback if provided (after showing confirmation)
       if (onSuccess) {
         onSuccess(form)
       }
@@ -220,6 +188,11 @@ export function useCreateAccountForm(onSuccess) {
     setSubmitError('')
   }
 
+  const closeConfirmationPopup = () => {
+    setShowConfirmationPopup(false)
+    setSuccessMessage('')
+  }
+
   return {
     form,
     showPassword,
@@ -228,7 +201,6 @@ export function useCreateAccountForm(onSuccess) {
     emailError,
     firstNameError,
     lastNameError,
-    restaurantNameError,
     handleChange,
     isFormValid,
     handleSubmit,
@@ -236,6 +208,9 @@ export function useCreateAccountForm(onSuccess) {
     submitError,
     showErrorPopup,
     closeErrorPopup,
+    successMessage,
+    showConfirmationPopup,
+    closeConfirmationPopup,
   }
 }
 
