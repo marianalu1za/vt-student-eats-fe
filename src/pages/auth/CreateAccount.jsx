@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useCreateAccountForm } from './hooks/useCreateAccountForm'
-import ErrorPopup from './components/ErrorPopup'
-import ConfirmationMessage from './components/ConfirmationMessage'
+import ErrorPopup from '../../components/common/ErrorPopup'
+import ConfirmationMessage from '../../components/common/ConfirmationMessage'
 import Header from '../restaurants/components/Header.jsx'
 import './Auth.css'
 
