@@ -42,15 +42,20 @@
 .auth-wrapper {
   background-color: #ebcfca;
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  min-height: 100vh;
+  height: calc(100vh - 100px);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 .auth-page {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
+  flex: 1;
   padding: 2rem;
+  box-sizing: border-box;
+  min-height: 0;
 }
 
 /* Card */
