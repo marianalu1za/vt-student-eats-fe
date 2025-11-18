@@ -16,15 +16,13 @@
   position: relative;
 }
 
-/* Top Container with Gray Background */
+/* Top Container */
 .restaurant-top-container {
   background-color: white;
   border: 1px solid #e0e0e0;
   width: 100vw;
   margin-left: calc(-50vw + 50%);
   position: relative;
-  margin-top: 0;
-  padding-top: 0;
 }
 
 .restaurant-top-content {
@@ -75,9 +73,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  margin-top: 0;
   margin-bottom: 2rem;
-  margin-left: 0;
   align-items: stretch;
 }
 
@@ -338,7 +334,6 @@
   flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 1rem;
-  margin-bottom: 0;
   align-items: stretch;
 }
 
@@ -363,38 +358,27 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
 }
 
-.website-button {
-    background-color: #6a283c;
-    color: white !important;
-    border-color: #6a283c;
-  }
-  
-  .website-button:hover {
-    background-color: #5a2233;
-    border-color: #5a2233;
-    color: white !important;
-  }
-
-.discount-button {
-  background-color: #6a283c;
-  color: white;
-  border-color: #6a283c;
-}
-
-.discount-button:hover {
-  background-color: #5a2233;
-  border-color: #5a2233;
-}
-
+.website-button,
+.discount-button,
 .group-order-button {
   background-color: #6a283c;
   color: white;
   border-color: #6a283c;
 }
 
+.website-button:hover,
+.discount-button:hover,
 .group-order-button:hover {
   background-color: #5a2233;
   border-color: #5a2233;
+}
+
+.website-button {
+  color: white !important;
+}
+
+.website-button:hover {
+  color: white !important;
 }
 
 /* Search Section */
@@ -461,6 +445,15 @@
   flex-wrap: wrap;
   gap: 1rem;
   padding-bottom: 0.5rem;
+  justify-content: space-between;
+}
+
+@media (min-width: 768px) {
+  .popular-items-scroll {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 2rem;
+  }
 }
 
 .popular-item-card {
@@ -469,7 +462,6 @@
   border-radius: 16px;
   overflow: hidden;
   width: 100%;
-  max-width: 350px;
   height: 140px;
   display: flex;
   flex-direction: row;
@@ -478,15 +470,9 @@
   transition: transform 0.2s, box-shadow 0.2s;
 }
 
-@media (min-width: 480px) {
-  .popular-item-card {
-    width: 320px;
-  }
-}
-
 @media (min-width: 768px) {
   .popular-item-card {
-    width: 350px;
+    width: 380px;
   }
 }
 
@@ -609,7 +595,7 @@
 .menu-items-scroll {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 2.12rem;
   padding-bottom: 0.5rem;
 }
 
@@ -619,7 +605,6 @@
   border-radius: 16px;
   overflow: hidden;
   width: 100%;
-  max-width: 350px;
   height: 140px;
   display: flex;
   flex-direction: row;
@@ -630,13 +615,7 @@
 
 @media (min-width: 480px) {
   .menu-item-card {
-    width: 320px;
-  }
-}
-
-@media (min-width: 768px) {
-  .menu-item-card {
-    width: 350px;
+    width: 380px;
   }
 }
 
@@ -750,8 +729,6 @@
   .restaurant-header-section {
     flex-direction: column;
     align-items: stretch;
-    margin-left: 0;
-    margin-top: 0;
     gap: 1rem;
   }
 
@@ -823,7 +800,6 @@
 
   .popular-item-card,
   .menu-item-card {
-    width: 280px;
     height: 120px;
   }
 
@@ -882,8 +858,4 @@
     min-width: 260px;
   }
 
-  .popular-item-card,
-  .menu-item-card {
-    width: 320px;
-  }
 }
