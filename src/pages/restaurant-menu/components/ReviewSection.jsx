@@ -30,6 +30,11 @@ function ReviewSection({ reviews = [], overallRating = 4.7, totalRatings = 100, 
     }
   }
 
+  const handleAddReview = () => {
+    // TODO: Implement add review functionality
+    console.log('Add review clicked')
+  }
+
   // Helper function to render stars based on rating
   const renderStars = (rating) => {
     const stars = []
@@ -67,7 +72,7 @@ function ReviewSection({ reviews = [], overallRating = 4.7, totalRatings = 100, 
           <h2 className="review-section-title">Reviews</h2>
         </div>
         <div className="review-header-right">
-          <button className="add-review-button">Add Review</button>
+          <button className="add-review-button" onClick={handleAddReview}>Add Review</button>
           <div className="review-navigation">
             <button 
               className="nav-arrow nav-arrow-left" 
@@ -128,6 +133,15 @@ function ReviewSection({ reviews = [], overallRating = 4.7, totalRatings = 100, 
               <p className="review-text">{review.reviewText}</p>
             </article>
           ))}
+          {/* Add Review Card - show when there are less than 3 reviews */}
+          {displayReviews.length < 3 && (
+            <article className="review-card add-review-card" onClick={handleAddReview}>
+              <div className="add-review-card-content">
+                <i className="fa-solid fa-plus add-review-icon"></i>
+                <p className="add-review-text">add your review!</p>
+              </div>
+            </article>
+          )}
         </div>
       </div>
     </section>

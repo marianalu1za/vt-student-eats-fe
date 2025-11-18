@@ -6,7 +6,7 @@ export const mockReviews = [
     userInitial: 'B',
     contributions: 1,
     orderDate: '2025-07-18',
-    reviewText: 'Hey this place made my day Creamy, Comforting & Satisfying! 🍝 I tried two pasta dishes from Pasta Stop today the first Pen...',
+    reviewText: 'One of the best!!!',
     rating: 3
   },
   {
@@ -15,7 +15,7 @@ export const mockReviews = [
     userInitial: 'J',
     contributions: 1,
     orderDate: '2025-07-13',
-    reviewText: 'Absolutely delicious! I ordered the grilled salmon, french fries, and a slice of chocolate cake, and everything was spot on. The...',
+    reviewText: 'Absolutely delicious!',
     rating: 2.9
   },
   {
@@ -24,8 +24,26 @@ export const mockReviews = [
     userInitial: 'A',
     contributions: 81,
     orderDate: '2025-11-11',
-    reviewText: 'This place is amazing. I\'ve ordered multiple times and it\'s always perfect - delicious, packed well, huge portions...',
+    reviewText: 'This place is amazing.',
     rating: 5
-  }
+  },
+  // {
+  //   id: 4,
+  //   userName: 'Abigail B',
+  //   userInitial: 'A',
+  //   contributions: 81,
+  //   orderDate: '2025-11-11',
+  //   reviewText: 'This place is amazing. I\'ve ordered multiple times and it\'s always perfect - delicious, packed well, huge portions...',
+  //   rating: 5
+  // },
+  // {
+  //   id: 5,
+  //   userName: 'Abigail C',
+  //   userInitial: 'A',
+  //   contributions: 81,
+  //   orderDate: '2025-11-11',
+  //   reviewText: 'This place is amazing. I\'ve ordered multiple times and it\'s always perfect - delicious, packed well, huge portions...',
+  //   rating: 5
+  // }
 ]
 
