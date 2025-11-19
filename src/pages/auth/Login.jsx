@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Header from '../restaurants/components/Header.jsx'
 import ErrorPopup from '../../components/common/ErrorPopup'
 import './Auth.css'
-import { login } from '../../api/auth.js'
+import { login, getCurrentUser } from '../../api/auth.js'
 
 function Login() {
   const navigate = useNavigate()
@@ -35,8 +35,16 @@ function Login() {
       }
       const response = await login(credentials)
       console.log('Login successful:', response)
-      // TODO: Handle successful login (e.g., store tokens, redirect, update auth state)
-      // navigate('/') // Example: redirect to home page
+      
+      // Fetch current user data after successful login
+      const userData = await getCurrentUser()
+      console.log('User data fetched:', userData)
+      
+      // Store user data in localStorage for persistence across page refreshes
+      localStorage.setItem('user', JSON.stringify(userData))
+      
+      // Redirect to home page
+      navigate('/restaurants')
     } catch (err) {
       console.error('Login error:', err)
       const errorMessage = err.statusCode 

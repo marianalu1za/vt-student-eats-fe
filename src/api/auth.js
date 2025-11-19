@@ -187,3 +187,95 @@ export async function login(credentials) {
     throw error
   }
 }
+
+/**
+ * Fetches the current authenticated user's information from the API
+ * @returns {Promise<Object>} Current user data
+ */
+export async function getCurrentUser() {
+  try {
+    const response = await fetch(`${ACCOUNTS_API_BASE}/me/`, {
+      method: 'GET',
+      credentials: 'include', // Include cookies for session-based auth
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const errorMessage = errorData.detail || errorData.message || errorData.error || `Failed to fetch user data: ${response.status}`
+      const error = new Error(errorMessage)
+      error.statusCode = response.status
+      throw error
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('Error fetching current user:', error)
+    throw error
+  }
+}
+
+/**
+ * Gets the stored user data from localStorage
+ * @returns {Object|null} User data if available, null otherwise
+ */
+export function getStoredUser() {
+  try {
+    const userStr = localStorage.getItem('user')
+    return userStr ? JSON.parse(userStr) : null
+  } catch (error) {
+    console.error('Error parsing stored user data:', error)
+    return null
+  }
+}
+
+/**
+ * Removes the stored user data from localStorage
+ * Useful for logout
+ */
+export function clearStoredUser() {
+  localStorage.removeItem('user')
+}
+
+/**
+ * Logs out the current user
+ * Calls the logout API endpoint, clears stored user data, and clears CSRF token cache
+ * @returns {Promise<void>}
+ */
+export async function logout() {
+  try {
+    // Force refresh CSRF token to ensure we have a valid one
+    const token = await getCsrfToken(true)
+
+    const response = await fetch(`${ACCOUNTS_API_BASE}/logout/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': token,
+      },
+      credentials: 'include', // Include cookies for session-based auth
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const errorMessage = errorData.detail || errorData.message || errorData.error || `Logout failed: ${response.status}`
+      const error = new Error(errorMessage)
+      error.statusCode = response.status
+      throw error
+    }
+
+    // Clear stored user data and CSRF token cache after successful logout
+    clearStoredUser()
+    clearCsrfTokenCache()
+
+    return await response.json()
+  } catch (error) {
+    console.error('Error logging out:', error)
+    // Even if logout API call fails, clear local data
+    clearStoredUser()
+    clearCsrfTokenCache()
+    throw error
+  }
+}

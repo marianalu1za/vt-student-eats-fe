@@ -1,15 +1,35 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import './Header.css'
 import Logo from '../../../components/common/Logo'
 import ProfileButton from '../../../components/common/ProfileButton'
+import { getStoredUser } from '../../../api/auth.js'
 
 function Header() {
-  // TODO: Replace with actual authentication state from context/API
-  const [isLoggedIn] = useState(false) // Set to false to show visitor view by default
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    // Check if user is logged in on component mount
+    return !!getStoredUser()
+  })
   const location = useLocation()
   const isLoginPage = location.pathname === '/login'
   const isCreateAccountPage = location.pathname === '/create-account'
+
+  // Update login state when localStorage changes or location changes
+  useEffect(() => {
+    const checkAuthState = () => {
+      setIsLoggedIn(!!getStoredUser())
+    }
+
+    // Check on mount and when location changes (user navigates after login)
+    checkAuthState()
+
+    // Listen for storage changes (e.g., user logs in/out in another tab)
+    window.addEventListener('storage', checkAuthState)
+
+    return () => {
+      window.removeEventListener('storage', checkAuthState)
+    }
+  }, [location.pathname])
 
   return (
     <>
