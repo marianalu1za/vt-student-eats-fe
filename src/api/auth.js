@@ -56,7 +56,7 @@ export async function createAccount(formData) {
     // Map role values: vt_staff_students -> "User", restaurant_manager -> "Restaurant Manager"
     const roleMap = {
       'vt_staff_students': 'User',
-      'restaurant_manager': 'Restaurant Manger'
+      'restaurant_manager': 'Restaurant Manager'
     }
     
     const apiPayload = {
