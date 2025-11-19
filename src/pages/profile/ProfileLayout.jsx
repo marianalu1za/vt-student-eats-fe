@@ -4,8 +4,9 @@ import Sidebar from '../../components/common/Sidebar'
 import MyProfile from './MyProfile'
 import GroupOrdersJoined from './GroupOrdersJoined'
 import GroupOrdersHistory from './GroupOrdersHistory'
+import ChangePassword from './ChangePassword'
 import { logout } from '../../api/auth'
-import './UserProfile.css'
+import './ProfileLayout.css'
 
 const profileMenuItems = [
   { path: '/profile', icon: '👤', label: 'My Profile' },
@@ -13,7 +14,7 @@ const profileMenuItems = [
   { path: '/profile/group-orders-history', icon: '📜', label: 'Group Orders History' },
 ]
 
-function UserProfile() {
+function ProfileLayout() {
   const contentRef = useRef(null)
   const navigate = useNavigate()
 
@@ -39,7 +40,7 @@ function UserProfile() {
   ]
 
   return (
-    <div className="user-profile">
+    <div className="profile-layout">
       <Sidebar
         title="My Account"
         menuItems={menuItemsWithSignOut}
@@ -52,6 +53,7 @@ function UserProfile() {
           <Route path="" element={<MyProfile />} />
           <Route path="group-orders-joined" element={<GroupOrdersJoined />} />
           <Route path="group-orders-history" element={<GroupOrdersHistory />} />
+          <Route path="change-password" element={<ChangePassword />} />
           <Route path="*" element={<Navigate to="/profile" replace />} />
         </Routes>
       </div>
@@ -59,5 +61,5 @@ function UserProfile() {
   )
 }
 
-export default UserProfile
+export default ProfileLayout
 

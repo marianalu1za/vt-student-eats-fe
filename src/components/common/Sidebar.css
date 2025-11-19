@@ -88,6 +88,17 @@
   color: #ffffff;
 }
 
+.nav-item:active {
+  background-color: #8a5252;
+  color: #ffffff;
+}
+
+.nav-item:focus {
+  outline: none;
+  background-color: #ad6767;
+  color: #ffffff;
+}
+
 .nav-item.active {
   background-color: #2d2d2d;
   color: #ffffff;
@@ -106,6 +117,17 @@
 }
 
 .nav-item-sign-out:hover {
+  background-color: #dc3545;
+  color: #ffffff;
+}
+
+.nav-item-sign-out:active {
+  background-color: #c82333;
+  color: #ffffff;
+}
+
+.nav-item-sign-out:focus {
+  outline: none;
   background-color: #dc3545;
   color: #ffffff;
 }

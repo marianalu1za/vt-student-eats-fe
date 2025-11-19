@@ -80,7 +80,11 @@ function Sidebar({
             return (
               <button
                 key={index}
-                onClick={item.onClick}
+                onClick={(e) => {
+                  item.onClick(e)
+                  // Blur the button after click to remove focus state
+                  e.currentTarget.blur()
+                }}
                 className={`nav-item ${item.isSignOut ? 'nav-item-sign-out' : ''}`}
                 type="button"
               >
@@ -94,6 +98,7 @@ function Sidebar({
             <NavLink 
               key={index}
               to={item.path}
+              end={item.path === '/profile' || item.path === '/admin'}
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
             >
               <span className="nav-icon">{item.icon}</span>

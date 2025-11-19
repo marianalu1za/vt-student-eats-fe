@@ -218,6 +218,85 @@ export async function getCurrentUser() {
 }
 
 /**
+ * Updates the current authenticated user's profile information
+ * @param {Object} profileData - Profile data to update
+ * @param {string} profileData.first_name - User's first name
+ * @param {string} profileData.last_name - User's last name
+ * @returns {Promise<Object>} Updated user data
+ */
+export async function updateUserProfile(profileData) {
+  try {
+    // Force refresh CSRF token to ensure we have a valid one
+    const token = await getCsrfToken(true)
+
+    const response = await fetch(`${ACCOUNTS_API_BASE}/me/`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': token,
+      },
+      credentials: 'include', // Include cookies for session-based auth
+      body: JSON.stringify(profileData),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const errorMessage = errorData.detail || errorData.message || errorData.error || `Failed to update profile: ${response.status}`
+      
+      // If CSRF token error, clear cache and retry once
+      if (response.status === 403 && errorMessage.includes('CSRF')) {
+        console.log('CSRF token error detected, clearing cache and retrying...')
+        clearCsrfTokenCache()
+        
+        // Retry with a fresh token
+        const freshToken = await getCsrfToken(true)
+        const retryResponse = await fetch(`${ACCOUNTS_API_BASE}/me/`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': freshToken,
+          },
+          credentials: 'include',
+          body: JSON.stringify(profileData),
+        })
+        
+        if (!retryResponse.ok) {
+          const retryErrorData = await retryResponse.json().catch(() => ({}))
+          const retryErrorMessage = retryErrorData.detail || retryErrorData.message || retryErrorData.error || `Failed to update profile: ${retryResponse.status}`
+          const error = new Error(retryErrorMessage)
+          error.statusCode = retryResponse.status
+          throw error
+        }
+        
+        return await retryResponse.json()
+      }
+      
+      // Handle field-specific validation errors
+      if (typeof errorData === 'object' && !errorData.message && !errorData.error && !errorData.detail) {
+        const fieldErrors = []
+        for (const [field, errors] of Object.entries(errorData)) {
+          if (Array.isArray(errors) && errors.length > 0) {
+            fieldErrors.push(`${errors.join(', ')}`)
+          }
+        }
+        if (fieldErrors.length > 0) {
+          throw new Error(fieldErrors.join('\n'))
+        }
+      }
+      
+      const error = new Error(errorMessage)
+      error.statusCode = response.status
+      throw error
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('Error updating user profile:', error)
+    throw error
+  }
+}
+
+/**
  * Gets the stored user data from localStorage
  * @returns {Object|null} User data if available, null otherwise
  */
