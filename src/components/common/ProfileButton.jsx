@@ -138,14 +138,14 @@ function ProfileButton({
             <>
               <div 
                 className="profile-dropdown-item"
-                onClick={() => handleMenuItemClick('/group-orders')}
+                onClick={() => handleMenuItemClick('/profile/group-orders-joined')}
               >
                 <span className="profile-dropdown-icon">👥</span>
                 <span>Group orders I joined</span>
               </div>
               <div 
                 className="profile-dropdown-item"
-                onClick={() => handleMenuItemClick('/group-orders/history')}
+                onClick={() => handleMenuItemClick('/profile/group-orders-history')}
               >
                 <span className="profile-dropdown-icon">📜</span>
                 <span>Group order history</span>

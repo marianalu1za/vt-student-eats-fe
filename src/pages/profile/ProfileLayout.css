@@ -1,0 +1,55 @@
+.profile-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  position: relative;
+}
+
+.profile-content {
+  flex: 1;
+  padding: 32px;
+  min-height: 100vh;
+  transition: margin-left 0.1s ease;
+}
+
+.profile-page-content {
+  width: 100%;
+}
+
+/* Reuse admin styles for consistency */
+.profile-content .admin-page-header {
+  margin-bottom: 24px;
+}
+
+.profile-content .admin-page-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.profile-content .admin-page-header p {
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+  color: #666;
+}
+
+.profile-content .admin-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .profile-content {
+    padding: 16px;
+  }
+
+  .profile-content .admin-card {
+    padding: 16px;
+  }
+}
+
