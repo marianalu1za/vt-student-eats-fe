@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import Header from '../restaurants/components/Header.jsx'
 import './GroupOrders.css'
-import { fetchGroupOrders } from '../../api/groupOrders.js'
+import { fetchCurrentUser, fetchGroupOrders, createGroupOrder } from '../../api/groupOrders.js'
 import CreateGroupOrderForm from './GroupOrderForm.jsx'
+import { buildGroupOrderPayload } from './buildOrder.js'
 
 // helper: turn API object → card data
 function mapApiOrderToCard(order) {
@@ -33,11 +34,33 @@ function GroupOrders() {
   const [filter, setFilter] = useState('open')    // 'open' | 'full' | 'all'
   const [showCreateForm, setShowCreateForm] = useState(false)
 
-  const handleCreateSubmit = (data) => {
-    console.log('Create group order data from form:', data)
-    // later: call your POST API here with `data`
-    setShowCreateForm(false) // close form after "submit"
+  async function handleCreateSubmit(formData) {
+    console.log('Create group order data from form:', formData)
+
+    try {
+      let payload = buildGroupOrderPayload(formData)
+
+      // TODO: Test once log in works
+      // attach current user
+      // const user = await fetchCurrentUser()
+      // if (user) {
+      //   payload.created_by_user = user.id   // or whatever field your API expects
+      // }
+
+      console.log('Final payload:', payload)
+
+      const createdOrder = await createGroupOrder(payload)
+      console.log('Created group order:', createdOrder)
+
+      await loadGroupOrders()
+
+      setShowCreateForm(false)
+    } catch (err) {
+      console.error('Failed to create group order:', err)
+      // TODO: show an error message in the UI
+    }
   }
+
 
   useEffect(() => {
     async function loadGroupOrders() {
