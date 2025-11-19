@@ -155,8 +155,6 @@ function ExistingRestaurants() {
               <th>Owner</th>
               <th>Address</th>
               <th>Website</th>
-              <th>Xcoordinate</th>
-              <th>Ycoordinate</th>
               <th className="admin-table-actions-header">Actions</th>
 
             </tr>
@@ -202,8 +200,6 @@ function ExistingRestaurants() {
                     'N/A'
                   )}
                 </td>
-                <td>{restaurant.x_coordinate}</td>
-                <td>{restaurant.y_coordinate}</td>
                 <td className="admin-table-actions-cell">
                   <div className="admin-table-actions">
                     <button className="admin-btn admin-btn-primary" style={{ marginRight: '8px' }}>
