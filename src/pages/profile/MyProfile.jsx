@@ -168,7 +168,22 @@ function MyProfile() {
         theme: formData.theme,
       })
       setProfile(updatedProfile)
-      setOriginalData(formData)
+      // Reconstruct formData and originalData from server response to stay in sync
+      const syncedFormData = {
+        first_name: updatedProfile.first_name || '',
+        last_name: updatedProfile.last_name || '',
+        email: updatedProfile.email || '',
+        phone: updatedProfile.phone || '',
+        show_phone: updatedProfile.show_phone || false,
+        social_media: updatedProfile.social_media || '',
+        show_social_media: updatedProfile.show_social_media || false,
+        major: updatedProfile.major || '',
+        email_notifications: updatedProfile.email_notifications !== undefined ? updatedProfile.email_notifications : true,
+        sms_notifications: updatedProfile.sms_notifications || false,
+        theme: updatedProfile.theme || 'light',
+      }
+      setFormData(syncedFormData)
+      setOriginalData(syncedFormData)
       setIsEditing(false)
       setValidationErrors({})
     } catch (err) {
