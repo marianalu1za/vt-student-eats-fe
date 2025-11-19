@@ -68,6 +68,8 @@
   flex: 1;
   padding: 16px 0;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .nav-item {
@@ -90,6 +92,22 @@
   background-color: #2d2d2d;
   color: #ffffff;
   border-left-color: #e68060;
+}
+
+.nav-item-sign-out {
+  color: #ff6b6b;
+  margin-top: auto;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.nav-item-sign-out:hover {
+  background-color: #dc3545;
+  color: #ffffff;
 }
 
 .nav-icon {

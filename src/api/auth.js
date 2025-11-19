@@ -155,3 +155,96 @@ export async function login(credentials) {
     throw error
   }
 }
+
+/**
+ * Gets the current user's profile information
+ * @returns {Promise<Object>} User profile data (id, email, first_name, last_name, roles)
+ */
+export async function getUserProfile() {
+  try {
+    const response = await fetch(`${ACCOUNTS_API_BASE}/me/`, {
+      method: 'GET',
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || errorData.error || `Failed to fetch profile: ${response.status}`)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('Error fetching user profile:', error)
+    throw error
+  }
+}
+
+/**
+ * Logs out the current user
+ * @returns {Promise<Object>} Response data from the API
+ */
+export async function logout() {
+  try {
+    // Get CSRF token before making POST request
+    const token = await getCsrfToken()
+
+    const response = await fetch(`${ACCOUNTS_API_BASE}/logout/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': token,
+      },
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || errorData.error || `Logout failed: ${response.status}`)
+    }
+
+    // Clear localStorage user data
+    localStorage.removeItem('user')
+
+    return await response.json()
+  } catch (error) {
+    console.error('Error logging out:', error)
+    // Clear localStorage even if API call fails
+    localStorage.removeItem('user')
+    throw error
+  }
+}
+
+/**
+ * Updates the current user's profile information
+ * TODO: Backend endpoint does not exist yet. This function is prepared for future implementation.
+ * @param {Object} profileData - Profile data to update
+ * @param {string} profileData.first_name - User's first name
+ * @param {string} profileData.last_name - User's last name
+ * @returns {Promise<Object>} Updated user profile data
+ */
+export async function updateUserProfile(profileData) {
+  try {
+    // Get CSRF token before making PUT/PATCH request
+    const token = await getCsrfToken()
+
+    const response = await fetch(`${ACCOUNTS_API_BASE}/me/`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': token,
+      },
+      credentials: 'include',
+      body: JSON.stringify(profileData),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || errorData.error || `Failed to update profile: ${response.status}`)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('Error updating user profile:', error)
+    throw error
+  }
+}

@@ -6,6 +6,7 @@ import Login from './pages/auth/Login'
 import CreateAccount from './pages/auth/CreateAccount'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import GroupOrders from './pages/group-orders/GroupOrders.jsx'
+import UserProfile from './pages/profile/UserProfile'
 import './App.css'
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/create-account" element={<CreateAccount />} />
         <Route path="/admin/*" element={<AdminDashboard />} />
+        <Route path="/profile/*" element={<UserProfile />} />
         <Route path="/group-orders" element={<GroupOrders />} />
       </Routes>
     </BrowserRouter>
