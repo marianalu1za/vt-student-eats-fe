@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import './ReviewSection.css'
 import { mockReviews } from '../../../mock_data/reviews.js'
 
@@ -9,26 +9,68 @@ function formatDate(dateString) {
 }
 
 function ReviewSection({ reviews = [], overallRating = 4.7, totalRatings = 100, publicReviews = 20 }) {
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const scrollContainerRef = useRef(null)
+  const [scrollLeft, setScrollLeft] = useState(0)
+  const [canGoNext, setCanGoNext] = useState(false)
   
   // Use provided reviews or fall back to mock reviews
   const displayReviews = reviews.length > 0 ? reviews : mockReviews
 
-  const reviewsToShow = displayReviews.slice(currentIndex, currentIndex + 3)
-  const canGoPrevious = currentIndex > 0
-  const canGoNext = currentIndex + 3 < displayReviews.length
+  const scrollAmount = 120 // pixels to scroll
+
+  // Update canGoNext based on scroll position and container dimensions
+  useEffect(() => {
+    const updateCanGoNext = () => {
+      if (scrollContainerRef.current) {
+        const container = scrollContainerRef.current
+        const maxScroll = container.scrollWidth - container.clientWidth
+        setCanGoNext(scrollLeft < maxScroll - 1)
+      }
+    }
+    updateCanGoNext()
+    
+    // Also update on window resize
+    const handleResize = () => {
+      updateCanGoNext()
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [scrollLeft, displayReviews.length])
 
   const handlePrevious = () => {
-    if (canGoPrevious) {
-      setCurrentIndex(Math.max(0, currentIndex - 3))
+    if (scrollContainerRef.current) {
+      const newScrollLeft = Math.max(0, scrollContainerRef.current.scrollLeft - scrollAmount)
+      scrollContainerRef.current.scrollTo({
+        left: newScrollLeft,
+        behavior: 'smooth'
+      })
+      setScrollLeft(newScrollLeft)
     }
   }
 
   const handleNext = () => {
-    if (canGoNext) {
-      setCurrentIndex(Math.min(displayReviews.length - 3, currentIndex + 3))
+    if (scrollContainerRef.current) {
+      const container = scrollContainerRef.current
+      const newScrollLeft = Math.min(
+        container.scrollWidth - container.clientWidth,
+        container.scrollLeft + scrollAmount
+      )
+      container.scrollTo({
+        left: newScrollLeft,
+        behavior: 'smooth'
+      })
+      setScrollLeft(newScrollLeft)
     }
   }
+
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      const currentScroll = scrollContainerRef.current.scrollLeft
+      setScrollLeft(currentScroll)
+    }
+  }
+
+  const canGoPrevious = scrollLeft > 0
 
   const handleAddReview = () => {
     // TODO: Implement add review functionality
@@ -71,45 +113,52 @@ function ReviewSection({ reviews = [], overallRating = 4.7, totalRatings = 100, 
         <div className="review-header-left">
           <h2 className="review-section-title">Reviews</h2>
         </div>
-        <div className="review-header-right">
-          <button className="add-review-button" onClick={handleAddReview}>Add Review</button>
-          <div className="review-navigation">
-            <button 
-              className="nav-arrow nav-arrow-left" 
-              onClick={handlePrevious}
-              disabled={!canGoPrevious}
-              aria-label="Previous reviews"
-            >
-              <i className="fa-solid fa-chevron-left"></i>
-            </button>
-            <button 
-              className="nav-arrow nav-arrow-right" 
-              onClick={handleNext}
-              disabled={!canGoNext}
-              aria-label="Next reviews"
-            >
-              <i className="fa-solid fa-chevron-right"></i>
-            </button>
+        {displayReviews.length > 2 && (
+          <div className="review-header-right">
+            <button className="add-review-button" onClick={handleAddReview}>Add Review</button>
+            <div className="review-navigation">
+              <button 
+                className="nav-arrow nav-arrow-left" 
+                onClick={handlePrevious}
+                disabled={!canGoPrevious}
+                aria-label="Previous reviews"
+              >
+                <i className="fa-solid fa-chevron-left"></i>
+              </button>
+              <button 
+                className="nav-arrow nav-arrow-right" 
+                onClick={handleNext}
+                disabled={!canGoNext}
+                aria-label="Next reviews"
+              >
+                <i className="fa-solid fa-chevron-right"></i>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Content */}
       <div className="review-content">
         {/* Overall Rating Display */}
-        <div className="overall-rating-container">
-          <div className="rating-box">
-            <div className="rating-number-large">{overallRating.toFixed(1)}</div>
-            <div className="rating-stars-container">
-              {renderStars(overallRating)}
+        {displayReviews.length > 0 && (
+          <div className="overall-rating-container">
+            <div className="rating-box">
+              <div className="rating-number-large">{overallRating.toFixed(1)}</div>
+              <div className="rating-stars-container">
+                {renderStars(overallRating)}
+              </div>
+              <p className="rating-count-text">{totalRatings}+ ratings</p>
             </div>
-            <p className="rating-count-text">{totalRatings}+ ratings</p>
           </div>
-        </div>
-
+        )}
         {/* Review Cards */}
-        <div className="review-cards-container">
-          {reviewsToShow.map((review) => (
+        <div 
+          className="review-cards-container" 
+          ref={scrollContainerRef}
+          onScroll={handleScroll}
+        >
+          {displayReviews.map((review) => (
             <article key={review.id} className="review-card">
               <div className="review-card-header">
                 <div className="review-user-info">
