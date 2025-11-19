@@ -146,7 +146,10 @@ export async function login(credentials) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || errorData.error || `Login failed: ${response.status}`)
+      const errorMessage = errorData.detail || errorData.message || errorData.error || `Login failed: ${response.status}`
+      const error = new Error(errorMessage)
+      error.statusCode = response.status
+      throw error
     }
 
     return await response.json()
