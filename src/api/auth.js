@@ -6,11 +6,28 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 const ACCOUNTS_API_BASE = `${API_BASE_URL}/api/accounts`
 
+let csrfTokenCache = null
+
+/**
+ * Clears the cached CSRF token
+ * Useful for logout or when you want to force a fresh token
+ */
+export function clearCsrfTokenCache() {
+  csrfTokenCache = null
+}
+
 /**
  * Fetches the CSRF token from the backend
+ * Caches the token in memory to avoid fetching on every request
+ * @param {boolean} forceRefresh - If true, bypasses cache and fetches fresh token
  * @returns {Promise<string>} CSRF token
  */
-export async function getCsrfToken() {
+export async function getCsrfToken(forceRefresh = false) {
+  // Return cached token if available and not forcing refresh
+  if (csrfTokenCache && !forceRefresh) {
+    return csrfTokenCache
+  }
+
   try {
     console.log('Fetching CSRF token from:', `${ACCOUNTS_API_BASE}/csrf/`)
 
@@ -28,11 +45,16 @@ export async function getCsrfToken() {
     }
 
     const data = await response.json()
+    
+    // Cache the token
+    csrfTokenCache = data.csrfToken
 
-    return data.csrfToken
+    return csrfTokenCache
 
   } catch (error) {
     console.error('Error fetching CSRF token:', error)
+    // Clear cache on error
+    clearCsrfTokenCache()
     throw error
   }
 }
@@ -147,6 +169,13 @@ export async function login(credentials) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       const errorMessage = errorData.detail || errorData.message || errorData.error || `Login failed: ${response.status}`
+      
+      // If CSRF token error, clear cache
+      if (response.status === 403 && errorMessage.includes('CSRF')) {
+        console.log('CSRF token error detected, clearing cache...')
+        clearCsrfTokenCache()
+      }
+      
       const error = new Error(errorMessage)
       error.statusCode = response.status
       throw error
