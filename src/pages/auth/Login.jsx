@@ -1,19 +1,42 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Header from '../restaurants/components/Header.jsx'
 import './Auth.css'
+import { login } from '../../api/auth.js'
 
 function Login() {
+  const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', password: '' })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   const handleChange = (e) => {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
+    // Clear error when user starts typing
+    if (error) setError(null)
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // TODO: Handle Submitted Log-in Here
-    console.log('Login form submitted:', form)
+    setLoading(true)
+    setError(null)
+
+    try {
+      const credentials = {
+        username: form.email,
+        password: form.password
+      }
+      const response = await login(credentials)
+      console.log('Login successful:', response)
+      // TODO: Handle successful login (e.g., store tokens, redirect, update auth state)
+      // navigate('/') // Example: redirect to home page
+    } catch (err) {
+      console.error('Login error:', err)
+      setError(err.message || 'Failed to log in. Please check your credentials.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -54,6 +77,12 @@ function Login() {
               />
             </div>
 
+            {error && (
+              <div className="auth-error" role="alert">
+                {error}
+              </div>
+            )}
+
             <div className="auth-row">
               {/* TODO: Handle Remember Me Box Here */}
               <label className="auth-remember">
@@ -70,8 +99,8 @@ function Login() {
               </button>
             </div>
 
-            <button type="submit" className="auth-btn">
-              Log in
+            <button type="submit" className="auth-btn" disabled={loading}>
+              {loading ? 'Logging in...' : 'Log in'}
             </button>
           </form>
 
