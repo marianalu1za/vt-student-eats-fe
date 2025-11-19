@@ -1,6 +1,7 @@
 import './ProfileButton.css'
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
+import { getStoredUser, logout } from '../../api/auth.js'
 
 function ProfileButton({
   onClick,
@@ -12,35 +13,44 @@ function ProfileButton({
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef(null)
 
-  // Try to get user from localStorage if not provided
-  const getCurrentUser = () => {
-    if (user) return user
-    try {
-      const storedUser = localStorage.getItem('user')
-      return storedUser ? JSON.parse(storedUser) : null
-    } catch {
-      return null
-    }
-  }
-
-  const currentUser = getCurrentUser()
+  // Use provided user prop or get from localStorage
+  const currentUser = user || getStoredUser()
+  // API returns first_name, last_name, and roles (snake_case)
   const userName = currentUser 
-    ? `${currentUser.firstName || ''} ${currentUser.lastName}`.trim() 
+    ? `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() 
     : 'Justin Bieber'
   
-  const userRole = currentUser?.role?.toLowerCase() || 'student'
+  // Extract role from roles field (could be string, array, null, or undefined)
+  const getRoleString = (roles) => {
+    if (!roles) return null
+    // If it's an array, take the first role
+    if (Array.isArray(roles)) {
+      return roles.length > 0 ? roles[0] : null
+    }
+    // If it's already a string, return it
+    if (typeof roles === 'string') {
+      return roles
+    }
+    return null
+  }
+  
+  const roleString = getRoleString(currentUser?.roles)
+  // Default to 'user' if role is empty or missing (lowercase for comparisons)
+  const userRole = roleString?.toLowerCase() || 'user'
   
   // Format role for display: capitalize first letter and replace underscores with spaces
   const formatRole = (role) => {
     if (!role) return ''
-    return role
+    const roleStr = typeof role === 'string' ? role : String(role)
+    return roleStr
       .replace(/_/g, ' ')
       .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ')
   }
   
-  const displayRole = formatRole(currentUser?.role || userRole)
+  // Display the formatted original role, or default to "User"
+  const displayRole = formatRole(roleString || 'User')
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -72,10 +82,20 @@ function ProfileButton({
     navigate(path)
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsOpen(false)
-    // TODO: Implement logout logic
-    console.log('Logging out...')
+    try {
+      await logout()
+      // Navigate to login page after successful logout
+      navigate('/login')
+      // Force page reload to update Header component
+      window.location.reload()
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Navigate to login page even if logout API call fails
+      navigate('/login')
+      window.location.reload()
+    }
   }
 
   return (
@@ -113,8 +133,8 @@ function ProfileButton({
             <span>Profile</span>
           </div>
           
-          {/* Student/Staff menu items */}
-          {(userRole === 'student' || userRole === 'staff') && (
+          {/* User (Student/Staff) menu items */}
+          {(userRole === 'user') && (
             <>
               <div 
                 className="profile-dropdown-item"
@@ -134,7 +154,7 @@ function ProfileButton({
           )}
           
           {/* Restaurant Manager menu item */}
-          {userRole === 'restaurant_manager' && (
+          {userRole === 'restaurant manager' && (
             <div 
               className="profile-dropdown-item"
               onClick={() => handleMenuItemClick('/restaurants/management')}

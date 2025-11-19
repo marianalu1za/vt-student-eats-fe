@@ -1,19 +1,65 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Header from '../restaurants/components/Header.jsx'
+import ErrorPopup from '../../components/common/ErrorPopup'
 import './Auth.css'
+import { login, getCurrentUser } from '../../api/auth.js'
 
 function Login() {
+  const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', password: '' })
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [showErrorPopup, setShowErrorPopup] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
     setForm((prev) => ({ ...prev, [name]: value }))
+    // Clear error when user starts typing
+    if (error) {
+      setError(null)
+      setShowErrorPopup(false)
+    }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // TODO: Handle Submitted Log-in Here
-    console.log('Login form submitted:', form)
+    setLoading(true)
+    setError(null)
+    setShowErrorPopup(false)
+
+    try {
+      const credentials = {
+        username: form.email,
+        password: form.password
+      }
+      const response = await login(credentials)
+      console.log('Login successful:', response)
+      
+      // Fetch current user data after successful login
+      const userData = await getCurrentUser()
+      console.log('User data fetched:', userData)
+      
+      // Store user data in localStorage for persistence across page refreshes
+      localStorage.setItem('user', JSON.stringify(userData))
+      
+      // Redirect to home page
+      navigate('/restaurants')
+    } catch (err) {
+      console.error('Login error:', err)
+      const errorMessage = err.statusCode 
+        ? `${err.statusCode}: ${err.message || 'Failed to log in. Please check your credentials.'}`
+        : err.message || 'Failed to log in. Please check your credentials.'
+      setError(errorMessage)
+      setShowErrorPopup(true)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const closeErrorPopup = () => {
+    setShowErrorPopup(false)
+    setError(null)
   }
 
   return (
@@ -70,8 +116,8 @@ function Login() {
               </button>
             </div>
 
-            <button type="submit" className="auth-btn">
-              Log in
+            <button type="submit" className="auth-btn" disabled={loading}>
+              {loading ? 'Logging in...' : 'Log in'}
             </button>
           </form>
 
@@ -88,6 +134,13 @@ function Login() {
           </div>
         </div>
       </div>
+      
+      {showErrorPopup && (
+        <ErrorPopup
+          message={error}
+          onClose={closeErrorPopup}
+        />
+      )}
     </div>
     </>
   )
