@@ -6,11 +6,28 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 const ACCOUNTS_API_BASE = `${API_BASE_URL}/api/accounts`
 
+let csrfTokenCache = null
+
+/**
+ * Clears the cached CSRF token
+ * Useful for logout or when you want to force a fresh token
+ */
+export function clearCsrfTokenCache() {
+  csrfTokenCache = null
+}
+
 /**
  * Fetches the CSRF token from the backend
+ * Caches the token in memory to avoid fetching on every request
+ * @param {boolean} forceRefresh - If true, bypasses cache and fetches fresh token
  * @returns {Promise<string>} CSRF token
  */
-export async function getCsrfToken() {
+export async function getCsrfToken(forceRefresh = false) {
+  // Return cached token if available and not forcing refresh
+  if (csrfTokenCache && !forceRefresh) {
+    return csrfTokenCache
+  }
+
   try {
     console.log('Fetching CSRF token from:', `${ACCOUNTS_API_BASE}/csrf/`)
 
@@ -28,11 +45,16 @@ export async function getCsrfToken() {
     }
 
     const data = await response.json()
+    
+    // Cache the token
+    csrfTokenCache = data.csrfToken
 
-    return data.csrfToken
+    return csrfTokenCache
 
   } catch (error) {
     console.error('Error fetching CSRF token:', error)
+    // Clear cache on error
+    clearCsrfTokenCache()
     throw error
   }
 }
@@ -56,7 +78,7 @@ export async function createAccount(formData) {
     // Map role values: vt_staff_students -> "User", restaurant_manager -> "Restaurant Manager"
     const roleMap = {
       'vt_staff_students': 'User',
-      'restaurant_manager': 'Restaurant Manger'
+      'restaurant_manager': 'Restaurant Manager'
     }
     
     const apiPayload = {
@@ -146,7 +168,17 @@ export async function login(credentials) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || errorData.error || `Login failed: ${response.status}`)
+      const errorMessage = errorData.detail || errorData.message || errorData.error || `Login failed: ${response.status}`
+      
+      // If CSRF token error, clear cache
+      if (response.status === 403 && errorMessage.includes('CSRF')) {
+        console.log('CSRF token error detected, clearing cache...')
+        clearCsrfTokenCache()
+      }
+      
+      const error = new Error(errorMessage)
+      error.statusCode = response.status
+      throw error
     }
 
     return await response.json()
@@ -157,36 +189,65 @@ export async function login(credentials) {
 }
 
 /**
- * Gets the current user's profile information
- * @returns {Promise<Object>} User profile data (id, email, first_name, last_name, roles)
+ * Fetches the current authenticated user's information from the API
+ * @returns {Promise<Object>} Current user data
  */
-export async function getUserProfile() {
+export async function getCurrentUser() {
   try {
     const response = await fetch(`${ACCOUNTS_API_BASE}/me/`, {
       method: 'GET',
-      credentials: 'include',
+      credentials: 'include', // Include cookies for session-based auth
+      headers: {
+        'Content-Type': 'application/json',
+      },
     })
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || errorData.error || `Failed to fetch profile: ${response.status}`)
+      const errorMessage = errorData.detail || errorData.message || errorData.error || `Failed to fetch user data: ${response.status}`
+      const error = new Error(errorMessage)
+      error.statusCode = response.status
+      throw error
     }
 
     return await response.json()
   } catch (error) {
-    console.error('Error fetching user profile:', error)
+    console.error('Error fetching current user:', error)
     throw error
   }
 }
 
 /**
+ * Gets the stored user data from localStorage
+ * @returns {Object|null} User data if available, null otherwise
+ */
+export function getStoredUser() {
+  try {
+    const userStr = localStorage.getItem('user')
+    return userStr ? JSON.parse(userStr) : null
+  } catch (error) {
+    console.error('Error parsing stored user data:', error)
+    return null
+  }
+}
+
+/**
+ * Removes the stored user data from localStorage
+ * Useful for logout
+ */
+export function clearStoredUser() {
+  localStorage.removeItem('user')
+}
+
+/**
  * Logs out the current user
- * @returns {Promise<Object>} Response data from the API
+ * Calls the logout API endpoint, clears stored user data, and clears CSRF token cache
+ * @returns {Promise<void>}
  */
 export async function logout() {
   try {
-    // Get CSRF token before making POST request
-    const token = await getCsrfToken()
+    // Force refresh CSRF token to ensure we have a valid one
+    const token = await getCsrfToken(true)
 
     const response = await fetch(`${ACCOUNTS_API_BASE}/logout/`, {
       method: 'POST',
@@ -194,57 +255,27 @@ export async function logout() {
         'Content-Type': 'application/json',
         'X-CSRFToken': token,
       },
-      credentials: 'include',
+      credentials: 'include', // Include cookies for session-based auth
     })
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || errorData.error || `Logout failed: ${response.status}`)
+      const errorMessage = errorData.detail || errorData.message || errorData.error || `Logout failed: ${response.status}`
+      const error = new Error(errorMessage)
+      error.statusCode = response.status
+      throw error
     }
 
-    // Clear localStorage user data
-    localStorage.removeItem('user')
+    // Clear stored user data and CSRF token cache after successful logout
+    clearStoredUser()
+    clearCsrfTokenCache()
 
     return await response.json()
   } catch (error) {
     console.error('Error logging out:', error)
-    // Clear localStorage even if API call fails
-    localStorage.removeItem('user')
-    throw error
-  }
-}
-
-/**
- * Updates the current user's profile information
- * TODO: Backend endpoint does not exist yet. This function is prepared for future implementation.
- * @param {Object} profileData - Profile data to update
- * @param {string} profileData.first_name - User's first name
- * @param {string} profileData.last_name - User's last name
- * @returns {Promise<Object>} Updated user profile data
- */
-export async function updateUserProfile(profileData) {
-  try {
-    // Get CSRF token before making PUT/PATCH request
-    const token = await getCsrfToken()
-
-    const response = await fetch(`${ACCOUNTS_API_BASE}/me/`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': token,
-      },
-      credentials: 'include',
-      body: JSON.stringify(profileData),
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || errorData.error || `Failed to update profile: ${response.status}`)
-    }
-
-    return await response.json()
-  } catch (error) {
-    console.error('Error updating user profile:', error)
+    // Even if logout API call fails, clear local data
+    clearStoredUser()
+    clearCsrfTokenCache()
     throw error
   }
 }
