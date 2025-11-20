@@ -6,6 +6,7 @@ import Header from '../restaurants/components/Header.jsx'
 import { fetchRestaurant, fetchMenuItems } from '../../api/restaurants.js'
 import { getDetailImage } from '../../utils/imageUtils.js'
 import { MenuItemSkeleton, PopularItemSkeleton } from '../restaurants/components/skeletons'
+import ReviewSection from './components/ReviewSection.jsx'
 
 // Format open hours for display
 function formatOpenHours(openHours) {
@@ -582,6 +583,9 @@ function RestaurantMenu() {
               ))}
           </div>
         </section>
+
+        {/* Review Section */}
+        <ReviewSection restaurantId={id} overallRating={restaurant.ratings} />
 
         {/* Menu Section */}
         <section className="menu-section">

@@ -1,0 +1,55 @@
+.star-rating {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.star-rating-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #ddd;
+  font-size: 1.5rem;
+  transition: color 0.2s ease, transform 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+}
+
+.star-rating-button:not(.disabled):hover {
+  color: #ffc107;
+  transform: scale(1.1);
+}
+
+.star-rating-button:not(.disabled):active {
+  transform: scale(0.95);
+}
+
+.star-rating-button.filled {
+  color: #ffc107;
+}
+
+.star-rating-button.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.star-rating-button:focus-visible {
+  outline: 2px solid #e68060;
+  outline-offset: 2px;
+}
+
+/* Hover effect: fill stars up to hovered star */
+.star-rating-button:not(.disabled):hover ~ .star-rating-button {
+  color: #ddd;
+}
+
+.star-rating-button:not(.disabled):hover,
+.star-rating-button:not(.disabled):hover ~ .star-rating-button.filled {
+  color: #ffc107;
+}
+
