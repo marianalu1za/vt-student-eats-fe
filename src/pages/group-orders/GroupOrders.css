@@ -279,3 +279,137 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* -------- Create Group Order Form -------- */
+
+.create-group-order-form {
+  background-color: #f3d5cf;
+  border-radius: 14px;
+  padding: 18px 20px 20px;
+  max-width: 520px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+}
+
+.create-group-order-form h2 {
+  margin: 0 0 12px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #3b1b26;
+}
+
+.form-error {
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background-color: #fbe3e3;
+  color: #8a1c1c;
+  font-size: 13px;
+}
+
+.form-loading {
+  font-size: 13px;
+  color: #555;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.form-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a1f30;
+}
+
+.form-field input,
+.form-field select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #c79d93;
+  background-color: #ffffff;
+  font-size: 14px;
+  font-family: inherit;
+  color: #333;
+}
+
+.form-field input::placeholder {
+  color: #a8887f;
+}
+
+.form-field input:focus,
+.form-field select:focus {
+  outline: none;
+  border-color: #6a283c;
+  box-shadow: 0 0 0 2px rgba(106, 40, 60, 0.18);
+}
+
+/* Button row */
+
+.form-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 10px;
+}
+
+.form-primary-button {
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: none;
+  background-color: #6a283c;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.form-primary-button:hover {
+  background-color: #7a384c;
+}
+
+.form-primary-button:active {
+  transform: scale(0.97);
+}
+
+.form-secondary-button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid #6a283c;
+  background-color: transparent;
+  color: #6a283c;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.form-secondary-button:hover {
+  background-color: #f4e0dc;
+}
+
+.form-secondary-button:active {
+  transform: scale(0.97);
+}
+
+/* Mobile tweak so the card fills width on narrow screens */
+@media (max-width: 768px) { 
+  .create-group-order-form {
+    max-width: 100%;
+  }
+}
+
+/* Add calendar icon to datetime-local input */
+.form-field input[type="datetime-local"] {
+  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%236a283c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 18px;
+  cursor: pointer;
+}
+
+
