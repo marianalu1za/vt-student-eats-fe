@@ -67,7 +67,7 @@ function CreateGroupOrderForm({ onSubmit, onCancel }) {
       <div className="form-field">
         <label htmlFor="restaurant">Restaurant</label>
         {loadingRestaurants ? (
-          <p>Loading restaurants...</p>
+          <p className="form-loading">Loading restaurants...</p>
         ) : (
           <select
             id="restaurant"
@@ -120,9 +120,15 @@ function CreateGroupOrderForm({ onSubmit, onCancel }) {
       </div>
 
       <div className="form-actions">
-        <button type="submit">Continue</button>
+        <button type="submit" className="form-primary-button">
+          Continue
+        </button>
         {onCancel && (
-          <button type="button" onClick={onCancel}>
+          <button
+            type="button"
+            className="form-secondary-button"
+            onClick={onCancel}
+          >
             Cancel
           </button>
         )}
