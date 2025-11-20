@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Header from '../restaurants/components/Header.jsx'
 import './GroupOrders.css'
-import { fetchCurrentUser, fetchGroupOrders, createGroupOrder } from '../../api/groupOrders.js'
+import { fetchGroupOrders, createGroupOrder } from '../../api/groupOrders.js'
 import CreateGroupOrderForm from './GroupOrderForm.jsx'
 import { buildGroupOrderPayload } from './buildOrder.js'
+import ErrorPopup from '../../components/common/ErrorPopup'
 
 // helper: turn API object → card data
 function mapApiOrderToCard(order) {
@@ -27,66 +29,112 @@ function mapApiOrderToCard(order) {
   }
 }
 
+function getStoredUser() {
+  try {
+    const raw = localStorage.getItem('user')
+    return raw ? JSON.parse(raw) : null
+  } catch (e) {
+    console.error('Failed to parse stored user:', e)
+    return null
+  }
+}
+
+
 function GroupOrders() {
+  const navigate = useNavigate()
   const [groups, setGroups] = useState([])        // data from API
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [filter, setFilter] = useState('open')    // 'open' | 'full' | 'all'
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [createError, setCreateError] = useState(null)
+  const [showCreateErrorPopup, setShowCreateErrorPopup] = useState(false)
+  const [showAuthPopup, setShowAuthPopup] = useState(false)
 
-  async function handleCreateSubmit(formData) {
-    console.log('Create group order data from form:', formData)
 
+  const loadGroupOrders = useCallback(async () => {
     try {
-      let payload = buildGroupOrderPayload(formData)
+      setLoading(true)
+      setError(null)
 
-      // TODO: Test once log in works
-      // attach current user
-      // const user = await fetchCurrentUser()
-      // if (user) {
-      //   payload.created_by_user = user.id   // or whatever field your API expects
-      // }
+      const apiData = await fetchGroupOrders()
+      console.log('Raw group orders from API:', apiData)
 
-      console.log('Final payload:', payload)
+      const arr = Array.isArray(apiData) ? apiData : [apiData]
+      const cards = arr.map(mapApiOrderToCard)
+
+      setGroups(cards)
+    } catch (err) {
+      console.error('Error loading group orders:', err)
+      setError('Could not load group orders.')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadGroupOrders()
+  }, [loadGroupOrders])
+
+  // async function handleCreateSubmit(formData) {
+  //   // console.log('Create group order data from form:', formData)
+
+  //   try {
+  //     let payload = buildGroupOrderPayload(formData)
+  //     const user = await fetchCurrentUser()
+  //     if (user) {
+  //       payload.created_by_user = user.id   // or whatever field your API expects
+  //     }
+
+  //     const createdOrder = await createGroupOrder(payload, user.id)
+  //     console.log('Created group order:', createdOrder)
+
+  //     await loadGroupOrders()
+
+  //     setShowCreateForm(false)
+  //   } catch (err) {
+  //     console.error('Failed to create group order:', err)
+  //     const errorMessage = err?.message || 'Failed to create group order.'
+  //     setCreateError(errorMessage)
+  //     setShowCreateErrorPopup(true)
+  //   }
+  // }
+  async function handleCreateSubmit(formData) {
+    try {
+      const storedUser = getStoredUser()
+      if (!storedUser) {
+        // shouldn't happen if button is gated, but just in case
+        setCreateError('You must be logged in to create a group order.')
+        setShowCreateErrorPopup(true)
+        return
+      }
+
+      const payload = buildGroupOrderPayload(formData, storedUser.id)
+      // console.log('Final payload:', payload)
 
       const createdOrder = await createGroupOrder(payload)
       console.log('Created group order:', createdOrder)
 
       await loadGroupOrders()
-
       setShowCreateForm(false)
     } catch (err) {
       console.error('Failed to create group order:', err)
-      // TODO: show an error message in the UI
+      const errorMessage = err?.message || 'Failed to create group order.'
+      setCreateError(errorMessage)
+      setShowCreateErrorPopup(true)
     }
   }
 
+  function handleCreateClick() {
+    const user = getStoredUser()
 
-  useEffect(() => {
-    async function loadGroupOrders() {
-      try {
-        setLoading(true)
-        setError(null)
-
-        const apiData = await fetchGroupOrders()
-        console.log('Raw group orders from API:', apiData)
-
-        // make sure it's an array
-        const arr = Array.isArray(apiData) ? apiData : [apiData]
-
-        const cards = arr.map(mapApiOrderToCard)
-
-        setGroups(cards)
-      } catch (err) {
-        console.error('Error loading group orders:', err)
-        setError('Could not load group orders.')
-      } finally {
-        setLoading(false)
-      }
+    if (!user) {
+      setShowAuthPopup(true)   // show “you must log in” popup
+      return
     }
 
-    loadGroupOrders()
-  }, [])
+    setShowCreateForm(true)    // open the form if logged in
+  }
 
   // apply filter to the data
   const filteredGroups = groups.filter(group => {
@@ -120,7 +168,7 @@ function GroupOrders() {
           <button
             type="button"
             className="group-orders-primary-button"
-            onClick={() => setShowCreateForm(true)}
+            onClick={handleCreateClick}
           >
             + Create a group order
           </button>
@@ -259,6 +307,24 @@ function GroupOrders() {
               </div>
             )}
           </section>
+        )}
+        {showCreateErrorPopup && (
+          <ErrorPopup
+            message={createError}
+            onClose={() => {
+              setShowCreateErrorPopup(false)
+              setCreateError(null)
+            }}
+          />
+        )}
+        {showAuthPopup && (
+          <ErrorPopup
+            message="You need to be logged in to create a group order. Please log in and try again."
+            onClose={() => {
+              setShowAuthPopup(false)
+              navigate('/login')
+            }}
+          />
         )}
       </main>
     </div>

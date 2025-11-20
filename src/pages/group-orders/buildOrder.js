@@ -1,10 +1,8 @@
-export function buildGroupOrderPayload(raw) {
+export function buildGroupOrderPayload(raw, userID) {
   return {
-    // keep what the user actually picked
     restaurant: raw.restaurant,
     
-    // hard-coded for now (you’d normally get this from auth)
-    created_by_user: 4,
+    created_by_user: userID,
 
     // default values
     status: "open",
