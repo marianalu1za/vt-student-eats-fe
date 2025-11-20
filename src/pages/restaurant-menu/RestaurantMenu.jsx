@@ -585,7 +585,7 @@ function RestaurantMenu() {
         </section>
 
         {/* Review Section */}
-        <ReviewSection overallRating={restaurant.ratings} />
+        <ReviewSection restaurantId={id} overallRating={restaurant.ratings} />
 
         {/* Menu Section */}
         <section className="menu-section">
