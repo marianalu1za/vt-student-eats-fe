@@ -41,14 +41,13 @@ function ChangePassword() {
       errors.new_password = 'New password is required'
     } else if (formData.new_password.length < 8) {
       errors.new_password = 'Password must be at least 8 characters'
-    }
-    
-    if (formData.new_password !== formData.confirm_password) {
-      errors.confirm_password = 'Passwords do not match'
-    }
-    
-    if (formData.current_password === formData.new_password) {
+    } else if (formData.current_password.trim() && formData.current_password === formData.new_password) {
+      // Only check if passwords are the same when both are non-empty
       errors.new_password = 'New password must be different from current password'
+    }
+    
+    if (formData.new_password && formData.new_password !== formData.confirm_password) {
+      errors.confirm_password = 'Passwords do not match'
     }
 
     setValidationErrors(errors)

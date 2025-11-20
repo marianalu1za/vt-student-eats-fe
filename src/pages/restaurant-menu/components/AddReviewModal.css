@@ -1,0 +1,230 @@
+.add-review-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.add-review-modal {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.add-review-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.add-review-modal-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.add-review-modal-close {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.add-review-modal-close:hover:not(:disabled) {
+  background-color: #f0f0f0;
+  color: #666;
+}
+
+.add-review-modal-close:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.add-review-modal-close i {
+  font-size: 18px;
+}
+
+.add-review-modal-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.add-review-modal-content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.add-review-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.add-review-label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #444;
+}
+
+.required-asterisk {
+  color: #d64545;
+  margin-left: 2px;
+}
+
+.add-review-field-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+}
+
+.add-review-textarea {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: #444;
+  outline: none;
+  background: #fafafa;
+  transition: border 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.add-review-textarea:focus {
+  border-color: #e68060;
+  box-shadow: 0 0 0 3px rgba(230, 128, 96, 0.2);
+  background: #ffffff;
+}
+
+.add-review-textarea:disabled {
+  background-color: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+.add-review-error {
+  padding: 12px;
+  background-color: #f8d7da;
+  color: #721c24;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  margin-top: 8px;
+}
+
+.add-review-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding: 16px 24px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.add-review-button-cancel,
+.add-review-button-submit {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-review-button-cancel {
+  background-color: #6c757d;
+  color: #ffffff;
+}
+
+.add-review-button-cancel:hover:not(:disabled) {
+  background-color: #5a6268;
+}
+
+.add-review-button-submit {
+  background-color: #6a283c;
+  color: #ffffff;
+}
+
+.add-review-button-submit:hover:not(:disabled) {
+  background-color: #5a2233;
+}
+
+.add-review-button-cancel:disabled,
+.add-review-button-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .add-review-modal {
+    width: 95%;
+    max-height: 85vh;
+  }
+
+  .add-review-modal-header {
+    padding: 16px 20px;
+  }
+
+  .add-review-modal-content {
+    padding: 20px;
+  }
+
+  .add-review-modal-actions {
+    padding: 12px 20px;
+    flex-direction: column-reverse;
+  }
+
+  .add-review-button-cancel,
+  .add-review-button-submit {
+    width: 100%;
+  }
+}
+
