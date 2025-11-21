@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { fetchRestaurants } from '../../api/restaurants'
+import { fetchRestaurants, updateRestaurant } from '../../api/restaurants'
 import './AdminDashboard.css'
 import AdminSearchBar from './components/AdminSearchBar.jsx'
 import AdminPagination from './components/AdminPagination.jsx'
@@ -119,11 +119,26 @@ function ExistingRestaurants() {
     setIsEditDialogOpen(true)
   }
 
-  const handleEditSave = (updated) => {
-    // TODO: Add API call to save restaurant edits
-    console.log('Saving restaurant edits for', selectedRestaurant?.id, updated)
-    setIsEditDialogOpen(false)
-    setSelectedRestaurant(null)
+  const handleEditSave = async (updated) => {
+    if (!selectedRestaurant) return
+    
+    try {
+      setIsLoading(true)
+      await updateRestaurant(selectedRestaurant.id, updated)
+      
+      // Refresh the restaurant list after successful update
+      const data = await fetchRestaurants()
+      setRestaurants(Array.isArray(data) ? data : [])
+      setFetchError(null)
+      
+      setIsEditDialogOpen(false)
+      setSelectedRestaurant(null)
+    } catch (error) {
+      console.error('Failed to update restaurant', error)
+      setFetchError(error.message || 'Unable to update restaurant. Please try again later.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleEditCancel = () => {
