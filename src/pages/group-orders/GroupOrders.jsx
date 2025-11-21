@@ -6,6 +6,7 @@ import { fetchGroupOrders, createGroupOrder } from '../../api/groupOrders.js'
 import CreateGroupOrderForm from './GroupOrderForm.jsx'
 import { buildGroupOrderPayload } from './buildOrder.js'
 import ErrorPopup from '../../components/common/ErrorPopup'
+import { formatTags } from './getTags.js'
 
 // helper: turn API object → card data
 function mapApiOrderToCard(order) {
@@ -23,9 +24,10 @@ function mapApiOrderToCard(order) {
     restaurantName: order.restaurant_name,
     hostName: order.created_by_username,
     pickupTime,
-    discount: 'Group discount', // TODO: pull from tags if you add it there?
+    discount: 'Group discount', // TODO: Sprint 3 discounts??
     spotsLeft,
     status: spotsLeft > 0 && order.status === 'open' ? 'open' : 'full',
+    tags: formatTags(order.tags),
   }
 }
 
@@ -76,29 +78,6 @@ function GroupOrders() {
     loadGroupOrders()
   }, [loadGroupOrders])
 
-  // async function handleCreateSubmit(formData) {
-  //   // console.log('Create group order data from form:', formData)
-
-  //   try {
-  //     let payload = buildGroupOrderPayload(formData)
-  //     const user = await fetchCurrentUser()
-  //     if (user) {
-  //       payload.created_by_user = user.id   // or whatever field your API expects
-  //     }
-
-  //     const createdOrder = await createGroupOrder(payload, user.id)
-  //     console.log('Created group order:', createdOrder)
-
-  //     await loadGroupOrders()
-
-  //     setShowCreateForm(false)
-  //   } catch (err) {
-  //     console.error('Failed to create group order:', err)
-  //     const errorMessage = err?.message || 'Failed to create group order.'
-  //     setCreateError(errorMessage)
-  //     setShowCreateErrorPopup(true)
-  //   }
-  // }
   async function handleCreateSubmit(formData) {
     try {
       const storedUser = getStoredUser()
@@ -283,6 +262,9 @@ function GroupOrders() {
                   </p>
                   <p className="group-card-label">
                     Discount: <span>{group.discount}</span>
+                  </p>
+                  <p className="group-card-label">
+                    Tags: <span>{group.tags}</span>
                   </p>
                   <p className="group-card-label">
                     Spots left:{' '}
