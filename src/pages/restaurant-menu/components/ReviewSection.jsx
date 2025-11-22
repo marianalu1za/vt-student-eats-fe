@@ -32,17 +32,9 @@ function ReviewSection({ restaurantId, reviews: propReviews = [], overallRating:
       return []
     }
 
-    // Group reviews by user to count contributions
-    const userContributions = {}
-    apiReviews.forEach(review => {
-      const userId = review.user || 'unknown'
-      userContributions[userId] = (userContributions[userId] || 0) + 1
-    })
-
     const mappedReviews = apiReviews.map(review => ({
       id: review.id,
       userName: review.user_name || review.user_email || `User ${review.user}` || 'Anonymous',
-      contributions: userContributions[review.user] || 1,
       orderDate: review.created_at || review.orderDate || new Date().toISOString(),
       reviewText: review.comment || review.reviewText || '',
       rating: review.rating || 0
@@ -346,9 +338,6 @@ function ReviewSection({ restaurantId, reviews: propReviews = [], overallRating:
                     <div className="review-user-name-row">
                       <span className="review-user-name">{review.userName}</span>
                     </div>
-                    <p className="review-user-contributions">
-                      {review.contributions} {review.contributions === 1 ? 'contribution' : 'contributions'}
-                    </p>
                   </div>
                 </div>
                 <div className="review-rating-display">
