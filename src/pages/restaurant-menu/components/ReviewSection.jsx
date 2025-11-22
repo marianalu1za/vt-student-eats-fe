@@ -31,7 +31,7 @@ function ReviewSection({ restaurantId, reviews: propReviews = [], overallRating:
       userContributions[userId] = (userContributions[userId] || 0) + 1
     })
 
-    return apiReviews.map(review => ({
+    const mappedReviews = apiReviews.map(review => ({
       id: review.id,
       userName: review.user_name || review.user_email || `User ${review.user}` || 'Anonymous',
       contributions: userContributions[review.user] || 1,
@@ -39,6 +39,9 @@ function ReviewSection({ restaurantId, reviews: propReviews = [], overallRating:
       reviewText: review.comment || review.reviewText || '',
       rating: review.rating || 0
     }))
+
+    // Sort reviews by rating in descending order (higher ratings first)
+    return mappedReviews.sort((a, b) => (b.rating || 0) - (a.rating || 0))
   }
 
   // Calculate overall rating and total ratings from reviews
