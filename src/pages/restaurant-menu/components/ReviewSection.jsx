@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import './ReviewSection.css'
-import { mockReviews } from '../../../mock_data/reviews.js'
+import { fetchRestaurantReviews } from '../../../api/review.js'
 
 // Helper function to format date
 function formatDate(dateString) {
@@ -8,13 +8,101 @@ function formatDate(dateString) {
   return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: '2-digit' })
 }
 
-function ReviewSection({ reviews = [], overallRating = 4.7, totalRatings = 100, publicReviews = 20 }) {
+function ReviewSection({ restaurantId, reviews: propReviews = [], overallRating: propOverallRating, totalRatings: propTotalRatings }) {
   const scrollContainerRef = useRef(null)
   const [scrollLeft, setScrollLeft] = useState(0)
   const [canGoNext, setCanGoNext] = useState(false)
+  const [reviews, setReviews] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [overallRating, setOverallRating] = useState(propOverallRating || 0)
+  const [totalRatings, setTotalRatings] = useState(propTotalRatings || 0)
   
-  // Use provided reviews or fall back to mock reviews
-  const displayReviews = reviews.length > 0 ? reviews : mockReviews
+  // Map API review format to display format
+  function mapApiReviewsToDisplayFormat(apiReviews) {
+    if (!Array.isArray(apiReviews)) {
+      return []
+    }
+
+    // Group reviews by user to count contributions
+    const userContributions = {}
+    apiReviews.forEach(review => {
+      const userId = review.user || 'unknown'
+      userContributions[userId] = (userContributions[userId] || 0) + 1
+    })
+
+    return apiReviews.map(review => ({
+      id: review.id,
+      userName: review.user_name || review.user_email || `User ${review.user}` || 'Anonymous',
+      contributions: userContributions[review.user] || 1,
+      orderDate: review.created_at || review.orderDate || new Date().toISOString(),
+      reviewText: review.comment || review.reviewText || '',
+      rating: review.rating || 0
+    }))
+  }
+
+  // Calculate overall rating and total ratings from reviews
+  function calculateRatings(reviewList) {
+    if (!reviewList || reviewList.length === 0) {
+      setOverallRating(propOverallRating || 0)
+      setTotalRatings(propTotalRatings || 0)
+      return
+    }
+
+    const ratings = reviewList.map(r => r.rating).filter(r => r > 0)
+    if (ratings.length === 0) {
+      setOverallRating(propOverallRating || 0)
+      setTotalRatings(propTotalRatings || 0)
+      return
+    }
+
+    const sum = ratings.reduce((acc, rating) => acc + rating, 0)
+    const average = sum / ratings.length
+    setOverallRating(average)
+    setTotalRatings(ratings.length)
+  }
+
+  // Fetch reviews from API when restaurantId changes
+  useEffect(() => {
+    if (!restaurantId) {
+      // If no restaurantId, use provided reviews
+      if (propReviews.length > 0) {
+        const mappedReviews = mapApiReviewsToDisplayFormat(propReviews)
+        setReviews(mappedReviews)
+        calculateRatings(mappedReviews)
+      } else {
+        setReviews([])
+        calculateRatings([])
+      }
+      return
+    }
+
+    const fetchReviews = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const reviewsData = await fetchRestaurantReviews(restaurantId)
+        
+        // Map API response to display format
+        const mappedReviews = mapApiReviewsToDisplayFormat(reviewsData)
+        setReviews(mappedReviews)
+        calculateRatings(mappedReviews)
+      } catch (err) {
+        console.error('Error fetching reviews:', err)
+        setError(err.message || 'Failed to load reviews')
+        setReviews([])
+        calculateRatings([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchReviews()
+
+  }, [restaurantId])
+
+  // Use fetched reviews, or provided reviews
+  const displayReviews = reviews.length > 0 ? reviews : (propReviews.length > 0 ? mapApiReviewsToDisplayFormat(propReviews) : [])
 
   const scrollAmount = 120 // pixels to scroll
 
@@ -113,9 +201,10 @@ function ReviewSection({ reviews = [], overallRating = 4.7, totalRatings = 100, 
         <div className="review-header-left">
           <h2 className="review-section-title">Reviews</h2>
         </div>
-        {displayReviews.length > 2 && (
+        {(displayReviews.length > 0 || restaurantId) && (
           <div className="review-header-right">
             <button className="add-review-button" onClick={handleAddReview}>Add Review</button>
+            {displayReviews.length > 2 && (
             <div className="review-navigation">
               <button 
                 className="nav-arrow nav-arrow-left" 
@@ -134,6 +223,7 @@ function ReviewSection({ reviews = [], overallRating = 4.7, totalRatings = 100, 
                 <i className="fa-solid fa-chevron-right"></i>
               </button>
             </div>
+            )}
           </div>
         )}
       </div>
@@ -141,16 +231,24 @@ function ReviewSection({ reviews = [], overallRating = 4.7, totalRatings = 100, 
       {/* Content */}
       <div className="review-content">
         {/* Overall Rating Display */}
-        {displayReviews.length > 0 && (
+        {displayReviews.length > 0 && overallRating > 0 && (
           <div className="overall-rating-container">
             <div className="rating-box">
               <div className="rating-number-large">{overallRating.toFixed(1)}</div>
               <div className="rating-stars-container">
                 {renderStars(overallRating)}
               </div>
-              <p className="rating-count-text">{totalRatings}+ ratings</p>
+              <p className="rating-count-text">{totalRatings} {totalRatings === 1 ? 'rating' : 'ratings'}</p>
             </div>
           </div>
+        )}
+        {/* Loading State */}
+        {loading && displayReviews.length === 0 && (
+          <div className="review-loading">Loading reviews...</div>
+        )}
+        {/* Error State */}
+        {error && displayReviews.length === 0 && (
+          <div className="review-error">Failed to load reviews</div>
         )}
         {/* Review Cards */}
         <div 
