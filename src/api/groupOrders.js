@@ -16,6 +16,7 @@ export async function fetchGroupOrders() {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
     })
 
     if (!response.ok) {
@@ -153,7 +154,6 @@ export async function createGroupOrder(data) {
       )
     }
 
-    // Rethrow for UI to handle (e.g., show toast)
     throw error
   }
 }

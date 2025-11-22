@@ -27,6 +27,8 @@ function mapApiOrderToCard(order) {
     discount: 'Group discount', // TODO: pull from tags if you add it there?
     spotsLeft,
     status: spotsLeft > 0 && order.status === 'open' ? 'open' : 'full',
+    hasJoined: order.has_joined ?? false,
+    isOwner: order.is_owner ?? false,
   }
 }
 
@@ -267,9 +269,11 @@ function GroupOrders() {
         {!loading && !error && (
           <section className="group-orders-grid">
             {filteredGroups.map(group => {
-              const currentUser = getStoredUser()
-              const isHost = currentUser && currentUser.id === group.hostId
+              const isHost = group.isOwner ?? false
+              const hasJoined = group.hasJoined ?? false
               const isFull = group.spotsLeft === 0 || group.status !== 'open'
+              const isDisabled = isFull || isHost || hasJoined
+
 
               return (
                 <article key={group.id} className="group-card">
@@ -298,18 +302,20 @@ function GroupOrders() {
                   <button
                     type="button"
                     className="group-card-join-button"
-                    disabled={isHost || isFull}
+                    disabled={isDisabled}
                     onClick={() => {
-                      if (!isHost && !isFull) {
+                      if (!isDisabled) {
                         handleJoinClick(group)
                       }
                     }}
                   >
                     {isHost
                       ? 'Your Group'
-                      : isFull
-                        ? 'Group Full'
-                        : '+ Join Group'}
+                      : hasJoined
+                        ? 'Joined'
+                        : isFull
+                          ? 'Group Full'
+                          : '+ Join Group'}
                   </button>
                 </article>
               )
