@@ -385,3 +385,16 @@
   }
 }
 
+/* Loading and Error States */
+.review-loading,
+.review-error {
+  padding: 2rem;
+  text-align: center;
+  color: #666;
+  font-size: 0.875rem;
+}
+
+.review-error {
+  color: #dc2626;
+}
+
