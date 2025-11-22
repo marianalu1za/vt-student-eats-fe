@@ -157,3 +157,36 @@ export async function createGroupOrder(data) {
     throw error
   }
 }
+
+
+export async function joinGroupOrder(groupOrderId) {
+  const url = `${API_BASE_URL}/api/group-order-participants/`
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      credentials: 'include', // if you use cookie auth
+      headers: {
+        'Content-Type': 'application/json',
+        // include CSRF header here if your other POSTs do
+        // 'X-CSRFTOKEN': getCsrfTokenFromCookie(),
+      },
+      body: JSON.stringify({ group_order: groupOrderId }),
+    })
+
+    if (!response.ok) {
+      const data = await response.json().catch(() => null)
+      const message =
+        data?.detail ||
+        data?.non_field_errors?.[0] ||
+        data?.group_order?.[0] ||
+        'Failed to join group order.'
+      throw new Error(message)
+    }
+
+    return await response.json()
+  } catch (err) {
+    console.error('Error joining group order:', err)
+    throw err
+  }
+}
