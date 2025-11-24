@@ -1,14 +1,15 @@
 import { useState, useMemo, useEffect } from 'react'
 import { fetchRestaurants, updateRestaurant } from '../../api/restaurants'
+import { getAllUsers } from '../../api/auth.js'
 import './AdminDashboard.css'
 import AdminSearchBar from './components/AdminSearchBar.jsx'
 import AdminPagination from './components/AdminPagination.jsx'
 import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
 import EditRestaurantModal from './components/EditRestaurantModal.jsx'
-import { VTusers } from '../../mock_data/admin_portal'
 
 function ExistingRestaurants() {
   const [restaurants, setRestaurants] = useState([])
+  const [users, setUsers] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [fetchError, setFetchError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -16,6 +17,8 @@ function ExistingRestaurants() {
   const [selectedRestaurant, setSelectedRestaurant] = useState(null)
   const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
 
   // Rows per page for every admin page
   const [rowsPerPage, setRowsPerPage] = useState(() => {
@@ -47,7 +50,40 @@ function ExistingRestaurants() {
       }
     }
 
+    const loadUsers = async () => {
+      try {
+        const usersData = await getAllUsers()
+        if (isMounted) {
+          // Filter users with role "Restaurant Manager" and map to expected format
+          const restaurantManagers = usersData
+            .filter(user => {
+              // Check if roles array includes "Restaurant Manager" or role string equals "Restaurant Manager"
+              if (Array.isArray(user.roles) && user.roles.length > 0) {
+                return user.roles.includes('Restaurant Manager')
+              }
+              // Fallback to checking user.role if roles array is not available
+              return user.role === 'Restaurant Manager'
+            })
+            .map(user => ({
+              id: user.id,
+              firstName: user.first_name || '',
+              lastName: user.last_name || '',
+              email: user.email || ''
+            }))
+          
+          setUsers(restaurantManagers)
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error('Failed to fetch users', error)
+          // Don't set error state for users, just log it
+          setUsers([])
+        }
+      }
+    }
+
     loadRestaurants()
+    loadUsers()
 
     return () => {
       isMounted = false
@@ -123,7 +159,8 @@ function ExistingRestaurants() {
     if (!selectedRestaurant) return
     
     try {
-      setIsLoading(true)
+      setIsSubmitting(true)
+      setSubmitError(null)
       await updateRestaurant(selectedRestaurant.id, updated)
       
       // Refresh the restaurant list after successful update
@@ -133,17 +170,19 @@ function ExistingRestaurants() {
       
       setIsEditDialogOpen(false)
       setSelectedRestaurant(null)
+      setSubmitError(null)
     } catch (error) {
       console.error('Failed to update restaurant', error)
-      setFetchError(error.message || 'Unable to update restaurant. Please try again later.')
+      setSubmitError(error.message || 'Unable to update restaurant. Please try again later.')
     } finally {
-      setIsLoading(false)
+      setIsSubmitting(false)
     }
   }
 
   const handleEditCancel = () => {
     setIsEditDialogOpen(false)
     setSelectedRestaurant(null)
+    setSubmitError(null)
   }
 
   return (
@@ -267,8 +306,10 @@ function ExistingRestaurants() {
         open={isEditDialogOpen}
         restaurant={selectedRestaurant}
         onSave={handleEditSave}
-        users={VTusers}
+        users={users}
         onCancel={handleEditCancel}
+        isSubmitting={isSubmitting}
+        error={submitError}
       />
     </div>
   )
