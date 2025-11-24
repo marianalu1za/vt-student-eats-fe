@@ -28,19 +28,24 @@ function Users() {
         
         // Map API response format to component format
         // API response has: id, email, first_name, last_name, roles (array)
-        const mappedUsers = usersData.map(user => ({
-          id: user.id,
-          firstName: user.first_name || '',
-          lastName: user.last_name || '',
-          email: user.email || '',
-          role: Array.isArray(user.roles) && user.roles.length > 0 
-            ? user.roles[0] 
-            : (user.role || ''),
-          status: user.is_active !== undefined 
-            ? (user.is_active ? 'Active' : 'Inactive') 
-            : (user.status || 'Active'),
-          createdAt: user.created_at || user.createdAt || ''
-        }))
+        const mappedUsers = usersData
+          .map(user => ({
+            id: user.id,
+            firstName: user.first_name || '',
+            lastName: user.last_name || '',
+            email: user.email || '',
+            role: Array.isArray(user.roles) && user.roles.length > 0 
+              ? user.roles[0] 
+              : (user.role || ''),
+            status: user.is_active !== undefined 
+              ? (user.is_active ? 'Active' : 'Inactive') 
+              : (user.status || 'Active'),
+            createdAt: user.created_at || user.createdAt || ''
+          }))
+          // Filter out users with empty roles
+          .filter(user => user.role && user.role.trim() !== '')
+          // Sort by ID from small to big (ascending)
+          .sort((a, b) => a.id - b.id)
         
         setUsers(mappedUsers)
       } catch (err) {
@@ -148,15 +153,13 @@ function Users() {
                   <th>Last Name</th>
                   <th>Email</th>
                   <th>Role</th>
-                  <th>Status</th>
-                  <th>Created At</th>
                   <th className="admin-table-actions-header">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+                    <td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
                       {searchQuery ? 'No users found matching your search' : 'No users'}
                     </td>
                   </tr>
@@ -168,12 +171,6 @@ function Users() {
                     <td>{user.lastName}</td>
                     <td>{user.email}</td>
                     <td>{user.role}</td>
-                    <td>
-                      <span className={`admin-status ${user.status === 'Active' ? 'admin-status-approved' : 'admin-status-pending'}`}>
-                        {user.status}
-                      </span>
-                    </td>
-                    <td>{user.createdAt}</td>
                     <td className="admin-table-actions-cell">
                       <div className="admin-table-actions">
                         <button className="admin-btn admin-btn-secondary" style={{ marginRight: '8px' }}>
