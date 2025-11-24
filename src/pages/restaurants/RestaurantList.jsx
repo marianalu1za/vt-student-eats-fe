@@ -91,7 +91,13 @@ function RestaurantList() {
         setLoading(true)
         setError(null)
         const apiData = await fetchRestaurants()
-        const transformedData = transformRestaurantData(apiData)
+        
+        // Filter to only show restaurants where is_active is true
+        const activeRestaurants = Array.isArray(apiData)
+          ? apiData.filter(restaurant => restaurant.is_active === true)
+          : []
+        
+        const transformedData = transformRestaurantData(activeRestaurants)
 
         // Luke: Distance Changes go here
         const userLoc = await getUserLocation();

@@ -358,3 +358,51 @@ export async function logout() {
     throw error
   }
 }
+
+/**
+ * Fetches all users from the backend API
+ * @returns {Promise<Array>} Array of user objects
+ * @throws {Error} If the request fails
+ */
+export async function getAllUsers() {
+  const url = `${ACCOUNTS_API_BASE}/users/`
+  
+  try {
+    console.log('Fetching all users from:', url)
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('API Error Response:', errorText)
+      
+      if (response.status === 404) {
+        throw new Error(`Users not found: ${errorText}`)
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
+    }
+
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error('Error fetching users:', error)
+    
+    // Provide more specific error messages
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error(
+        `Failed to connect to backend API at ${url}. ` +
+        `Please ensure the backend server is running at ${API_BASE_URL}. ` +
+        `This might be a CORS issue or the server is not running.`
+      )
+    }
+    
+    throw error
+  }
+}

@@ -79,6 +79,38 @@
   word-break: break-word;
 }
 
+/* Freeze the ID column on the left */
+.admin-table th:first-child,
+.admin-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background-color: #f8f9fa;
+  box-shadow: 1px 0 0 #dee2e6;
+  width: 50px !important;
+  min-width: 50px !important;
+  max-width: 50px !important;
+  box-sizing: border-box;
+  /* padding: 8px 4px !important; */
+}
+
+.admin-table td:first-child {
+  background-color: #ffffff;
+  z-index: 1;
+}
+
+.admin-table tbody tr:hover td:first-child {
+  background-color: #f8f9fa;
+}
+
+/* Email column width - only for Users table */
+.admin-table-users th:nth-child(4),
+.admin-table-users td:nth-child(4) {
+  width: 150px;
+  min-width: 150px;
+  max-width: 150px;
+}
+
 /* Freeze the actions column on the right */
 .admin-table-actions-header {
   position: sticky;

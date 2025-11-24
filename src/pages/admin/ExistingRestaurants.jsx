@@ -1,117 +1,74 @@
-import { useState, useMemo, useEffect } from 'react'
-import { fetchRestaurants, updateRestaurant } from '../../api/restaurants'
+import { useState, useEffect } from 'react'
+import { updateRestaurant } from '../../api/restaurants'
 import './AdminDashboard.css'
 import AdminSearchBar from './components/AdminSearchBar.jsx'
 import AdminPagination from './components/AdminPagination.jsx'
 import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
 import EditRestaurantModal from './components/EditRestaurantModal.jsx'
-import { VTusers } from '../../mock_data/admin_portal'
+import { useRestaurants } from './hooks/useRestaurants'
+import { usePagination } from './hooks/usePagination'
+import { useRestaurantSearch } from './hooks/useRestaurantSearch'
+import { usePaginatedData } from './hooks/usePaginatedData'
+import { useRestaurantManagers } from './hooks/useRestaurantManagers'
 
 function ExistingRestaurants() {
-  const [restaurants, setRestaurants] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [fetchError, setFetchError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [page, setPage] = useState(1)
   const [selectedRestaurant, setSelectedRestaurant] = useState(null)
   const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
+  const [isRemoving, setIsRemoving] = useState(false)
+  const [removeError, setRemoveError] = useState(null)
 
-  // Rows per page for every admin page
-  const [rowsPerPage, setRowsPerPage] = useState(() => {
-    const saved = localStorage.getItem('adminRowsPerPage')
-    return saved ? parseInt(saved, 10) : 10
-  })
+  // Custom hooks
+  const { restaurants, isLoading, fetchError, refreshRestaurants } = useRestaurants(
+    true, // isActive = true for existing restaurants
+    'Unable to load restaurants. Please try again later.'
+  )
+  const { users } = useRestaurantManagers()
+  const { page, rowsPerPage, handlePageChange, handleRowsPerPageChange, resetPage } = usePagination()
+  const filteredRestaurants = useRestaurantSearch(restaurants, searchQuery)
+  const paginatedRestaurants = usePaginatedData(filteredRestaurants, page, rowsPerPage)
 
+  // Reset page when search query changes
   useEffect(() => {
-    let isMounted = true
-
-    const loadRestaurants = async () => {
-      try {
-        setIsLoading(true)
-        const data = await fetchRestaurants()
-        if (isMounted) {
-          setRestaurants(Array.isArray(data) ? data : [])
-          setFetchError(null)
-        }
-      } catch (error) {
-        if (isMounted) {
-          console.error('Failed to fetch restaurants', error)
-          setFetchError('Unable to load restaurants. Please try again later.')
-          setRestaurants([])
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false)
-        }
-      }
-    }
-
-    loadRestaurants()
-
-    return () => {
-      isMounted = false
-    }
-  }, [])
-
-  const filteredRestaurants = useMemo(() => {
-    if (!searchQuery.trim()) return restaurants
-    
-    const query = searchQuery.toLowerCase().trim()
-    return restaurants.filter(restaurant => {
-      const name = (restaurant.name || '').toLowerCase()
-      const phone = (restaurant.phoneNumber || '').toLowerCase()
-      const email = (restaurant.email || '').toLowerCase()
-      const address = (restaurant.address || '').toLowerCase()
-      const website = (restaurant.website_link).toLowerCase()
-
-      return (
-        name.includes(query) ||
-        phone.includes(query) ||
-        email.includes(query) ||
-        address.includes(query) ||
-        website.includes(query)
-      )
-    })
-  }, [restaurants, searchQuery])
-
-  const paginatedRestaurants = useMemo(() => {
-    const startIndex = (page - 1) * rowsPerPage
-    const endIndex = startIndex + rowsPerPage
-    return filteredRestaurants.slice(startIndex, endIndex)
-  }, [filteredRestaurants, page, rowsPerPage])
-
-  const handlePageChange = (event, value) => {
-    setPage(value)
-  }
-
-  const handleRowsPerPageChange = (event) => {
-    const newRowsPerPage = event.target.value
-    setRowsPerPage(newRowsPerPage)
-    localStorage.setItem('adminRowsPerPage', newRowsPerPage.toString())
-    setPage(1)
-  }
-
-  useEffect(() => {
-    setPage(1)
-  }, [searchQuery])
+    resetPage()
+  }, [searchQuery, resetPage])
 
   const handleRemoveClick = (restaurant) => {
     setSelectedRestaurant(restaurant)
     setIsRemoveDialogOpen(true)
   }
 
-  const handleRemoveConfirm = () => {
-    if (!selectedRestaurant) return
-    // TODO: Add API call to remove restaurant
-    console.log('Confirm remove restaurant (no local list change):', selectedRestaurant.id)
-    setIsRemoveDialogOpen(false)
-    setSelectedRestaurant(null)
+  const handleRemoveConfirm = async () => {
+    if (!selectedRestaurant || isRemoving) return
+    
+    try {
+      setIsRemoving(true)
+      setRemoveError(null)
+      
+      // Send PATCH request to set is_active to false
+      await updateRestaurant(selectedRestaurant.id, { is_active: false })
+      
+      // After removal, refresh the list to remove the restaurant
+      await refreshRestaurants()
+      
+      setIsRemoveDialogOpen(false)
+      setSelectedRestaurant(null)
+      setRemoveError(null)
+    } catch (error) {
+      console.error('Failed to remove restaurant', error)
+      setRemoveError(error.message || 'Unable to remove restaurant. Please try again later.')
+    } finally {
+      setIsRemoving(false)
+    }
   }
 
   const handleRemoveCancel = () => {
     setIsRemoveDialogOpen(false)
     setSelectedRestaurant(null)
+    setRemoveError(null)
   }
 
   const handleEditClick = (restaurant) => {
@@ -123,27 +80,28 @@ function ExistingRestaurants() {
     if (!selectedRestaurant) return
     
     try {
-      setIsLoading(true)
+      setIsSubmitting(true)
+      setSubmitError(null)
       await updateRestaurant(selectedRestaurant.id, updated)
       
       // Refresh the restaurant list after successful update
-      const data = await fetchRestaurants()
-      setRestaurants(Array.isArray(data) ? data : [])
-      setFetchError(null)
+      await refreshRestaurants()
       
       setIsEditDialogOpen(false)
       setSelectedRestaurant(null)
+      setSubmitError(null)
     } catch (error) {
       console.error('Failed to update restaurant', error)
-      setFetchError(error.message || 'Unable to update restaurant. Please try again later.')
+      setSubmitError(error.message || 'Unable to update restaurant. Please try again later.')
     } finally {
-      setIsLoading(false)
+      setIsSubmitting(false)
     }
   }
 
   const handleEditCancel = () => {
     setIsEditDialogOpen(false)
     setSelectedRestaurant(null)
+    setSubmitError(null)
   }
 
   return (
@@ -255,10 +213,10 @@ function ExistingRestaurants() {
         title="Remove restaurant?"
         message={
           selectedRestaurant
-            ? `This will remove ${selectedRestaurant.name} from the approved list. This action cannot be undone.`
+            ? `This will remove ${selectedRestaurant.name} from the approved list. The restaurant will not be visible to users.`
             : ''
         }
-        confirmLabel="Remove"
+        confirmLabel={isRemoving ? 'Removing...' : 'Remove'}
         cancelLabel="Cancel"
         onConfirm={handleRemoveConfirm}
         onCancel={handleRemoveCancel}
@@ -267,8 +225,10 @@ function ExistingRestaurants() {
         open={isEditDialogOpen}
         restaurant={selectedRestaurant}
         onSave={handleEditSave}
-        users={VTusers}
+        users={users}
         onCancel={handleEditCancel}
+        isSubmitting={isSubmitting}
+        error={submitError}
       />
     </div>
   )

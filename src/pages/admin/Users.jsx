@@ -1,12 +1,14 @@
 import { useState, useMemo, useEffect } from 'react'
 import './AdminDashboard.css'
-import { VTusers } from '../../mock_data/admin_portal'
+import { getAllUsers } from '../../api/auth.js'
 import AdminSearchBar from './components/AdminSearchBar'
 import AdminPagination from './components/AdminPagination'
 import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
 
 function Users() {
-  const [users] = useState(VTusers)
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
   const [selectedUser, setSelectedUser] = useState(null)
@@ -15,6 +17,48 @@ function Users() {
     const saved = localStorage.getItem('adminRowsPerPage')
     return saved ? parseInt(saved, 10) : 10
   })
+
+  // Fetch users from API
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const usersData = await getAllUsers()
+        
+        // Map API response format to component format
+        // API response has: id, email, first_name, last_name, roles (array)
+        const mappedUsers = usersData
+          .map(user => ({
+            id: user.id,
+            firstName: user.first_name || '',
+            lastName: user.last_name || '',
+            email: user.email || '',
+            role: Array.isArray(user.roles) && user.roles.length > 0 
+              ? user.roles[0] 
+              : (user.role || ''),
+            status: user.is_active !== undefined 
+              ? (user.is_active ? 'Active' : 'Inactive') 
+              : (user.status || 'Active'),
+            createdAt: user.created_at || user.createdAt || ''
+          }))
+          // Filter out users with empty roles
+          .filter(user => user.role && user.role.trim() !== '')
+          // Sort by ID from small to big (ascending)
+          .sort((a, b) => a.id - b.id)
+        
+        setUsers(mappedUsers)
+      } catch (err) {
+        console.error('Error fetching users:', err)
+        setError(err.message || 'Failed to load users')
+        setUsers([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUsers()
+  }, [])
 
   const filteredUsers = useMemo(() => {
     if (!searchQuery.trim()) return users
@@ -89,67 +133,75 @@ function Users() {
           setSearchQuery={setSearchQuery}
           placeholder="Search users by name, email, or role..."
         />
-        <div className="admin-table-wrapper">
-          <div className="admin-table-scroll">
-          <table className="admin-table admin-table-restaurants">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>First Name</th>
-              <th>Last Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Created At</th>
-              <th className="admin-table-actions-header">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.length === 0 ? (
-              <tr>
-                <td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
-                  {searchQuery ? 'No users found matching your search' : 'No users'}
-                </td>
-              </tr>
-            ) : (
-              paginatedUsers.map((user) => (
-              <tr key={`${user.id}`}>
-                <td>{user.id}</td>
-                <td>{user.firstName}</td>
-                <td>{user.lastName}</td>
-                <td>{user.email}</td>
-                <td>{user.role}</td>
-                <td>
-                  <span className="admin-status admin-status-approved">{user.status}</span>
-                </td>
-                <td>{user.createdAt}</td>
-                <td className="admin-table-actions-cell">
-                  <div className="admin-table-actions">
-                    <button className="admin-btn admin-btn-secondary" style={{ marginRight: '8px' }}>
-                      Edit
-                    </button>
-                    <button
-                      className="admin-btn admin-btn-danger"
-                      onClick={() => handleDeleteClick(user)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </td>
-              </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-        </div>
-        </div>
-        <AdminPagination
-          page={page}
-          rowsPerPage={rowsPerPage}
-          totalItems={filteredUsers.length}
-          onPageChange={handlePageChange}
-          onRowsPerPageChange={handleRowsPerPageChange}
-        />
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+            Loading users...
+          </div>
+        ) : error ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: '#dc2626' }}>
+            Error: {error}
+          </div>
+        ) : (
+          <>
+            <div className="admin-table-wrapper">
+              <div className="admin-table-scroll">
+              <table className="admin-table admin-table-restaurants admin-table-users">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>First Name</th>
+                  <th>Last Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th className="admin-table-actions-header">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+                      {searchQuery ? 'No users found matching your search' : 'No users'}
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedUsers.map((user) => (
+                  <tr key={`${user.id}`}>
+                    <td>{user.id}</td>
+                    <td>{user.firstName}</td>
+                    <td>{user.lastName}</td>
+                    <td>{user.email}</td>
+                    <td>{user.role}</td>
+                    <td className="admin-table-actions-cell">
+                      <div className="admin-table-actions">
+                        <button className="admin-btn admin-btn-secondary" style={{ marginRight: '8px' }}>
+                          Edit
+                        </button>
+                        <button
+                          className="admin-btn admin-btn-danger"
+                          onClick={() => handleDeleteClick(user)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+            </div>
+            </div>
+          </>
+        )}
+        {!loading && !error && (
+          <AdminPagination
+            page={page}
+            rowsPerPage={rowsPerPage}
+            totalItems={filteredUsers.length}
+            onPageChange={handlePageChange}
+            onRowsPerPageChange={handleRowsPerPageChange}
+          />
+        )}
       </div>
       <ConfirmDialog
         open={isDeleteDialogOpen}
