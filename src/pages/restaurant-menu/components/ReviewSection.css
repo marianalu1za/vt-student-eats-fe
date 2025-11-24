@@ -335,12 +335,6 @@
   color: #1a1a1a;
 }
 
-.review-user-contributions {
-  font-size: 0.8125rem;
-  color: #666;
-  margin: 0;
-}
-
 .local-expert-badge {
   font-weight: 600;
   color: #1a1a1a;
@@ -383,5 +377,18 @@
   .rating-number-large {
     font-size: 1.75rem;
   }
+}
+
+/* Loading and Error States */
+.review-loading,
+.review-error {
+  padding: 2rem;
+  text-align: center;
+  color: #666;
+  font-size: 0.875rem;
+}
+
+.review-error {
+  color: #dc2626;
 }
 

@@ -6,6 +6,7 @@ import { fetchGroupOrders, createGroupOrder, joinGroupOrder } from '../../api/gr
 import CreateGroupOrderForm from './GroupOrderForm.jsx'
 import { buildGroupOrderPayload } from './buildOrder.js'
 import ErrorPopup from '../../components/common/ErrorPopup'
+import { formatTags } from './getTags.js'
 
 // helper: turn API object → card data
 function mapApiOrderToCard(order) {
@@ -24,11 +25,10 @@ function mapApiOrderToCard(order) {
     hostName: order.created_by_username,
     hostId: order.created_by_user,
     pickupTime,
-    discount: 'Group discount', // TODO: pull from tags if you add it there?
+    discount: 'Group discount', // TODO: Sprint 3 discounts??
     spotsLeft,
     status: spotsLeft > 0 && order.status === 'open' ? 'open' : 'full',
-    hasJoined: order.has_joined ?? false,
-    isOwner: order.is_owner ?? false,
+    tags: formatTags(order.tags),
   }
 }
 
@@ -268,58 +268,42 @@ function GroupOrders() {
         {/* Group cards grid */}
         {!loading && !error && (
           <section className="group-orders-grid">
-            {filteredGroups.map(group => {
-              const isHost = group.isOwner ?? false
-              const hasJoined = group.hasJoined ?? false
-              const isFull = group.spotsLeft === 0 || group.status !== 'open'
-              const isDisabled = isFull || isHost || hasJoined
-
-
-              return (
-                <article key={group.id} className="group-card">
-                  <div className="group-card-header">
-                    <h4 className="group-card-restaurant">
-                      {group.restaurantName}
-                    </h4>
-                  </div>
-                  <div className="group-card-body">
-                    <p className="group-card-label">
-                      Host: <span>{group.hostName}</span>
-                    </p>
-                    <p className="group-card-label">
-                      Pickup time: <span>{group.pickupTime}</span>
-                    </p>
-                    <p className="group-card-label">
-                      Discount: <span>{group.discount}</span>
-                    </p>
-                    <p className="group-card-label">
-                      Spots left:{' '}
-                      <span className={group.spotsLeft === 0 ? 'spots-full' : ''}>
-                        {group.spotsLeft === 0 ? 'Full' : group.spotsLeft}
-                      </span>
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    className="group-card-join-button"
-                    disabled={isDisabled}
-                    onClick={() => {
-                      if (!isDisabled) {
-                        handleJoinClick(group)
-                      }
-                    }}
-                  >
-                    {isHost
-                      ? 'Your Group'
-                      : hasJoined
-                        ? 'Joined'
-                        : isFull
-                          ? 'Group Full'
-                          : '+ Join Group'}
-                  </button>
-                </article>
-              )
-            })}
+            {filteredGroups.map(group => (
+              <article key={group.id} className="group-card">
+                <div className="group-card-header">
+                  <h4 className="group-card-restaurant">
+                    {group.restaurantName}
+                  </h4>
+                </div>
+                <div className="group-card-body">
+                  <p className="group-card-label">
+                    Host: <span>{group.hostName}</span>
+                  </p>
+                  <p className="group-card-label">
+                    Pickup time: <span>{group.pickupTime}</span>
+                  </p>
+                  <p className="group-card-label">
+                    Discount: <span>{group.discount}</span>
+                  </p>
+                  <p className="group-card-label">
+                    Tags: <span>{group.tags}</span>
+                  </p>
+                  <p className="group-card-label">
+                    Spots left:{' '}
+                    <span className={group.spotsLeft === 0 ? 'spots-full' : ''}>
+                      {group.spotsLeft === 0 ? 'Full' : group.spotsLeft}
+                    </span>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="group-card-join-button"
+                  disabled={group.spotsLeft === 0}
+                >
+                  {group.spotsLeft === 0 ? 'Group Full' : '+ Join Group'}
+                </button>
+              </article>
+            ))}
 
             {filteredGroups.length === 0 && (
               <div className="group-orders-empty">
