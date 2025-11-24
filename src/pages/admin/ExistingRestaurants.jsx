@@ -1,136 +1,38 @@
-import { useState, useMemo, useEffect } from 'react'
-import { fetchRestaurants, updateRestaurant } from '../../api/restaurants'
-import { getAllUsers } from '../../api/auth.js'
+import { useState, useEffect } from 'react'
+import { updateRestaurant } from '../../api/restaurants'
 import './AdminDashboard.css'
 import AdminSearchBar from './components/AdminSearchBar.jsx'
 import AdminPagination from './components/AdminPagination.jsx'
 import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
 import EditRestaurantModal from './components/EditRestaurantModal.jsx'
+import { useRestaurants } from './hooks/useRestaurants'
+import { usePagination } from './hooks/usePagination'
+import { useRestaurantSearch } from './hooks/useRestaurantSearch'
+import { usePaginatedData } from './hooks/usePaginatedData'
+import { useRestaurantManagers } from './hooks/useRestaurantManagers'
 
 function ExistingRestaurants() {
-  const [restaurants, setRestaurants] = useState([])
-  const [users, setUsers] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [fetchError, setFetchError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [page, setPage] = useState(1)
   const [selectedRestaurant, setSelectedRestaurant] = useState(null)
   const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
 
-  // Rows per page for every admin page
-  const [rowsPerPage, setRowsPerPage] = useState(() => {
-    const saved = localStorage.getItem('adminRowsPerPage')
-    return saved ? parseInt(saved, 10) : 10
-  })
+  // Custom hooks
+  const { restaurants, isLoading, fetchError, refreshRestaurants } = useRestaurants(
+    true, // isActive = true for existing restaurants
+    'Unable to load restaurants. Please try again later.'
+  )
+  const { users } = useRestaurantManagers()
+  const { page, rowsPerPage, handlePageChange, handleRowsPerPageChange, resetPage } = usePagination()
+  const filteredRestaurants = useRestaurantSearch(restaurants, searchQuery)
+  const paginatedRestaurants = usePaginatedData(filteredRestaurants, page, rowsPerPage)
 
+  // Reset page when search query changes
   useEffect(() => {
-    let isMounted = true
-
-    const loadRestaurants = async () => {
-      try {
-        setIsLoading(true)
-        const data = await fetchRestaurants()
-        if (isMounted) {
-          setRestaurants(Array.isArray(data) ? data : [])
-          setFetchError(null)
-        }
-      } catch (error) {
-        if (isMounted) {
-          console.error('Failed to fetch restaurants', error)
-          setFetchError('Unable to load restaurants. Please try again later.')
-          setRestaurants([])
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false)
-        }
-      }
-    }
-
-    const loadUsers = async () => {
-      try {
-        const usersData = await getAllUsers()
-        if (isMounted) {
-          // Filter users with role "Restaurant Manager" and map to expected format
-          const restaurantManagers = usersData
-            .filter(user => {
-              // Check if roles array includes "Restaurant Manager" or role string equals "Restaurant Manager"
-              if (Array.isArray(user.roles) && user.roles.length > 0) {
-                return user.roles.includes('Restaurant Manager')
-              }
-              // Fallback to checking user.role if roles array is not available
-              return user.role === 'Restaurant Manager'
-            })
-            .map(user => ({
-              id: user.id,
-              firstName: user.first_name || '',
-              lastName: user.last_name || '',
-              email: user.email || ''
-            }))
-          
-          setUsers(restaurantManagers)
-        }
-      } catch (error) {
-        if (isMounted) {
-          console.error('Failed to fetch users', error)
-          // Don't set error state for users, just log it
-          setUsers([])
-        }
-      }
-    }
-
-    loadRestaurants()
-    loadUsers()
-
-    return () => {
-      isMounted = false
-    }
-  }, [])
-
-  const filteredRestaurants = useMemo(() => {
-    if (!searchQuery.trim()) return restaurants
-    
-    const query = searchQuery.toLowerCase().trim()
-    return restaurants.filter(restaurant => {
-      const name = (restaurant.name || '').toLowerCase()
-      const phone = (restaurant.phoneNumber || '').toLowerCase()
-      const email = (restaurant.email || '').toLowerCase()
-      const address = (restaurant.address || '').toLowerCase()
-      const website = (restaurant.website_link).toLowerCase()
-
-      return (
-        name.includes(query) ||
-        phone.includes(query) ||
-        email.includes(query) ||
-        address.includes(query) ||
-        website.includes(query)
-      )
-    })
-  }, [restaurants, searchQuery])
-
-  const paginatedRestaurants = useMemo(() => {
-    const startIndex = (page - 1) * rowsPerPage
-    const endIndex = startIndex + rowsPerPage
-    return filteredRestaurants.slice(startIndex, endIndex)
-  }, [filteredRestaurants, page, rowsPerPage])
-
-  const handlePageChange = (event, value) => {
-    setPage(value)
-  }
-
-  const handleRowsPerPageChange = (event) => {
-    const newRowsPerPage = event.target.value
-    setRowsPerPage(newRowsPerPage)
-    localStorage.setItem('adminRowsPerPage', newRowsPerPage.toString())
-    setPage(1)
-  }
-
-  useEffect(() => {
-    setPage(1)
-  }, [searchQuery])
+    resetPage()
+  }, [searchQuery, resetPage])
 
   const handleRemoveClick = (restaurant) => {
     setSelectedRestaurant(restaurant)
@@ -164,9 +66,7 @@ function ExistingRestaurants() {
       await updateRestaurant(selectedRestaurant.id, updated)
       
       // Refresh the restaurant list after successful update
-      const data = await fetchRestaurants()
-      setRestaurants(Array.isArray(data) ? data : [])
-      setFetchError(null)
+      await refreshRestaurants()
       
       setIsEditDialogOpen(false)
       setSelectedRestaurant(null)

@@ -1,70 +1,48 @@
-import { useState, useMemo, useEffect } from 'react'
-import { pendingRestaurants as mockRestaurants, VTusers } from '../../mock_data/admin_portal'
+import { useState, useEffect } from 'react'
 import './AdminDashboard.css'
 import AdminSearchBar from './components/AdminSearchBar.jsx'
 import AdminPagination from './components/AdminPagination.jsx'
 import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
+import { useRestaurants } from './hooks/useRestaurants'
+import { usePagination } from './hooks/usePagination'
+import { useRestaurantSearch } from './hooks/useRestaurantSearch'
+import { usePaginatedData } from './hooks/usePaginatedData'
 
 function PendingRestaurants() {
-  const [restaurants, setRestaurants] = useState(mockRestaurants)
   const [searchQuery, setSearchQuery] = useState('')
-  const [page, setPage] = useState(1)
   const [selectedRestaurant, setSelectedRestaurant] = useState(null)
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false)
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
-  const [rowsPerPage, setRowsPerPage] = useState(() => {
-    const saved = localStorage.getItem('adminRowsPerPage')
-    return saved ? parseInt(saved, 10) : 10
-  })
 
-  const filteredRestaurants = useMemo(() => {
-    if (!searchQuery.trim()) return restaurants
-    
-    const query = searchQuery.toLowerCase().trim()
-    return restaurants.filter(restaurant => {
-      const owner = VTusers.find(user => user.id === restaurant.ownerId)
-      const ownerName = owner ? `${owner.firstName} ${owner.lastName}`.toLowerCase() : ''
-      
-      return (
-        restaurant.name.toLowerCase().includes(query) ||
-        restaurant.phoneNumber.toLowerCase().includes(query) ||
-        ownerName.includes(query)
-      )
-    })
-  }, [restaurants, searchQuery])
+  // Custom hooks
+  const { restaurants, isLoading, fetchError, refreshRestaurants } = useRestaurants(
+    false, // isActive = false for pending restaurants
+    'Unable to load pending restaurants. Please try again later.'
+  )
+  const { page, rowsPerPage, handlePageChange, handleRowsPerPageChange, resetPage } = usePagination()
+  const filteredRestaurants = useRestaurantSearch(restaurants, searchQuery)
+  const paginatedRestaurants = usePaginatedData(filteredRestaurants, page, rowsPerPage)
 
-  const paginatedRestaurants = useMemo(() => {
-    const startIndex = (page - 1) * rowsPerPage
-    const endIndex = startIndex + rowsPerPage
-    return filteredRestaurants.slice(startIndex, endIndex)
-  }, [filteredRestaurants, page, rowsPerPage])
-
-  const handlePageChange = (event, value) => {
-    setPage(value)
-  }
-
-  const handleRowsPerPageChange = (event) => {
-    const newRowsPerPage = event.target.value
-    setRowsPerPage(newRowsPerPage)
-    localStorage.setItem('adminRowsPerPage', newRowsPerPage.toString())
-    setPage(1)
-  }
-
+  // Reset page when search query changes
   useEffect(() => {
-    setPage(1)
-  }, [searchQuery])
+    resetPage()
+  }, [searchQuery, resetPage])
 
   const handleApproveClick = (restaurant) => {
     setSelectedRestaurant(restaurant)
     setIsApproveDialogOpen(true)
   }
 
-  const handleApproveConfirm = () => {
+  const handleApproveConfirm = async () => {
     if (!selectedRestaurant) return
     // TODO: Add API call to approve restaurant (send email + publish)
-    console.log('Approving restaurant:', selectedRestaurant.id, 'email:', selectedRestaurant.email)
-    // Optionally remove from list
-    setRestaurants(prev => prev.filter(r => r.id !== selectedRestaurant.id))
+    console.log('Approving restaurant:', selectedRestaurant.id)
+    try {
+      // After approval, refresh the list to remove the approved restaurant
+      await refreshRestaurants()
+    } catch (error) {
+      console.error('Failed to refresh restaurants after approval', error)
+    }
     setIsApproveDialogOpen(false)
     setSelectedRestaurant(null)
   }
@@ -79,11 +57,16 @@ function PendingRestaurants() {
     setIsRejectDialogOpen(true)
   }
 
-  const handleRejectConfirm = () => {
+  const handleRejectConfirm = async () => {
     if (!selectedRestaurant) return
     // TODO: Add API call to reject restaurant
-    console.log('Rejecting restaurant:', selectedRestaurant.id, 'email:', selectedRestaurant.email)
-    setRestaurants(prev => prev.filter(r => r.id !== selectedRestaurant.id))
+    console.log('Rejecting restaurant:', selectedRestaurant.id)
+    try {
+      // After rejection, refresh the list to remove the rejected restaurant
+      await refreshRestaurants()
+    } catch (error) {
+      console.error('Failed to refresh restaurants after rejection', error)
+    }
     setIsRejectDialogOpen(false)
     setSelectedRestaurant(null)
   }
@@ -91,6 +74,11 @@ function PendingRestaurants() {
   const handleRejectCancel = () => {
     setIsRejectDialogOpen(false)
     setSelectedRestaurant(null)
+  }
+
+  const handleView = (restaurantId) => {
+    // TODO: Implement view menu functionality
+    console.log('View menu for restaurant:', restaurantId)
   }
 
   return (
@@ -123,7 +111,19 @@ function PendingRestaurants() {
             </tr>
           </thead>
           <tbody>
-            {filteredRestaurants.length === 0 ? (
+            {isLoading ? (
+              <tr>
+                <td colSpan="9" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+                  Loading pending restaurants...
+                </td>
+              </tr>
+            ) : fetchError ? (
+              <tr>
+                <td colSpan="9" style={{ textAlign: 'center', padding: '40px', color: '#c1121f' }}>
+                  {fetchError}
+                </td>
+              </tr>
+            ) : filteredRestaurants.length === 0 ? (
               <tr>
                 <td colSpan="9" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
                   {searchQuery ? 'No pending restaurants found matching your search' : 'No pending restaurants'}
@@ -134,37 +134,24 @@ function PendingRestaurants() {
                 <tr key={restaurant.id}>
                   <td>{restaurant.id}</td>
                   <td>{restaurant.name}</td>
-                  <td>{restaurant.phoneNumber}</td>
+                  <td>{restaurant.phone_number || restaurant.phoneNumber || 'N/A'}</td>
+                  <td>{restaurant.owner_id || 'N/A'}</td>
+                  <td>{restaurant.owner || 'N/A'}</td>
                   <td>
-                    {VTusers.find(
-                      (user) =>
-                        user.id === restaurant.ownerId
-                    )?.id ?? 'N/A'}
-                  </td>
-                  <td>
-                    {(() => {
-                      const owner = VTusers.find(
-                        (user) =>
-                          user.id === restaurant.ownerId
-                      )
-                      return owner ? `${owner.firstName} ${owner.lastName}` : 'N/A'
-                    })()}
-                  </td>
-                  <td>
-                    {restaurant.link ? (
+                    {restaurant.website_link || restaurant.website ? (
                       <a 
-                        href={restaurant.link} 
+                        href={restaurant.website_link || restaurant.website} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         style={{ color: '#007bff', textDecoration: 'none' }}
                       >
-                        {restaurant.link}
+                        {restaurant.website_link || restaurant.website}
                       </a>
                     ) : (
                       <span style={{ color: '#6c757d' }}>N/A</span>
                     )}
                   </td>
-                  <td>{restaurant.submittedAt}</td>
+                  <td>{restaurant.created_at ? new Date(restaurant.created_at).toLocaleDateString() : 'N/A'}</td>
                   <td>
                     <span className="admin-status admin-status-pending">Pending</span>
                   </td>
@@ -212,7 +199,7 @@ function PendingRestaurants() {
         title="Send approval email?"
         message={
           selectedRestaurant
-            ? `This will send an approval email to the owner of ${selectedRestaurant.name} (${selectedRestaurant.email}) and publish their restaurant.`
+            ? `This will send an approval email to the owner of ${selectedRestaurant.name} and publish their restaurant.`
             : ''
         }
         confirmLabel="Send email"
@@ -225,7 +212,7 @@ function PendingRestaurants() {
         title="Send rejection email?"
         message={
           selectedRestaurant
-            ? `This will send a rejection email to the owner of ${selectedRestaurant.name} (${selectedRestaurant.email}) and remove their application.`
+            ? `This will send a rejection email to the owner of ${selectedRestaurant.name} and remove their application.`
             : ''
         }
         confirmLabel="Send email"
