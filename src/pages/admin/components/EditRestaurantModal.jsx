@@ -14,9 +14,7 @@ function EditRestaurantModal({
     owner: '',
     owner_id: '',
     address: '',
-    website_link: '',
-    x_coordinate: '',
-    y_coordinate: '',
+    website_link: ''
   })
 
   useEffect(() => {
@@ -39,9 +37,7 @@ function EditRestaurantModal({
         owner: restaurant.owner || '',
         owner_id: ownerId || '',
         address: restaurant.address || '',
-        website_link: restaurant.website_link || restaurant.website || '',
-        x_coordinate: restaurant.x_coordinate || '',
-        y_coordinate: restaurant.y_coordinate || '',
+        website_link: restaurant.website_link || restaurant.website || ''
       })
     }
   }, [restaurant, open])
@@ -141,22 +137,6 @@ function EditRestaurantModal({
                 type="text"
                 value={form.website_link}
                 onChange={handleChange('website_link')}
-              />
-            </label>
-            <label className="edit-restaurant-field">
-              <span>X coordinate</span>
-              <input
-                type="text"
-                value={form.x_coordinate}
-                onChange={handleChange('x_coordinate')}
-              />
-            </label>
-            <label className="edit-restaurant-field">
-              <span>Y coordinate</span>
-              <input
-                type="text"
-                value={form.y_coordinate}
-                onChange={handleChange('y_coordinate')}
               />
             </label>
           </div>
