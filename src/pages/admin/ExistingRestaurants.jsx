@@ -18,6 +18,8 @@ function ExistingRestaurants() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
+  const [isRemoving, setIsRemoving] = useState(false)
+  const [removeError, setRemoveError] = useState(null)
 
   // Custom hooks
   const { restaurants, isLoading, fetchError, refreshRestaurants } = useRestaurants(
@@ -39,17 +41,34 @@ function ExistingRestaurants() {
     setIsRemoveDialogOpen(true)
   }
 
-  const handleRemoveConfirm = () => {
-    if (!selectedRestaurant) return
-    // TODO: Add API call to remove restaurant
-    console.log('Confirm remove restaurant (no local list change):', selectedRestaurant.id)
-    setIsRemoveDialogOpen(false)
-    setSelectedRestaurant(null)
+  const handleRemoveConfirm = async () => {
+    if (!selectedRestaurant || isRemoving) return
+    
+    try {
+      setIsRemoving(true)
+      setRemoveError(null)
+      
+      // Send PATCH request to set is_active to false
+      await updateRestaurant(selectedRestaurant.id, { is_active: false })
+      
+      // After removal, refresh the list to remove the restaurant
+      await refreshRestaurants()
+      
+      setIsRemoveDialogOpen(false)
+      setSelectedRestaurant(null)
+      setRemoveError(null)
+    } catch (error) {
+      console.error('Failed to remove restaurant', error)
+      setRemoveError(error.message || 'Unable to remove restaurant. Please try again later.')
+    } finally {
+      setIsRemoving(false)
+    }
   }
 
   const handleRemoveCancel = () => {
     setIsRemoveDialogOpen(false)
     setSelectedRestaurant(null)
+    setRemoveError(null)
   }
 
   const handleEditClick = (restaurant) => {
@@ -194,10 +213,10 @@ function ExistingRestaurants() {
         title="Remove restaurant?"
         message={
           selectedRestaurant
-            ? `This will remove ${selectedRestaurant.name} from the approved list. This action cannot be undone.`
+            ? `This will remove ${selectedRestaurant.name} from the approved list. The restaurant will not be visible to users.`
             : ''
         }
-        confirmLabel="Remove"
+        confirmLabel={isRemoving ? 'Removing...' : 'Remove'}
         cancelLabel="Cancel"
         onConfirm={handleRemoveConfirm}
         onCancel={handleRemoveCancel}

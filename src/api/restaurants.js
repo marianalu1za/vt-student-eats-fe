@@ -239,6 +239,9 @@ export async function updateRestaurant(id, restaurantData) {
     if (restaurantData.website_link !== undefined) {
       apiPayload.website_link = restaurantData.website_link
     }
+    if (restaurantData.is_active !== undefined) {
+      apiPayload.is_active = restaurantData.is_active
+    }
     
     const response = await fetch(url, {
       method: 'PATCH',

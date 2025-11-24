@@ -7,12 +7,15 @@ import { useRestaurants } from './hooks/useRestaurants'
 import { usePagination } from './hooks/usePagination'
 import { useRestaurantSearch } from './hooks/useRestaurantSearch'
 import { usePaginatedData } from './hooks/usePaginatedData'
+import { updateRestaurant } from '../../api/restaurants'
 
 function PendingRestaurants() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRestaurant, setSelectedRestaurant] = useState(null)
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false)
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [approveError, setApproveError] = useState(null)
 
   // Custom hooks
   const { restaurants, isLoading, fetchError, refreshRestaurants } = useRestaurants(
@@ -34,22 +37,33 @@ function PendingRestaurants() {
   }
 
   const handleApproveConfirm = async () => {
-    if (!selectedRestaurant) return
-    // TODO: Add API call to approve restaurant (send email + publish)
-    console.log('Approving restaurant:', selectedRestaurant.id)
+    if (!selectedRestaurant || isSubmitting) return
+    
     try {
+      setIsSubmitting(true)
+      setApproveError(null)
+      
+      // Send PATCH request to set is_active to true
+      await updateRestaurant(selectedRestaurant.id, { is_active: true })
+      
       // After approval, refresh the list to remove the approved restaurant
       await refreshRestaurants()
+      
+      setIsApproveDialogOpen(false)
+      setSelectedRestaurant(null)
+      setApproveError(null)
     } catch (error) {
-      console.error('Failed to refresh restaurants after approval', error)
+      console.error('Failed to approve restaurant', error)
+      setApproveError(error.message || 'Unable to approve restaurant. Please try again later.')
+    } finally {
+      setIsSubmitting(false)
     }
-    setIsApproveDialogOpen(false)
-    setSelectedRestaurant(null)
   }
 
   const handleApproveCancel = () => {
     setIsApproveDialogOpen(false)
     setSelectedRestaurant(null)
+    setApproveError(null)
   }
 
   const handleRejectClick = (restaurant) => {
@@ -196,13 +210,13 @@ function PendingRestaurants() {
       </div>
       <ConfirmDialog
         open={isApproveDialogOpen}
-        title="Send approval email?"
+        title="Approve restaurant?"
         message={
           selectedRestaurant
-            ? `This will send an approval email to the owner of ${selectedRestaurant.name} and publish their restaurant.`
+            ? `This will publish the restaurant: ${selectedRestaurant.name} to our website. Users will be able to view the menu on the VT Student Eats website.`
             : ''
         }
-        confirmLabel="Send email"
+        confirmLabel={isSubmitting ? 'Approving...' : 'Approve'}
         cancelLabel="Cancel"
         onConfirm={handleApproveConfirm}
         onCancel={handleApproveCancel}
@@ -212,7 +226,7 @@ function PendingRestaurants() {
         title="Send rejection email?"
         message={
           selectedRestaurant
-            ? `This will send a rejection email to the owner of ${selectedRestaurant.name} and remove their application.`
+            ? `This will reject the restaurant: ${selectedRestaurant.name} and remove their application.`
             : ''
         }
         confirmLabel="Send email"
