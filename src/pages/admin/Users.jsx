@@ -140,7 +140,7 @@ function Users() {
           <>
             <div className="admin-table-wrapper">
               <div className="admin-table-scroll">
-              <table className="admin-table admin-table-restaurants">
+              <table className="admin-table admin-table-restaurants admin-table-users">
               <thead>
                 <tr>
                   <th>ID</th>
