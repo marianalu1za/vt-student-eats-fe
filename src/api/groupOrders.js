@@ -16,6 +16,7 @@ export async function fetchGroupOrders() {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
     })
 
     if (!response.ok) {
@@ -153,7 +154,60 @@ export async function createGroupOrder(data) {
       )
     }
 
-    // Rethrow for UI to handle (e.g., show toast)
+    throw error
+  }
+}
+
+
+export async function joinGroupOrder(groupOrderId) {
+  const url = `${API_BASE_URL}/api/group-order-participants/`
+  const csrftoken = getCSRFToken()
+
+  try {
+    console.log('Joining group order at:', url, 'with id:', groupOrderId)
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        ...(csrftoken ? { 'X-CSRFToken': csrftoken } : {}),
+      },
+      credentials: 'include',
+      body: JSON.stringify({ group_order: groupOrderId }),
+    })
+
+    if (!response.ok) {
+      try {
+        const data = await response.json()
+        const message =
+          data?.detail ||
+          data?.non_field_errors?.[0] ||
+          data?.group_order?.[0] ||
+          `HTTP error! status: ${response.status}`
+
+        console.error('API Error Response (join group order):', data)
+        throw new Error(message)
+      } catch (jsonErr) {
+        // Fall back to raw text if JSON parsing fails
+        const errorText = await response.text()
+        console.error('API Error Response (join group order - text):', errorText)
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
+      }
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('Error joining group order:', error)
+
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error(
+        `Failed to connect to backend API at ${url}. ` +
+        `Please ensure the backend server is running at http://localhost:8000. ` +
+        `This might be a CORS issue or the server is not running.`
+      )
+    }
+
     throw error
   }
 }
