@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Header from '../restaurants/components/Header.jsx'
 import './GroupOrders.css'
-import { fetchGroupOrders, createGroupOrder } from '../../api/groupOrders.js'
+import { fetchGroupOrders, createGroupOrder, joinGroupOrder } from '../../api/groupOrders.js'
 import CreateGroupOrderForm from './GroupOrderForm.jsx'
 import { buildGroupOrderPayload } from './buildOrder.js'
 import ErrorPopup from '../../components/common/ErrorPopup'
@@ -23,6 +23,7 @@ function mapApiOrderToCard(order) {
     id: order.id,
     restaurantName: order.restaurant_name,
     hostName: order.created_by_username,
+    hostId: order.created_by_user,
     pickupTime,
     discount: 'Group discount', // TODO: Sprint 3 discounts??
     spotsLeft,
@@ -52,6 +53,9 @@ function GroupOrders() {
   const [createError, setCreateError] = useState(null)
   const [showCreateErrorPopup, setShowCreateErrorPopup] = useState(false)
   const [showAuthPopup, setShowAuthPopup] = useState(false)
+  const [joinError, setJoinError] = useState(null)
+  const [showJoinErrorPopup, setShowJoinErrorPopup] = useState(false)
+
 
 
   const loadGroupOrders = useCallback(async () => {
@@ -103,6 +107,24 @@ function GroupOrders() {
       setShowCreateErrorPopup(true)
     }
   }
+
+  async function handleJoinClick(group) {
+    const storedUser = getStoredUser()
+    if (!storedUser) {
+      setShowAuthPopup(true)
+      return
+    }
+
+    try {
+      await joinGroupOrder(group.id)
+      await loadGroupOrders()
+    } catch (err) {
+      const message = err?.message || 'Failed to join group order.'
+      setJoinError(message)
+      setShowJoinErrorPopup(true)
+    }
+  }
+
 
   function handleCreateClick() {
     const user = getStoredUser()
@@ -308,6 +330,16 @@ function GroupOrders() {
             }}
           />
         )}
+        {showJoinErrorPopup && (
+          <ErrorPopup
+            message={joinError}
+            onClose={() => {
+              setShowJoinErrorPopup(false)
+              setJoinError(null)
+            }}
+          />
+        )}
+
       </main>
     </div>
   )
