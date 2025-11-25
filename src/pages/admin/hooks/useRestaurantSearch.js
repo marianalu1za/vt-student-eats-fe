@@ -12,28 +12,46 @@ export function useRestaurantSearch(restaurants, searchQuery, customFilter = nul
     if (!searchQuery.trim()) return restaurants
     
     if (customFilter) {
-      return customFilter(restaurants, searchQuery)
+      try {
+        return customFilter(restaurants, searchQuery)
+      } catch (error) {
+        console.error('Error in custom filter:', error)
+        return restaurants
+      }
     }
     
     // Default search filter
-    const query = searchQuery.toLowerCase().trim()
-    return restaurants.filter(restaurant => {
-      const name = (restaurant.name || '').toLowerCase()
-      const phone = (restaurant.phone_number || restaurant.phoneNumber || '').toLowerCase()
-      const owner = (restaurant.owner || '').toLowerCase()
-      const address = (restaurant.address || '').toLowerCase()
-      const website = (restaurant.website_link || restaurant.website || '').toLowerCase()
-      const email = (restaurant.email || '').toLowerCase()
+    try {
+      const query = searchQuery.toLowerCase().trim()
+      return restaurants.filter(restaurant => {
+        if (!restaurant) return false
+        
+        // Safely convert all values to strings before calling toLowerCase
+        const name = String(restaurant.name || '').toLowerCase()
+        const phone = String(restaurant.phone_number || restaurant.phoneNumber || '').toLowerCase()
+        const owner = String(restaurant.owner || '').toLowerCase()
+        const address = String(restaurant.address || '').toLowerCase()
+        const website = String(restaurant.website_link || restaurant.website || '').toLowerCase()
+        const email = String(restaurant.email || '').toLowerCase()
 
-      return (
-        name.includes(query) ||
-        phone.includes(query) ||
-        owner.includes(query) ||
-        address.includes(query) ||
-        website.includes(query) ||
-        email.includes(query)
-      )
-    })
+        try {
+          return (
+            name.includes(query) ||
+            phone.includes(query) ||
+            owner.includes(query) ||
+            address.includes(query) ||
+            website.includes(query) ||
+            email.includes(query)
+          )
+        } catch (error) {
+          console.error('Error filtering restaurant:', error, restaurant)
+          return false
+        }
+      })
+    } catch (error) {
+      console.error('Error in search filter:', error)
+      return restaurants
+    }
   }, [restaurants, searchQuery, customFilter])
 
   return filteredRestaurants
