@@ -1,12 +1,14 @@
 import { useState, useMemo, useEffect } from 'react'
-import { groupOrders as mockGroupOrders } from '../../mock_data/admin_portal'
+import { fetchGroupOrders } from '../../api/groupOrders'
 import './AdminDashboard.css'
 import AdminSearchBar from './components/AdminSearchBar.jsx'
 import AdminPagination from './components/AdminPagination'
 import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
 
 function GroupOrders() {
-  const [orders] = useState(mockGroupOrders)
+  const [orders, setOrders] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
   const [selectedOrder, setSelectedOrder] = useState(null)
@@ -16,15 +18,59 @@ function GroupOrders() {
     return saved ? parseInt(saved, 10) : 10
   })
 
+  useEffect(() => {
+    let isMounted = true
+
+    const loadGroupOrders = async () => {
+      try {
+        setIsLoading(true)
+        setFetchError(null)
+        const apiData = await fetchGroupOrders()
+        
+        if (isMounted) {
+          // Map API response to component format
+          const mappedOrders = Array.isArray(apiData) 
+            ? apiData.map(order => ({
+                id: order.id,
+                host: order.created_by_username || order.created_by_user || 'N/A',
+                restaurant: order.restaurant_name || order.restaurant || 'N/A',
+                pick_up_time: order.pick_up_time || null,
+                max_capacity: order.max_capacity || 0,
+                current_capacity: order.current_capacity || 0,
+                status: order.status || 'unknown'
+              }))
+            : []
+          
+          setOrders(mappedOrders)
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error('Failed to fetch group orders', error)
+          setFetchError('Unable to load group orders. Please try again later.')
+          setOrders([])
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadGroupOrders()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
   const filteredOrders = useMemo(() => {
     if (!searchQuery.trim()) return orders
     
     const query = searchQuery.toLowerCase().trim()
     return orders.filter(order => 
-      order.host.toLowerCase().includes(query) ||
-      order.restaurant.toLowerCase().includes(query) ||
-      order.meetPlace.toLowerCase().includes(query) ||
-      order.meetTime.toLowerCase().includes(query)
+      (order.host || '').toLowerCase().includes(query) ||
+      (order.restaurant || '').toLowerCase().includes(query) ||
+      (order.pick_up_time || '').toLowerCase().includes(query)
     )
   }, [orders, searchQuery])
 
@@ -78,7 +124,7 @@ function GroupOrders() {
         <AdminSearchBar 
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          placeholder="Search group orders by host, restaurant, or meet place..."
+          placeholder="Search group orders by host, restaurant, or pick up time..."
         />
         <div className="admin-table-wrapper">
           <div className="admin-table-scroll">
@@ -88,50 +134,84 @@ function GroupOrders() {
               <th>ID</th>
               <th>Host</th>
               <th>Restaurant</th>
-              <th>Meet Time</th>
-              <th>Meet Place</th>
-              <th>Created At</th>
-              <th>Max Number of Users</th>
-              <th>Current Number of Users</th>
+              <th>Pick Up Time</th>
+              <th>max_capacity</th>
+              <th>current_capacity</th>
               <th>Status</th>
               <th className="admin-table-actions-header">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredOrders.length === 0 ? (
+            {isLoading ? (
               <tr>
-                <td colSpan="10" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+                  Loading group orders...
+                </td>
+              </tr>
+            ) : fetchError ? (
+              <tr>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: '#c1121f' }}>
+                  {fetchError}
+                </td>
+              </tr>
+            ) : filteredOrders.length === 0 ? (
+              <tr>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
                   {searchQuery ? 'No group orders found matching your search' : 'No group orders'}
                 </td>
               </tr>
             ) : (
-              paginatedOrders.map((order) => (
-                <tr key={order.id}>
-                  <td>{order.id}</td>
-                  <td>{order.host}</td>
-                  <td>{order.restaurant}</td>
-                  <td>{order.meetTime}</td>
-                  <td>{order.meetPlace}</td>
-                  <td>{order.createdAt}</td>
-                  <td>{order.maxUsers}</td>
-                  <td>{order.currentUsers}</td>
-                  <td>
-                    <span className={`admin-status admin-status-${order.status}`}>
-                      {order.status === 'current' ? 'Current' : 'Ended'}
-                    </span>
-                  </td>
-                  <td className="admin-table-actions-cell">
-                    <div className="admin-table-actions">
-                      <button 
-                        className="admin-btn admin-btn-danger"
-                        onClick={() => handleRemoveClick(order)}
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+              paginatedOrders.map((order) => {
+                const formatPickUpTime = (timeString) => {
+                  if (!timeString) return 'N/A'
+                  try {
+                    const date = new Date(timeString)
+                    return date.toLocaleString()
+                  } catch (e) {
+                    return timeString
+                  }
+                }
+
+                const getStatusDisplay = (status) => {
+                  const statusLower = (status || '').toLowerCase()
+                  if (statusLower === 'open') return 'Open'
+                  /* TODO: Add more statuses */
+                  return status || 'Unknown'
+                }
+
+                const getStatusClass = (status) => {
+                  const statusLower = (status || '').toLowerCase()
+                  if (statusLower === 'open') return 'admin-status-approved'
+                  // if (statusLower === 'closed' || statusLower === 'ended') return 'admin-status-ended'
+                  return 'admin-status-pending'
+                }
+
+                return (
+                  <tr key={order.id}>
+                    <td>{order.id}</td>
+                    <td>{order.host}</td>
+                    <td>{order.restaurant}</td>
+                    <td>{formatPickUpTime(order.pick_up_time)}</td>
+                    <td>{order.max_capacity}</td>
+                    <td>{order.current_capacity}</td>
+                    <td>
+                      <span className={`admin-status ${getStatusClass(order.status)}`}>
+                        {getStatusDisplay(order.status)}
+                      </span>
+                    </td>
+                    <td className="admin-table-actions-cell">
+                      <div className="admin-table-actions">
+                        <button 
+                          className="admin-btn admin-btn-danger"
+                          onClick={() => handleRemoveClick(order)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })
             )}
           </tbody>
         </table>
