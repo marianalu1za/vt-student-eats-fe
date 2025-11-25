@@ -1,18 +1,26 @@
 import { useState, useMemo, useEffect } from 'react'
-import { fetchGroupOrders } from '../../api/groupOrders'
+import { fetchGroupOrders, updateGroupOrder } from '../../api/groupOrders'
+import { fetchRestaurants } from '../../api/restaurants'
+import { getAllUsers } from '../../api/auth'
 import './AdminDashboard.css'
 import AdminSearchBar from './components/AdminSearchBar.jsx'
 import AdminPagination from './components/AdminPagination'
 import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
+import EditGroupOrderModal from './components/EditGroupOrderModal.jsx'
 
 function GroupOrders() {
   const [orders, setOrders] = useState([])
+  const [restaurants, setRestaurants] = useState([])
+  const [users, setUsers] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [fetchError, setFetchError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
   const [rowsPerPage, setRowsPerPage] = useState(() => {
     const saved = localStorage.getItem('adminRowsPerPage')
     return saved ? parseInt(saved, 10) : 10
@@ -34,6 +42,8 @@ function GroupOrders() {
                 id: order.id,
                 host: order.created_by_username || order.created_by_user || 'N/A',
                 restaurant: order.restaurant_name || order.restaurant || 'N/A',
+                restaurant_id: order.restaurant || null,
+                created_by_user: order.created_by_user || null,
                 pick_up_time: order.pick_up_time || null,
                 max_capacity: order.max_capacity || 0,
                 current_capacity: order.current_capacity || 0,
@@ -56,7 +66,57 @@ function GroupOrders() {
       }
     }
 
+    const loadRestaurants = async () => {
+      try {
+        const data = await fetchRestaurants()
+        if (isMounted) {
+          // Filter to only show restaurants where is_active is true
+          const activeRestaurants = Array.isArray(data)
+            ? data.filter(restaurant => restaurant.is_active === true)
+            : []
+          setRestaurants(activeRestaurants)
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error('Failed to fetch restaurants', error)
+          setRestaurants([])
+        }
+      }
+    }
+
+    const loadUsers = async () => {
+      try {
+        const usersData = await getAllUsers()
+        if (isMounted) {
+          // Filter users with role "User" and map to expected format
+          const regularUsers = usersData
+            .filter(user => {
+              // Check if roles array includes "User" or role string equals "User"
+              if (Array.isArray(user.roles) && user.roles.length > 0) {
+                return user.roles.includes('User')
+              }
+              // Fallback to checking user.role if roles array is not available
+              return user.role === 'User'
+            })
+            .map(user => ({
+              id: user.id,
+              firstName: user.first_name || '',
+              lastName: user.last_name || '',
+              email: user.email || ''
+            }))
+          setUsers(regularUsers)
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error('Failed to fetch users', error)
+          setUsers([])
+        }
+      }
+    }
+
     loadGroupOrders()
+    loadRestaurants()
+    loadUsers()
 
     return () => {
       isMounted = false
@@ -94,6 +154,55 @@ function GroupOrders() {
   useEffect(() => {
     setPage(1)
   }, [searchQuery])
+
+  const handleEditClick = (order) => {
+    setSelectedOrder(order)
+    setIsEditDialogOpen(true)
+    setSubmitError(null)
+  }
+
+  const handleEditSave = async (updated) => {
+    if (!selectedOrder) return
+    
+    try {
+      setIsSubmitting(true)
+      setSubmitError(null)
+      
+      await updateGroupOrder(selectedOrder.id, updated)
+      
+      // Refresh the group orders list after successful update
+      const apiData = await fetchGroupOrders()
+      const mappedOrders = Array.isArray(apiData) 
+        ? apiData.map(order => ({
+            id: order.id,
+            host: order.created_by_username || order.created_by_user || 'N/A',
+            restaurant: order.restaurant_name || order.restaurant || 'N/A',
+            restaurant_id: order.restaurant || null,
+            created_by_user: order.created_by_user || null,
+            pick_up_time: order.pick_up_time || null,
+            max_capacity: order.max_capacity || 0,
+            current_capacity: order.current_capacity || 0,
+            status: order.status || 'unknown'
+          }))
+        : []
+      setOrders(mappedOrders)
+      
+      setIsEditDialogOpen(false)
+      setSelectedOrder(null)
+      setSubmitError(null)
+    } catch (error) {
+      console.error('Failed to update group order', error)
+      setSubmitError(error.message || 'Unable to update group order. Please try again later.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleEditCancel = () => {
+    setIsEditDialogOpen(false)
+    setSelectedOrder(null)
+    setSubmitError(null)
+  }
 
   const handleRemoveClick = (order) => {
     setSelectedOrder(order)
@@ -201,6 +310,13 @@ function GroupOrders() {
                     </td>
                     <td className="admin-table-actions-cell">
                       <div className="admin-table-actions">
+                        <button
+                          className="admin-btn admin-btn-secondary"
+                          style={{ marginRight: '8px' }}
+                          onClick={() => handleEditClick(order)}
+                        >
+                          Edit
+                        </button>
                         <button 
                           className="admin-btn admin-btn-danger"
                           onClick={() => handleRemoveClick(order)}
@@ -225,6 +341,16 @@ function GroupOrders() {
           onRowsPerPageChange={handleRowsPerPageChange}
         />
       </div>
+      <EditGroupOrderModal
+        open={isEditDialogOpen}
+        groupOrder={selectedOrder}
+        onSave={handleEditSave}
+        restaurants={restaurants}
+        users={users}
+        onCancel={handleEditCancel}
+        isSubmitting={isSubmitting}
+        error={submitError}
+      />
       <ConfirmDialog
         open={isRemoveDialogOpen}
         title="Remove group order?"
