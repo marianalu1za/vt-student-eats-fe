@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { fetchGroupOrders, updateGroupOrder } from '../../api/groupOrders'
+import { fetchGroupOrders, updateGroupOrder, deleteGroupOrder } from '../../api/groupOrders'
 import { fetchRestaurants } from '../../api/restaurants'
 import { getAllUsers } from '../../api/auth'
 import './AdminDashboard.css'
@@ -21,6 +21,8 @@ function GroupOrders() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
   const [rowsPerPage, setRowsPerPage] = useState(() => {
     const saved = localStorage.getItem('adminRowsPerPage')
     return saved ? parseInt(saved, 10) : 10
@@ -207,19 +209,50 @@ function GroupOrders() {
   const handleRemoveClick = (order) => {
     setSelectedOrder(order)
     setIsRemoveDialogOpen(true)
+    setDeleteError(null)
   }
 
-  const handleRemoveConfirm = () => {
-    if (!selectedOrder) return
-    // TODO: Add API call to remove group order
-    console.log('Confirm remove group order (no local list change):', selectedOrder.id)
-    setIsRemoveDialogOpen(false)
-    setSelectedOrder(null)
+  const handleRemoveConfirm = async () => {
+    if (!selectedOrder || isDeleting) return
+    
+    try {
+      setIsDeleting(true)
+      setDeleteError(null)
+      
+      await deleteGroupOrder(selectedOrder.id)
+      
+      // Refresh the group orders list after successful deletion
+      const apiData = await fetchGroupOrders()
+      const mappedOrders = Array.isArray(apiData) 
+        ? apiData.map(order => ({
+            id: order.id,
+            host: order.created_by_username || order.created_by_user || 'N/A',
+            restaurant: order.restaurant_name || order.restaurant || 'N/A',
+            restaurant_id: order.restaurant || null,
+            created_by_user: order.created_by_user || null,
+            pick_up_time: order.pick_up_time || null,
+            max_capacity: order.max_capacity || 0,
+            current_capacity: order.current_capacity || 0,
+            status: order.status || 'unknown'
+          }))
+        : []
+      setOrders(mappedOrders)
+      
+      setIsRemoveDialogOpen(false)
+      setSelectedOrder(null)
+      setDeleteError(null)
+    } catch (error) {
+      console.error('Failed to delete group order', error)
+      setDeleteError(error.message || 'Unable to delete group order. Please try again later.')
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   const handleRemoveCancel = () => {
     setIsRemoveDialogOpen(false)
     setSelectedOrder(null)
+    setDeleteError(null)
   }
 
   return (
@@ -356,10 +389,10 @@ function GroupOrders() {
         title="Remove group order?"
         message={
           selectedOrder
-            ? `This will remove the group order hosted by ${selectedOrder.host}. This action cannot be undone.`
+            ? `This will remove the group order hosted by ${selectedOrder.host}. This action cannot be undone.${deleteError ? `\n\nError: ${deleteError}` : ''}`
             : ''
         }
-        confirmLabel="Remove"
+        confirmLabel={isDeleting ? 'Removing...' : 'Remove'}
         cancelLabel="Cancel"
         onConfirm={handleRemoveConfirm}
         onCancel={handleRemoveCancel}
