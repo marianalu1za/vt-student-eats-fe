@@ -157,7 +157,7 @@ function ProfileButton({
           {userRole === 'restaurant manager' && (
             <div 
               className="profile-dropdown-item"
-              onClick={() => handleMenuItemClick('/restaurants/management')}
+              onClick={() => handleMenuItemClick('/profile/restaurant-management')}
             >
               <span className="profile-dropdown-icon">🍽️</span>
               <span>Restaurants management</span>
