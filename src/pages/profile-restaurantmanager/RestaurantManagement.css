@@ -103,15 +103,6 @@
   background-color: #1e4478;
 }
 
-.edit-discounts-btn {
-  background-color: #28a745;
-  color: #ffffff;
-}
-
-.edit-discounts-btn:hover {
-  background-color: #218838;
-}
-
 .error-message {
   color: #dc3545;
   margin-top: 8px;

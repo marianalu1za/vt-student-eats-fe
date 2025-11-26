@@ -78,11 +78,6 @@ function RestaurantManagement() {
     navigate(`/profile/manage-restaurant/${restaurantId}`)
   }
 
-  const handleEditDiscounts = (restaurantId) => {
-    // TODO: Implement edit discounts functionality
-    console.log('Edit discounts:', restaurantId)
-  }
-
   if (loading) {
     return (
       <div className="profile-page-content">
@@ -153,12 +148,6 @@ function RestaurantManagement() {
                   onClick={() => handleEditRestaurant(restaurant.id)}
                 >
                   Edit Menu
-                </button>
-                <button
-                  className="restaurant-action-btn edit-discounts-btn"
-                  onClick={() => handleEditDiscounts(restaurant.id)}
-                >
-                  Edit Discounts
                 </button>
               </div>
             </div>
