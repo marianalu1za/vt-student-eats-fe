@@ -75,8 +75,7 @@ function RestaurantManagement() {
   }
 
   const handleEditRestaurant = (restaurantId) => {
-    // TODO: Implement edit restaurant functionality
-    console.log('Edit restaurant:', restaurantId)
+    navigate(`/profile/manage-restaurant/${restaurantId}`)
   }
 
   const handleEditDiscounts = (restaurantId) => {
