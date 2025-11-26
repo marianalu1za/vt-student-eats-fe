@@ -56,3 +56,26 @@
   color: #721c24;
 }
 
+.opening-hours-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.opening-hours-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.opening-hours-day {
+  font-weight: 600;
+  color: #666;
+  min-width: 120px;
+  margin-right: 16px;
+}
+
+.opening-hours-time {
+  color: #333;
+}
+

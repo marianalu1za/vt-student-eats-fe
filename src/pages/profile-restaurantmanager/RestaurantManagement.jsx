@@ -147,7 +147,7 @@ function RestaurantManagement() {
                   className="restaurant-action-btn edit-restaurant-btn"
                   onClick={() => handleEditRestaurant(restaurant.id)}
                 >
-                  Edit Menu
+                  Edit Restaurant
                 </button>
               </div>
             </div>
