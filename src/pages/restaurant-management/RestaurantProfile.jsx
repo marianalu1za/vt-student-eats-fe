@@ -82,8 +82,8 @@ function RestaurantProfile({ restaurantId, restaurant }) {
             )}
             <div className="info-row">
               <label>Status:</label>
-              <span className={`status-badge ${restaurantData.is_active ? 'status-active' : 'status-inactive'}`}>
-                {restaurantData.is_active ? 'Active' : 'Inactive'}
+              <span className={`status-badge ${restaurantData.is_active ? 'status-active' : 'status-pending'}`}>
+                {restaurantData.is_active ? 'Active' : 'Pending'}
               </span>
             </div>
           </div>

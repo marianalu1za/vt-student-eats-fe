@@ -14,10 +14,10 @@ function RestaurantManagementCard({ restaurant, actions }) {
         <div className="restaurant-status">
           <span
             className={`status-badge ${
-              restaurant.is_active ? 'status-active' : 'status-inactive'
+              restaurant.is_active ? 'status-active' : 'status-pending'
             }`}
           >
-            {restaurant.is_active ? 'Active' : 'Inactive'}
+            {restaurant.is_active ? 'Active' : 'Pending'}
           </span>
         </div>
       </div>
