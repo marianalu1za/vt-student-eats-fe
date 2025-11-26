@@ -1,0 +1,119 @@
+.restaurant-management-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #666;
+}
+
+.restaurant-management-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.restaurant-management-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background-color: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.restaurant-management-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-color: #6a283c;
+}
+
+.restaurant-card-info {
+  flex: 1;
+}
+
+.restaurant-card-info h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.restaurant-address,
+.restaurant-phone {
+  margin: 4px 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.restaurant-status {
+  margin-top: 12px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.status-active {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-inactive {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.restaurant-card-actions {
+  margin-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.restaurant-action-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.view-restaurant-btn {
+  background-color: #6a283c;
+  color: #ffffff;
+}
+
+.view-restaurant-btn:hover {
+  background-color: #5a1e2c;
+}
+
+.edit-restaurant-btn {
+  background-color: #2c5aa0;
+  color: #ffffff;
+}
+
+.edit-restaurant-btn:hover {
+  background-color: #1e4478;
+}
+
+.edit-discounts-btn {
+  background-color: #28a745;
+  color: #ffffff;
+}
+
+.edit-discounts-btn:hover {
+  background-color: #218838;
+}
+
+.error-message {
+  color: #dc3545;
+  margin-top: 8px;
+}
+

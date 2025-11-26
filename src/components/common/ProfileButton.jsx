@@ -153,15 +153,24 @@ function ProfileButton({
             </>
           )}
           
-          {/* Restaurant Manager menu item */}
+          {/* Restaurant Manager menu items */}
           {userRole === 'restaurant manager' && (
-            <div 
-              className="profile-dropdown-item"
-              onClick={() => handleMenuItemClick('/restaurants/management')}
-            >
-              <span className="profile-dropdown-icon">🍽️</span>
-              <span>Restaurants management</span>
-            </div>
+            <>
+              <div 
+                className="profile-dropdown-item"
+                onClick={() => handleMenuItemClick('/profile/restaurant-management')}
+              >
+                <span className="profile-dropdown-icon">🍽️</span>
+                <span>Restaurants management</span>
+              </div>
+              <div 
+                className="profile-dropdown-item"
+                onClick={() => handleMenuItemClick('/profile/create-restaurant')}
+              >
+                <span className="profile-dropdown-icon">➕</span>
+                <span>Create new restaurant</span>
+              </div>
+            </>
           )}
           
           {/* Admin: no additional menu items, just Profile and Log out */}
