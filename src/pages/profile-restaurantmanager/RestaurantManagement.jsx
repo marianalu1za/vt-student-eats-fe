@@ -79,6 +79,10 @@ function RestaurantManagement() {
     navigate(`/profile/manage-restaurant/${restaurantId}`)
   }
 
+  const handleCreateRestaurant = () => {
+    navigate('/profile/create-restaurant')
+  }
+
   if (loading) {
     return (
       <div className="profile-page-content">
@@ -107,6 +111,14 @@ function RestaurantManagement() {
         <h1>Restaurant Management</h1>
         <p>Manage your restaurants</p>
       </div>
+      <button 
+        className="floating-create-btn"
+        onClick={handleCreateRestaurant}
+        title="Create New Restaurant"
+      >
+        <i className="fa-solid fa-plus floating-create-btn-icon"></i>
+        <span className="floating-create-btn-text">Create Restaurant</span>
+      </button>
 
       {restaurants.length === 0 ? (
         <div className="restaurant-management-empty">
