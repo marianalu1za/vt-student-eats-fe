@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchRestaurants } from '../../api/restaurants'
 import { getStoredUser } from '../../api/auth'
+import RestaurantManagementCard from './components/RestaurantManagementCard'
 import './RestaurantManagement.css'
 
 function RestaurantManagement() {
@@ -114,43 +115,22 @@ function RestaurantManagement() {
       ) : (
         <div className="restaurant-management-list">
           {restaurants.map((restaurant) => (
-            <div
+            <RestaurantManagementCard
               key={restaurant.id}
-              className="restaurant-management-card"
-            >
-              <div className="restaurant-card-info">
-                <h3>{restaurant.name || `Restaurant ${restaurant.id}`}</h3>
-                {restaurant.address && (
-                  <p className="restaurant-address">{restaurant.address}</p>
-                )}
-                {restaurant.phone_number && (
-                  <p className="restaurant-phone">{restaurant.phone_number}</p>
-                )}
-                <div className="restaurant-status">
-                  <span
-                    className={`status-badge ${
-                      restaurant.is_active ? 'status-active' : 'status-inactive'
-                    }`}
-                  >
-                    {restaurant.is_active ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-              </div>
-              <div className="restaurant-card-actions">
-                <button
-                  className="restaurant-action-btn view-restaurant-btn"
-                  onClick={() => handleRestaurantClick(restaurant.id)}
-                >
-                  View Menu
-                </button>
-                <button
-                  className="restaurant-action-btn edit-restaurant-btn"
-                  onClick={() => handleEditRestaurant(restaurant.id)}
-                >
-                  Edit Restaurant
-                </button>
-              </div>
-            </div>
+              restaurant={restaurant}
+              actions={[
+                {
+                  label: 'View Menu',
+                  className: 'view-restaurant-btn',
+                  onClick: () => handleRestaurantClick(restaurant.id),
+                },
+                {
+                  label: 'Edit Restaurant',
+                  className: 'edit-restaurant-btn',
+                  onClick: () => handleEditRestaurant(restaurant.id),
+                },
+              ]}
+            />
           ))}
         </div>
       )}
