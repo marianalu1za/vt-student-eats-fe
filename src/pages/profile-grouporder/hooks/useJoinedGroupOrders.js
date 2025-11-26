@@ -18,6 +18,11 @@ export function useJoinedGroupOrders(
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
+
+  const refetch = () => {
+    setRefreshTrigger(prev => prev + 1)
+  }
 
   useEffect(() => {
     const loadOrders = async () => {
@@ -71,7 +76,8 @@ export function useJoinedGroupOrders(
             return {
               ...order,
               joined_at: participant?.joined_at,
-              participant_role: participant?.role
+              participant_role: participant?.role,
+              participant_id: participant?.id
             }
           })
 
@@ -99,8 +105,8 @@ export function useJoinedGroupOrders(
 
     loadOrders()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeParticipantsOnly])
+  }, [activeParticipantsOnly, refreshTrigger])
 
-  return { orders, loading, error }
+  return { orders, loading, error, refetch }
 }
 

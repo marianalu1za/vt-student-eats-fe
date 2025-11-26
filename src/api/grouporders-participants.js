@@ -52,3 +52,17 @@ export async function fetchGroupOrderParticipants(params = {}) {
   }
 }
 
+/**
+ * Leaves a group order by setting is_active to false for the participant
+ * TODO: Implement this function
+ * @param {number} participantId - The ID of the participant record to update
+ * @returns {Promise<Object>} The updated participant object
+ */
+export async function leaveGroupOrder(participantId) {
+  // TODO: Implement leave group order functionality
+  // Should send a PATCH request to /api/group-order-participants/{participantId}/
+  // with body: { is_active: false }
+  console.log('TODO: Leave group order not implemented yet. Participant ID:', participantId)
+  throw new Error('Leave group order functionality is not implemented yet')
+}
+

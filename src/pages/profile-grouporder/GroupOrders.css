@@ -35,3 +35,8 @@
   color: #383d41;
 }
 
+/* Align action column */
+.group-orders-table th:last-child,
+.group-orders-table td:last-child {
+  text-align: left;
+}
