@@ -27,11 +27,33 @@ function RestaurantManagement() {
         // Fetch all restaurants
         const allRestaurants = await fetchRestaurants()
 
-        // Filter restaurants where owner_id matches current user's id
+        // Filter restaurants where owner matches current user's id
         const myRestaurants = Array.isArray(allRestaurants)
           ? allRestaurants.filter(restaurant => {
-              const ownerId = restaurant.owner_id || restaurant.ownerId
-              return ownerId && String(ownerId) === String(currentUser.id)
+              // API can return owner as owner_id (number), owner (could be number, string ID, or object), or ownerId
+              let ownerId = null
+              
+              // Check owner_id first
+              if (restaurant.owner_id !== undefined && restaurant.owner_id !== null) {
+                ownerId = restaurant.owner_id
+              }
+              // Check owner field - could be a number (ID), object with id property, or string
+              else if (restaurant.owner !== undefined && restaurant.owner !== null) {
+                if (typeof restaurant.owner === 'number') {
+                  ownerId = restaurant.owner
+                } else if (typeof restaurant.owner === 'object' && restaurant.owner.id) {
+                  ownerId = restaurant.owner.id
+                } else if (typeof restaurant.owner === 'string' && !isNaN(parseInt(restaurant.owner, 10))) {
+                  ownerId = parseInt(restaurant.owner, 10)
+                }
+              }
+              // Check ownerId as fallback
+              else if (restaurant.ownerId !== undefined && restaurant.ownerId !== null) {
+                ownerId = restaurant.ownerId
+              }
+              
+              // Compare with current user's ID
+              return ownerId !== null && String(ownerId) === String(currentUser.id)
             })
           : []
 
@@ -50,6 +72,16 @@ function RestaurantManagement() {
 
   const handleRestaurantClick = (restaurantId) => {
     navigate(`/restaurants/${restaurantId}`)
+  }
+
+  const handleEditRestaurant = (restaurantId) => {
+    // TODO: Implement edit restaurant functionality
+    console.log('Edit restaurant:', restaurantId)
+  }
+
+  const handleEditDiscounts = (restaurantId) => {
+    // TODO: Implement edit discounts functionality
+    console.log('Edit discounts:', restaurantId)
   }
 
   if (loading) {
@@ -91,7 +123,6 @@ function RestaurantManagement() {
             <div
               key={restaurant.id}
               className="restaurant-management-card"
-              onClick={() => handleRestaurantClick(restaurant.id)}
             >
               <div className="restaurant-card-info">
                 <h3>{restaurant.name || `Restaurant ${restaurant.id}`}</h3>
@@ -113,13 +144,22 @@ function RestaurantManagement() {
               </div>
               <div className="restaurant-card-actions">
                 <button
-                  className="view-restaurant-btn"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleRestaurantClick(restaurant.id)
-                  }}
+                  className="restaurant-action-btn view-restaurant-btn"
+                  onClick={() => handleRestaurantClick(restaurant.id)}
                 >
-                  View Restaurant
+                  View Menu
+                </button>
+                <button
+                  className="restaurant-action-btn edit-restaurant-btn"
+                  onClick={() => handleEditRestaurant(restaurant.id)}
+                >
+                  Edit Menu
+                </button>
+                <button
+                  className="restaurant-action-btn edit-discounts-btn"
+                  onClick={() => handleEditDiscounts(restaurant.id)}
+                >
+                  Edit Discounts
                 </button>
               </div>
             </div>
