@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { fetchDiscounts, updateDiscount } from '../../api/discounts'
+import { fetchDiscounts, updateDiscount, createDiscount } from '../../api/discounts'
 import EditDiscountModal from './components/EditDiscountModal'
+import FloatingActionButton from '../../components/common/FloatingActionButton'
 import './DiscountManagement.css'
 
 function DiscountManagement({ restaurantId, restaurant }) {
@@ -9,6 +10,7 @@ function DiscountManagement({ restaurantId, restaurant }) {
   const [error, setError] = useState(null)
   const [selectedDiscount, setSelectedDiscount] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
 
@@ -81,6 +83,43 @@ function DiscountManagement({ restaurantId, restaurant }) {
     }
   }
 
+  const handleCreateDiscount = () => {
+    setSubmitError(null)
+    setIsCreateModalOpen(true)
+  }
+
+  const handleCreateModalClose = () => {
+    setIsCreateModalOpen(false)
+    setSubmitError(null)
+  }
+
+  const handleDiscountCreate = async (createData) => {
+    try {
+      setIsSubmitting(true)
+      setSubmitError(null)
+      await createDiscount(createData)
+      
+      // Refresh discounts list
+      const loadDiscounts = async () => {
+        try {
+          const discountsData = await fetchDiscounts({ restaurant_id: restaurantId })
+          setDiscounts(discountsData || [])
+        } catch (err) {
+          console.error('Failed to refresh discounts:', err)
+        }
+      }
+      await loadDiscounts()
+      
+      // Close modal
+      handleCreateModalClose()
+    } catch (err) {
+      console.error('Failed to create discount:', err)
+      setSubmitError(err.message || 'Failed to create discount. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="profile-page-content">
@@ -145,6 +184,14 @@ function DiscountManagement({ restaurantId, restaurant }) {
         )}
       </div>
 
+      <FloatingActionButton
+        icon="fa-solid fa-plus"
+        text="Add New Discount"
+        onClick={handleCreateDiscount}
+        title="Add New Discount"
+        variant="primary"
+      />
+
       <EditDiscountModal
         open={isModalOpen}
         discount={selectedDiscount}
@@ -153,6 +200,18 @@ function DiscountManagement({ restaurantId, restaurant }) {
         onCancel={handleModalClose}
         isSubmitting={isSubmitting}
         error={submitError}
+        mode="edit"
+      />
+
+      <EditDiscountModal
+        open={isCreateModalOpen}
+        discount={null}
+        restaurantId={restaurantId}
+        onSave={handleDiscountCreate}
+        onCancel={handleCreateModalClose}
+        isSubmitting={isSubmitting}
+        error={submitError}
+        mode="create"
       />
     </div>
   )
