@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchRestaurants } from '../../api/restaurants'
 import { getStoredUser } from '../../api/auth'
+import RestaurantManagementCard from './components/RestaurantManagementCard'
 import './RestaurantManagement.css'
 
 function RestaurantManagement() {
@@ -75,13 +76,11 @@ function RestaurantManagement() {
   }
 
   const handleEditRestaurant = (restaurantId) => {
-    // TODO: Implement edit restaurant functionality
-    console.log('Edit restaurant:', restaurantId)
+    navigate(`/profile/manage-restaurant/${restaurantId}`)
   }
 
-  const handleEditDiscounts = (restaurantId) => {
-    // TODO: Implement edit discounts functionality
-    console.log('Edit discounts:', restaurantId)
+  const handleCreateRestaurant = () => {
+    navigate('/profile/create-restaurant')
   }
 
   if (loading) {
@@ -112,6 +111,14 @@ function RestaurantManagement() {
         <h1>Restaurant Management</h1>
         <p>Manage your restaurants</p>
       </div>
+      <button 
+        className="floating-create-btn"
+        onClick={handleCreateRestaurant}
+        title="Create New Restaurant"
+      >
+        <i className="fa-solid fa-plus floating-create-btn-icon"></i>
+        <span className="floating-create-btn-text">Create Restaurant</span>
+      </button>
 
       {restaurants.length === 0 ? (
         <div className="restaurant-management-empty">
@@ -120,49 +127,22 @@ function RestaurantManagement() {
       ) : (
         <div className="restaurant-management-list">
           {restaurants.map((restaurant) => (
-            <div
+            <RestaurantManagementCard
               key={restaurant.id}
-              className="restaurant-management-card"
-            >
-              <div className="restaurant-card-info">
-                <h3>{restaurant.name || `Restaurant ${restaurant.id}`}</h3>
-                {restaurant.address && (
-                  <p className="restaurant-address">{restaurant.address}</p>
-                )}
-                {restaurant.phone_number && (
-                  <p className="restaurant-phone">{restaurant.phone_number}</p>
-                )}
-                <div className="restaurant-status">
-                  <span
-                    className={`status-badge ${
-                      restaurant.is_active ? 'status-active' : 'status-inactive'
-                    }`}
-                  >
-                    {restaurant.is_active ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-              </div>
-              <div className="restaurant-card-actions">
-                <button
-                  className="restaurant-action-btn view-restaurant-btn"
-                  onClick={() => handleRestaurantClick(restaurant.id)}
-                >
-                  View Menu
-                </button>
-                <button
-                  className="restaurant-action-btn edit-restaurant-btn"
-                  onClick={() => handleEditRestaurant(restaurant.id)}
-                >
-                  Edit Menu
-                </button>
-                <button
-                  className="restaurant-action-btn edit-discounts-btn"
-                  onClick={() => handleEditDiscounts(restaurant.id)}
-                >
-                  Edit Discounts
-                </button>
-              </div>
-            </div>
+              restaurant={restaurant}
+              actions={[
+                {
+                  label: 'View Menu',
+                  className: 'view-restaurant-btn',
+                  onClick: () => handleRestaurantClick(restaurant.id),
+                },
+                {
+                  label: 'Edit Restaurant',
+                  className: 'edit-restaurant-btn',
+                  onClick: () => handleEditRestaurant(restaurant.id),
+                },
+              ]}
+            />
           ))}
         </div>
       )}

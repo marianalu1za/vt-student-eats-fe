@@ -1,0 +1,32 @@
+.edit-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.edit-menu-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: #333;
+}
+
+.menu-items-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #666;
+}
+
+.menu-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.error-message {
+  color: #dc3545;
+  padding: 16px;
+}
+

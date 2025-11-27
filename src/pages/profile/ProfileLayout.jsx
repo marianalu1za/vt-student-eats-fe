@@ -5,8 +5,7 @@ import MyProfile from './MyProfile'
 import GroupOrdersJoined from '../profile-grouporder/GroupOrdersJoined'
 import GroupOrdersHistory from '../profile-grouporder/GroupOrdersHistory'
 import ChangePassword from './ChangePassword'
-import RestaurantManagement from '../restaurant-management/RestaurantManagement'
-import CreateRestaurant from '../restaurant-management/CreateRestaurant'
+import RestaurantManagement from '../profile-restaurantmanager/RestaurantManagement'
 import { logout, getStoredUser } from '../../api/auth'
 import './ProfileLayout.css'
 
@@ -48,17 +47,12 @@ function ProfileLayout() {
     ]
 
     if (isRestaurantManager) {
-      // For Restaurant Managers, show Restaurant Management and Create New Restaurant
+      // For Restaurant Managers, show Restaurant Management
       baseItems.push(
         {
           path: '/profile/restaurant-management',
           icon: '🏪',
           label: 'Restaurant Management',
-        },
-        {
-          path: '/profile/create-restaurant',
-          icon: '➕',
-          label: 'Create New Restaurant',
         }
       )
     } else {
@@ -97,7 +91,6 @@ function ProfileLayout() {
           <Route path="group-orders-joined" element={<GroupOrdersJoined />} />
           <Route path="group-orders-history" element={<GroupOrdersHistory />} />
           <Route path="restaurant-management" element={<RestaurantManagement />} />
-          <Route path="create-restaurant" element={<CreateRestaurant />} />
           <Route path="change-password" element={<ChangePassword />} />
           <Route path="*" element={<Navigate to="/profile" replace />} />
         </Routes>

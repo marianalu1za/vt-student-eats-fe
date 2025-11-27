@@ -1,0 +1,75 @@
+.restaurant-management-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #666;
+}
+
+.restaurant-management-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.error-message {
+  color: #dc3545;
+  margin-top: 8px;
+}
+
+.floating-create-btn {
+  position: fixed;
+  top: 30px;
+  right: 30px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background-color: #28a745;
+  color: #ffffff;
+  border: none;
+  border-radius: 30px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.floating-create-btn:hover {
+  background-color: #218838;
+  box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+  transform: translateY(-2px);
+}
+
+.floating-create-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.floating-create-btn-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.floating-create-btn-text {
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .floating-create-btn {
+    top: 70px;
+    right: 20px;
+    padding: 10px 16px;
+    font-size: 0.85rem;
+}
+
+  .floating-create-btn-text {
+    display: none;
+}
+
+  .floating-create-btn-icon {
+    font-size: 1.5rem;
+  }
+}
+
