@@ -9,6 +9,7 @@ function EditDiscountModal({
   restaurantId,
   isSubmitting = false,
   error = null,
+  mode = 'edit', // 'edit' or 'create'
 }) {
   const [form, setForm] = useState({
     description: '',
@@ -20,38 +21,49 @@ function EditDiscountModal({
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
-    if (discount && open) {
-      // Format dates to YYYY-MM-DD for date inputs
-      let startDate = ''
-      let dueDate = ''
-      if (discount.start_date) {
-        try {
-          const date = new Date(discount.start_date)
-          startDate = date.toISOString().split('T')[0]
-        } catch (e) {
-          console.error('Error parsing start_date:', e)
+    if (open) {
+      if (mode === 'create') {
+        // For create mode, initialize with empty form
+        setForm({
+          description: '',
+          conditions: '',
+          start_date: '',
+          due_date: '',
+          is_active: true,
+        })
+      } else if (discount) {
+        // Format dates to YYYY-MM-DD for date inputs
+        let startDate = ''
+        let dueDate = ''
+        if (discount.start_date) {
+          try {
+            const date = new Date(discount.start_date)
+            startDate = date.toISOString().split('T')[0]
+          } catch (e) {
+            console.error('Error parsing start_date:', e)
+          }
         }
-      }
-      if (discount.due_date) {
-        try {
-          const date = new Date(discount.due_date)
-          dueDate = date.toISOString().split('T')[0]
-        } catch (e) {
-          console.error('Error parsing due_date:', e)
+        if (discount.due_date) {
+          try {
+            const date = new Date(discount.due_date)
+            dueDate = date.toISOString().split('T')[0]
+          } catch (e) {
+            console.error('Error parsing due_date:', e)
+          }
         }
-      }
 
-      setForm({
-        description: discount.description || '',
-        conditions: discount.conditions || '',
-        start_date: startDate,
-        due_date: dueDate,
-        is_active: discount.is_active !== undefined ? discount.is_active : true,
-      })
+        setForm({
+          description: discount.description || '',
+          conditions: discount.conditions || '',
+          start_date: startDate,
+          due_date: dueDate,
+          is_active: discount.is_active !== undefined ? discount.is_active : true,
+        })
+      }
       // Clear errors when modal opens
       setErrors({})
     }
-  }, [discount, open])
+  }, [discount, open, mode])
 
   // Close modal on ESC key
   useEffect(() => {
@@ -69,7 +81,8 @@ function EditDiscountModal({
     }
   }, [open, onCancel])
 
-  if (!open || !discount) return null
+  if (!open) return null
+  if (mode === 'edit' && !discount) return null
 
   const handleChange = (field) => (e) => {
     const value = field === 'is_active' ? e.target.checked : e.target.value
@@ -151,10 +164,10 @@ function EditDiscountModal({
     >
       <div className="edit-discount-card">
         <h2 id="edit-discount-title" className="edit-discount-title">
-          Edit Discount
+          {mode === 'create' ? 'Create Discount' : 'Edit Discount'}
         </h2>
         <p className="edit-discount-subtitle">
-          Update the discount details below.
+          {mode === 'create' ? 'Enter the discount details below.' : 'Update the discount details below.'}
         </p>
         <form className="edit-discount-form" onSubmit={handleSubmit}>
           <div className="edit-discount-grid">
@@ -255,7 +268,10 @@ function EditDiscountModal({
               className="admin-btn admin-btn-primary"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Saving...' : 'Save changes'}
+              {isSubmitting 
+                ? (mode === 'create' ? 'Creating...' : 'Saving...')
+                : (mode === 'create' ? 'Create' : 'Save changes')
+              }
             </button>
           </div>
         </form>
