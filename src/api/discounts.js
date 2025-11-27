@@ -243,3 +243,56 @@ export async function createDiscount(discountData) {
     throw error
   }
 }
+
+/**
+ * Deletes a discount using DELETE request
+ * @param {string|number} discountId - The discount ID to delete
+ * @returns {Promise<void>}
+ * @throws {Error} If the deletion fails
+ */
+export async function deleteDiscount(discountId) {
+  const url = `${DISCOUNTS_API_BASE}/${discountId}/`
+  
+  try {
+    const { getCsrfToken } = await import('./auth.js')
+    const token = await getCsrfToken()
+    
+    console.log('Deleting discount at:', url)
+    
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': token,
+      },
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('API Error Response:', errorText)
+      
+      if (response.status === 404) {
+        throw new Error(`Discount not found: ${errorText}`)
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
+    }
+
+    // DELETE requests typically don't return a body
+    return
+  } catch (error) {
+    console.error('Error deleting discount:', error)
+    
+    // Provide more specific error messages
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error(
+        `Failed to connect to backend API at ${url}. ` +
+        `Please ensure the backend server is running at ${API_BASE_URL}. ` +
+        `This might be a CORS issue or the server is not running.`
+      )
+    }
+    
+    throw error
+  }
+}

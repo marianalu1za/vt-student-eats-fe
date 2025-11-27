@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { fetchDiscounts, updateDiscount, createDiscount } from '../../api/discounts'
+import { fetchDiscounts, updateDiscount, createDiscount, deleteDiscount } from '../../api/discounts'
 import EditDiscountModal from './components/EditDiscountModal'
 import FloatingActionButton from '../../components/common/FloatingActionButton'
 import './DiscountManagement.css'
@@ -12,6 +12,7 @@ function DiscountManagement({ restaurantId, restaurant }) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
 
   useEffect(() => {
@@ -120,6 +121,47 @@ function DiscountManagement({ restaurantId, restaurant }) {
     }
   }
 
+  const handleDiscountDelete = async () => {
+    if (!selectedDiscount || !selectedDiscount.id) {
+      setSubmitError('Invalid discount data')
+      return
+    }
+
+    // Confirm deletion
+    const confirmed = window.confirm(
+      `Are you sure you want to delete this discount?\n\n"${selectedDiscount.description || 'This discount'}"\n\nThis action cannot be undone.`
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    try {
+      setIsDeleting(true)
+      setSubmitError(null)
+      await deleteDiscount(selectedDiscount.id)
+      
+      // Refresh discounts list
+      const loadDiscounts = async () => {
+        try {
+          const discountsData = await fetchDiscounts({ restaurant_id: restaurantId })
+          setDiscounts(discountsData || [])
+        } catch (err) {
+          console.error('Failed to refresh discounts:', err)
+        }
+      }
+      await loadDiscounts()
+      
+      // Close modal
+      handleModalClose()
+    } catch (err) {
+      console.error('Failed to delete discount:', err)
+      setSubmitError(err.message || 'Failed to delete discount. Please try again.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="profile-page-content">
@@ -197,8 +239,10 @@ function DiscountManagement({ restaurantId, restaurant }) {
         discount={selectedDiscount}
         restaurantId={restaurantId}
         onSave={handleDiscountUpdate}
+        onDelete={handleDiscountDelete}
         onCancel={handleModalClose}
         isSubmitting={isSubmitting}
+        isDeleting={isDeleting}
         error={submitError}
         mode="edit"
       />

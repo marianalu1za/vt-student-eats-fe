@@ -116,6 +116,10 @@
   gap: 12px;
 }
 
+.edit-discount-actions .admin-btn-danger {
+  margin-right: auto;
+}
+
 .edit-discount-cancel {
   background: #ffffff;
   color: #374151;
@@ -139,6 +143,15 @@
 
 .admin-btn-primary:hover:not(:disabled) {
   background-color: #0052a3;
+}
+
+.admin-btn-danger {
+  background-color: #dc3545;
+  color: #ffffff;
+}
+
+.admin-btn-danger:hover:not(:disabled) {
+  background-color: #c82333;
 }
 
 .edit-discount-cancel:hover:not(:disabled) {

@@ -6,8 +6,10 @@ function EditDiscountModal({
   discount,
   onSave,
   onCancel,
+  onDelete,
   restaurantId,
   isSubmitting = false,
+  isDeleting = false,
   error = null,
   mode = 'edit', // 'edit' or 'create'
 }) {
@@ -255,18 +257,28 @@ function EditDiscountModal({
           )}
 
           <div className="edit-discount-actions">
+            {mode === 'edit' && onDelete && (
+              <button
+                type="button"
+                className="admin-btn admin-btn-danger"
+                onClick={onDelete}
+                disabled={isSubmitting || isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            )}
             <button
               type="button"
               className="admin-btn edit-discount-cancel"
               onClick={onCancel}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isDeleting}
             >
               Cancel
             </button>
             <button
               type="submit"
               className="admin-btn admin-btn-primary"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isDeleting}
             >
               {isSubmitting 
                 ? (mode === 'create' ? 'Creating...' : 'Saving...')
