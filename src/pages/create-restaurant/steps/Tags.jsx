@@ -85,7 +85,14 @@ function Tags({ formData, updateFormData, navigate }) {
     navigate('/profile/create-restaurant/opening-hours')
   }
 
+  const isFormValid = () => {
+    return localData.tags && localData.tags.length >= 1
+  }
+
   const handleNext = () => {
+    if (!isFormValid()) {
+      return
+    }
     updateFormData(localData)
     navigate('/profile/create-restaurant/review')
   }
@@ -97,7 +104,7 @@ function Tags({ formData, updateFormData, navigate }) {
     <div className="step-content-wrapper">
       <div className="step-header">
         <h1>Restaurant Tags</h1>
-        <p>Select up to {MAX_TAGS} tags that describe your restaurant (optional)</p>
+        <p>Select at least 1 tag (up to {MAX_TAGS} tags) that describe your restaurant</p>
       </div>
 
       <div className="admin-card">
@@ -108,9 +115,9 @@ function Tags({ formData, updateFormData, navigate }) {
         )}
 
         {/* Selected Tags */}
-        {localData.tags.length > 0 && (
-          <div className="tags-section">
-            <h3>Selected Tags ({localData.tags.length}/{MAX_TAGS})</h3>
+        <div className="tags-section">
+          <h3>Selected Tags ({localData.tags.length}/{MAX_TAGS})</h3>
+          {localData.tags.length > 0 ? (
             <div className="selected-tags-list">
               {localData.tags.map((tag, index) => (
                 <div key={index} className="selected-tag">
@@ -126,8 +133,10 @@ function Tags({ formData, updateFormData, navigate }) {
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <p style={{ color: '#666', fontStyle: 'italic' }}>No tags selected. Please select at least 1 tag.</p>
+          )}
+        </div>
 
         {/* Add New Tag */}
         <div className="tags-section">
@@ -192,12 +201,22 @@ function Tags({ formData, updateFormData, navigate }) {
           </div>
         )}
 
+        {!isFormValid() && (
+          <div className="error-message" style={{ marginTop: '20px' }}>
+            Please select at least 1 tag before proceeding.
+          </div>
+        )}
+
         <div className="form-actions">
           <button className="btn btn-secondary" onClick={handleBack}>
             <i className="fa-solid fa-arrow-left"></i>
             Back
           </button>
-          <button className="btn btn-primary" onClick={handleNext}>
+          <button 
+            className="btn btn-primary" 
+            onClick={handleNext}
+            disabled={!isFormValid()}
+          >
             Next: Review
             <i className="fa-solid fa-arrow-right"></i>
           </button>
