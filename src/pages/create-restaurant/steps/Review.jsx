@@ -77,6 +77,12 @@ function Review({ formData, updateFormData, navigate }) {
             <label>Address:</label>
             <span>{formData.address || 'Not provided'}</span>
           </div>
+          {formData.phone_number && (
+            <div className="review-item">
+              <label>Phone Number:</label>
+              <span>{formData.phone_number}</span>
+            </div>
+          )}
           {formData.website_link && (
             <div className="review-item">
               <label>Website Link:</label>

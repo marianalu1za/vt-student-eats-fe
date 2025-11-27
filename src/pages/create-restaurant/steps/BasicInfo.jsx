@@ -5,6 +5,7 @@ function BasicInfo({ formData, updateFormData, navigate }) {
   const [localData, setLocalData] = useState({
     name: formData.name || '',
     address: formData.address || '',
+    phone_number: formData.phone_number || '',
     website_link: formData.website_link || '',
     ...formData
   })
@@ -58,6 +59,18 @@ function BasicInfo({ formData, updateFormData, navigate }) {
               onChange={(e) => handleChange('address', e.target.value)}
               placeholder="Enter restaurant address"
               rows={3}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="phone_number">Phone Number</label>
+            <input
+              id="phone_number"
+              type="tel"
+              className="form-input"
+              value={localData.phone_number}
+              onChange={(e) => handleChange('phone_number', e.target.value)}
+              placeholder="Enter phone number (optional)"
             />
           </div>
 
