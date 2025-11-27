@@ -161,7 +161,7 @@ function ProfileButton({
                 onClick={() => handleMenuItemClick('/profile/restaurant-management')}
               >
                 <span className="profile-dropdown-icon">🍽️</span>
-                <span>Restaurants management</span>
+                <span>Restaurant Management</span>
               </div>
             </>
           )}
