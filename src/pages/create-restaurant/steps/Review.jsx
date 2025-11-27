@@ -36,7 +36,7 @@ function Review({ formData, updateFormData, navigate }) {
   const [error, setError] = useState(null)
 
   const handleBack = () => {
-    navigate('/profile/create-restaurant/opening-hours')
+    navigate('/profile/create-restaurant/tags')
   }
 
   const handleCreateRestaurant = async () => {
@@ -111,6 +111,19 @@ function Review({ formData, updateFormData, navigate }) {
             </div>
           )}
         </div>
+
+        {formData.tags && formData.tags.length > 0 && (
+          <div className="review-section">
+            <h3>Tags</h3>
+            <div className="review-tags-list">
+              {formData.tags.map((tag, index) => (
+                <span key={index} className="review-tag">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="error-message" style={{ marginTop: '24px' }}>

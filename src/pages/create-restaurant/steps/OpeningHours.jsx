@@ -49,7 +49,7 @@ function OpeningHours({ formData, updateFormData, navigate }) {
       return
     }
     updateFormData(localData)
-    navigate('/profile/create-restaurant/review')
+    navigate('/profile/create-restaurant/tags')
   }
 
   return (
@@ -81,7 +81,7 @@ function OpeningHours({ formData, updateFormData, navigate }) {
             onClick={handleNext}
             disabled={!isFormValid()}
           >
-            Next: Review
+            Next: Tags
             <i className="fa-solid fa-arrow-right"></i>
           </button>
         </div>
