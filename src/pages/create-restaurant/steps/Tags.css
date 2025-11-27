@@ -1,0 +1,102 @@
+.tags-section {
+  margin-bottom: 32px;
+}
+
+.tags-section h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16px;
+}
+
+.selected-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.selected-tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: #0066cc;
+  color: #ffffff;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.selected-tag span {
+  margin: 0;
+}
+
+.remove-tag-btn {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 0;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.remove-tag-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.add-tag-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.add-tag-controls input {
+  flex: 1;
+}
+
+.add-tag-controls button {
+  flex-shrink: 0;
+}
+
+.tag-limit-message {
+  color: #dc3545;
+  font-size: 0.85rem;
+  margin: 8px 0 0 0;
+}
+
+.available-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tag-button {
+  padding: 10px 20px;
+  background-color: #f5f5f5;
+  border: 2px solid #e0e0e0;
+  border-radius: 20px;
+  color: #333;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tag-button:hover:not(.disabled) {
+  background-color: #e8f4f8;
+  border-color: #0066cc;
+  color: #0066cc;
+}
+
+.tag-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
