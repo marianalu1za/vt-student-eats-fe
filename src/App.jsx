@@ -8,6 +8,7 @@ import AdminDashboard from './pages/admin/AdminDashboard'
 import GroupOrders from './pages/group-orders/GroupOrders.jsx'
 import ProfileLayout from './pages/profile/ProfileLayout'
 import ManageRestaurantLayout from './pages/restaurant-management/ManageRestaurantLayout'
+import CreateRestaurantLayout from './pages/create-restaurant/CreateRestaurantLayout'
 import './App.css'
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
         <Route path="/admin/*" element={<AdminDashboard />} />
         <Route path="/profile/manage-restaurant/:restaurantId/*" element={<ManageRestaurantLayout />} />
         <Route path="/profile/*" element={<ProfileLayout />} />
+        <Route path="/profile/create-restaurant/*" element={<CreateRestaurantLayout />} />
         <Route path="/group-orders" element={<GroupOrders />} />
       </Routes>
     </BrowserRouter>
