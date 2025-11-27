@@ -6,7 +6,6 @@ import GroupOrdersJoined from './GroupOrdersJoined'
 import GroupOrdersHistory from './GroupOrdersHistory'
 import ChangePassword from './ChangePassword'
 import RestaurantManagement from '../profile-restaurantmanager/RestaurantManagement'
-import CreateRestaurant from '../profile-restaurantmanager/CreateRestaurant'
 import { logout, getStoredUser } from '../../api/auth'
 import './ProfileLayout.css'
 
@@ -92,7 +91,6 @@ function ProfileLayout() {
           <Route path="group-orders-joined" element={<GroupOrdersJoined />} />
           <Route path="group-orders-history" element={<GroupOrdersHistory />} />
           <Route path="restaurant-management" element={<RestaurantManagement />} />
-          <Route path="create-restaurant" element={<CreateRestaurant />} />
           <Route path="change-password" element={<ChangePassword />} />
           <Route path="*" element={<Navigate to="/profile" replace />} />
         </Routes>
