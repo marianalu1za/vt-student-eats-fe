@@ -81,3 +81,87 @@ export async function fetchActiveDiscountsForRestaurant(restaurantId) {
   })
 }
 
+/**
+ * Updates a discount using PATCH request
+ * @param {string|number} discountId - The discount ID
+ * @param {Object} discountData - The discount data to update
+ * @param {string} discountData.description - Discount description
+ * @param {string} discountData.conditions - Discount conditions
+ * @param {string} discountData.start_date - Start date (YYYY-MM-DD format)
+ * @param {string} discountData.due_date - Due date (YYYY-MM-DD format)
+ * @param {boolean} [discountData.is_active] - Whether discount is active
+ * @param {number} discountData.restaurant - Restaurant ID
+ * @returns {Promise<Object>} Updated discount object
+ * @throws {Error} If the update fails
+ */
+export async function updateDiscount(discountId, discountData) {
+  const url = `${DISCOUNTS_API_BASE}/${discountId}/`
+  
+  try {
+    const { getCsrfToken } = await import('./auth.js')
+    const token = await getCsrfToken()
+    
+    console.log('Updating discount at:', url)
+    
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': token,
+      },
+      credentials: 'include',
+      body: JSON.stringify(discountData),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('API Error Response:', errorText)
+      
+      if (response.status === 404) {
+        throw new Error(`Discount not found: ${errorText}`)
+      }
+      
+      // Try to parse error as JSON for better error messages
+      let errorMessage = `HTTP error! status: ${response.status}`
+      try {
+        const errorData = JSON.parse(errorText)
+        if (errorData.message || errorData.error || errorData.detail) {
+          errorMessage = errorData.message || errorData.error || errorData.detail
+        } else if (typeof errorData === 'object') {
+          // Handle field-specific validation errors
+          const fieldErrors = []
+          for (const [field, errors] of Object.entries(errorData)) {
+            if (Array.isArray(errors) && errors.length > 0) {
+              fieldErrors.push(`${field}: ${errors.join(', ')}`)
+            }
+          }
+          if (fieldErrors.length > 0) {
+            errorMessage = fieldErrors.join('\n')
+          }
+        }
+      } catch {
+        // If not JSON, use the text as-is
+        errorMessage = errorText || errorMessage
+      }
+      
+      throw new Error(errorMessage)
+    }
+
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error('Error updating discount:', error)
+    
+    // Provide more specific error messages
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error(
+        `Failed to connect to backend API at ${url}. ` +
+        `Please ensure the backend server is running at ${API_BASE_URL}. ` +
+        `This might be a CORS issue or the server is not running.`
+      )
+    }
+    
+    throw error
+  }
+}
+

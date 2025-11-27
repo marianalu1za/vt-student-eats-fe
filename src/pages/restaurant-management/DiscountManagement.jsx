@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react'
-import { fetchDiscounts } from '../../api/discounts'
+import { fetchDiscounts, updateDiscount } from '../../api/discounts'
+import EditDiscountModal from './components/EditDiscountModal'
 import './DiscountManagement.css'
 
 function DiscountManagement({ restaurantId, restaurant }) {
   const [discounts, setDiscounts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [selectedDiscount, setSelectedDiscount] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
 
   useEffect(() => {
     const loadDiscounts = async () => {
@@ -31,6 +36,50 @@ function DiscountManagement({ restaurantId, restaurant }) {
 
     loadDiscounts()
   }, [restaurantId])
+
+  const handleDiscountClick = (discount) => {
+    setSelectedDiscount(discount)
+    setSubmitError(null)
+    setIsModalOpen(true)
+  }
+
+  const handleModalClose = () => {
+    setIsModalOpen(false)
+    setSelectedDiscount(null)
+    setSubmitError(null)
+  }
+
+  const handleDiscountUpdate = async (updateData) => {
+    if (!selectedDiscount || !selectedDiscount.id) {
+      setSubmitError('Invalid discount data')
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+      setSubmitError(null)
+      await updateDiscount(selectedDiscount.id, updateData)
+      
+      // Refresh discounts list
+      const loadDiscounts = async () => {
+        try {
+          const discountsData = await fetchDiscounts({ restaurant_id: restaurantId })
+          setDiscounts(discountsData || [])
+        } catch (err) {
+          console.error('Failed to refresh discounts:', err)
+        }
+      }
+      await loadDiscounts()
+      
+      // Close modal
+      handleModalClose()
+    } catch (err) {
+      console.error('Failed to update discount:', err)
+      setSubmitError(err.message || 'Failed to update discount. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -70,7 +119,12 @@ function DiscountManagement({ restaurantId, restaurant }) {
         ) : (
           <div className="discounts-list">
             {discounts.map((discount) => (
-              <div key={discount.id} className="discount-item">
+              <div 
+                key={discount.id} 
+                className="discount-item"
+                onClick={() => handleDiscountClick(discount)}
+                style={{ cursor: 'pointer' }}
+              >
                 <div className="discount-item-header">
                   <span className="discount-description">{discount.description || 'No description'}</span>
                   <span className={`discount-status-badge ${discount.is_active ? 'discount-active' : 'discount-inactive'}`}>
@@ -85,12 +139,21 @@ function DiscountManagement({ restaurantId, restaurant }) {
                     {new Date(discount.start_date).toLocaleDateString()} - {new Date(discount.due_date).toLocaleDateString()}
                   </p>
                 )}
-                {/* TODO: Add edit and delete buttons */}
               </div>
             ))}
           </div>
         )}
       </div>
+
+      <EditDiscountModal
+        open={isModalOpen}
+        discount={selectedDiscount}
+        restaurantId={restaurantId}
+        onSave={handleDiscountUpdate}
+        onCancel={handleModalClose}
+        isSubmitting={isSubmitting}
+        error={submitError}
+      />
     </div>
   )
 }
