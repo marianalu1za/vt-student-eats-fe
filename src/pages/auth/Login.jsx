@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Header from '../restaurants/components/Header.jsx'
 import ErrorPopup from '../../components/common/ErrorPopup'
 import './Auth.css'
-import { login, getCurrentUser } from '../../api/auth.js'
+import { login, getCurrentUser, requestPasswordReset } from '../../api/auth.js'
 
 function Login() {
   const navigate = useNavigate()
@@ -74,6 +74,31 @@ function Login() {
     setError(null)
   }
 
+  const handleForgotPassword = async () => {
+    const email = form.email.trim()
+    console.log('Password reset email being sent:', JSON.stringify(email))
+    if (!form.email) {
+      setError('Please enter your email address first.')
+      setShowErrorPopup(true)
+      return
+    }
+
+    try {
+      await requestPasswordReset(form.email)
+      alert(
+        'If an account with this email exists, a password reset email has been sent.'
+      )
+    } catch (err) {
+      console.error('Password reset error:', err)
+      const msg =
+        err.message ||
+        'Unable to start password reset. Please check the email and try again.'
+      setError(msg)
+      setShowErrorPopup(true)
+    }
+  }
+
+
   return (
     <>
       <Header />
@@ -121,11 +146,10 @@ function Login() {
                   />
                   <span>Remember me</span>
                 </label>
-                {/* TODO: Handle Forgot Password Here */}
                 <button
                   type="button"
                   className="auth-link"
-                  onClick={() => console.log('Forgot password')}
+                  onClick={handleForgotPassword}
                 >
                   Forgot password?
                 </button>
