@@ -6,6 +6,7 @@ import { fetchGroupOrders, createGroupOrder, joinGroupOrder } from '../../api/gr
 import CreateGroupOrderForm from './GroupOrderForm.jsx'
 import { buildGroupOrderPayload } from './buildOrder.js'
 import ErrorPopup from '../../components/common/ErrorPopup'
+import { getStoredUser } from '../../api/auth.js'
 
 // helper: turn API object → card data
 function mapApiOrderToCard(order) {
@@ -29,16 +30,6 @@ function mapApiOrderToCard(order) {
     status: spotsLeft > 0 && order.status === 'open' ? 'open' : 'full',
     hasJoined: order.has_joined ?? false,
     isOwner: order.is_owner ?? false,
-  }
-}
-
-function getStoredUser() {
-  try {
-    const raw = localStorage.getItem('user')
-    return raw ? JSON.parse(raw) : null
-  } catch (e) {
-    console.error('Failed to parse stored user:', e)
-    return null
   }
 }
 
