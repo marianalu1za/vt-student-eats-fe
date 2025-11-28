@@ -7,6 +7,7 @@ import CreateGroupOrderForm from './GroupOrderForm.jsx'
 import { buildGroupOrderPayload } from './buildOrder.js'
 import ErrorPopup from '../../components/common/ErrorPopup'
 import { getStoredUser } from '../../api/auth.js'
+import { formatTags } from './getTags.js'
 
 // helper: turn API object → card data
 function mapApiOrderToCard(order) {
@@ -25,11 +26,12 @@ function mapApiOrderToCard(order) {
     hostName: order.created_by_username,
     hostId: order.created_by_user,
     pickupTime,
-    discount: 'Group discount', // TODO: pull from tags if you add it there?
+    discount: 'Group discount', // TODO: Sprint 3 Discounts?
     spotsLeft,
     status: spotsLeft > 0 && order.status === 'open' ? 'open' : 'full',
     hasJoined: order.has_joined ?? false,
     isOwner: order.is_owner ?? false,
+    tags: formatTags(order.tags)
   }
 }
 
@@ -282,6 +284,9 @@ function GroupOrders() {
                     </p>
                     <p className="group-card-label">
                       Discount: <span>{group.discount}</span>
+                    </p>
+                    <p className="group-card-label">
+                      Tags: <span>{group.tags}</span>
                     </p>
                     <p className="group-card-label">
                       Spots left:{' '}
