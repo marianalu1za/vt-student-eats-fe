@@ -1,0 +1,13 @@
+.create-restaurant-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.create-restaurant-content {
+  flex: 1;
+  padding: 24px;
+  transition: margin-left 0.3s ease;
+  overflow-y: auto;
+}
+

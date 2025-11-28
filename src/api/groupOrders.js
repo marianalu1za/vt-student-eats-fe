@@ -16,6 +16,7 @@ export async function fetchGroupOrders() {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include',
     })
 
     if (!response.ok) {
@@ -153,7 +154,168 @@ export async function createGroupOrder(data) {
       )
     }
 
-    // Rethrow for UI to handle (e.g., show toast)
+    throw error
+  }
+}
+
+
+export async function joinGroupOrder(groupOrderId) {
+  const url = `${API_BASE_URL}/api/group-order-participants/`
+  const csrftoken = getCSRFToken()
+
+  try {
+    console.log('Joining group order at:', url, 'with id:', groupOrderId)
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        ...(csrftoken ? { 'X-CSRFToken': csrftoken } : {}),
+      },
+      credentials: 'include',
+      body: JSON.stringify({ group_order: groupOrderId }),
+    })
+
+    if (!response.ok) {
+      try {
+        const data = await response.json()
+        const message =
+          data?.detail ||
+          data?.non_field_errors?.[0] ||
+          data?.group_order?.[0] ||
+          `HTTP error! status: ${response.status}`
+
+        console.error('API Error Response (join group order):', data)
+        throw new Error(message)
+      } catch (jsonErr) {
+        // Fall back to raw text if JSON parsing fails
+        const errorText = await response.text()
+        console.error('API Error Response (join group order - text):', errorText)
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
+      }
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('Error joining group order:', error)
+
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error(
+        `Failed to connect to backend API at ${url}. ` +
+        `Please ensure the backend server is running at http://localhost:8000. ` +
+        `This might be a CORS issue or the server is not running.`
+      )
+    }
+
+    throw error
+  }
+}
+
+/**
+ * Updates a group order via PATCH /api/group-orders/{id}/
+ * @param {number|string} id - The group order ID
+ * @param {Object} data - Group order update payload
+ * @returns {Promise<Object>} The updated group order object
+ */
+export async function updateGroupOrder(id, data) {
+  const url = `${API_BASE_URL}/api/group-orders/${id}/`
+  const csrftoken = getCSRFToken()
+
+  try {
+    console.log('Updating group order at:', url, 'with data:', data)
+
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        ...(csrftoken ? { 'X-CSRFToken': csrftoken } : {}),
+      },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('API Error Response (update group order):', errorText)
+      
+      // Try to parse as JSON for better error messages
+      try {
+        const errorData = JSON.parse(errorText)
+        const message = errorData?.detail || errorData?.message || errorText
+        throw new Error(message)
+      } catch (e) {
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
+      }
+    }
+
+    const updated = await response.json()
+    return updated
+  } catch (error) {
+    console.error('Error updating group order:', error)
+
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error(
+        `Failed to connect to backend API at ${url}. ` +
+        `Please ensure the backend server is running at http://localhost:8000. ` +
+        `This might be a CORS issue or the server is not running.`
+      )
+    }
+
+    throw error
+  }
+}
+
+/**
+ * Deletes a group order via DELETE /api/group-orders/{id}/
+ * @param {number|string} id - The group order ID
+ * @returns {Promise<void>}
+ */
+export async function deleteGroupOrder(id) {
+  const url = `${API_BASE_URL}/api/group-orders/${id}/`
+  const csrftoken = getCSRFToken()
+
+  try {
+    console.log('Deleting group order at:', url)
+
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        ...(csrftoken ? { 'X-CSRFToken': csrftoken } : {}),
+      },
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('API Error Response (delete group order):', errorText)
+      
+      // Try to parse as JSON for better error messages
+      try {
+        const errorData = JSON.parse(errorText)
+        const message = errorData?.detail || errorData?.message || errorText
+        throw new Error(message)
+      } catch (e) {
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
+      }
+    }
+
+    // 204 No Content response - success, no body to return
+    return
+  } catch (error) {
+    console.error('Error deleting group order:', error)
+
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error(
+        `Failed to connect to backend API at ${url}. ` +
+        `Please ensure the backend server is running at http://localhost:8000. ` +
+        `This might be a CORS issue or the server is not running.`
+      )
+    }
+
     throw error
   }
 }

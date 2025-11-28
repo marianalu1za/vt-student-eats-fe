@@ -1,0 +1,81 @@
+.restaurant-profile-info {
+  padding: 20px;
+}
+
+.restaurant-profile-info h2 {
+  margin: 0 0 24px 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.restaurant-profile-section {
+  margin-bottom: 32px;
+}
+
+.restaurant-profile-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.2rem;
+  color: #555;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 8px;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 0;
+}
+
+.info-row label {
+  font-weight: 600;
+  color: #666;
+  min-width: 150px;
+  margin-right: 16px;
+}
+
+.info-row span {
+  color: #333;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.status-active {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.opening-hours-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.opening-hours-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.opening-hours-day {
+  font-weight: 600;
+  color: #666;
+  min-width: 120px;
+  margin-right: 16px;
+}
+
+.opening-hours-time {
+  color: #333;
+}
+

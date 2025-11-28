@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Header from '../restaurants/components/Header.jsx'
 import './GroupOrders.css'
-import { fetchGroupOrders, createGroupOrder } from '../../api/groupOrders.js'
+import { fetchGroupOrders, createGroupOrder, joinGroupOrder } from '../../api/groupOrders.js'
 import CreateGroupOrderForm from './GroupOrderForm.jsx'
 import { buildGroupOrderPayload } from './buildOrder.js'
 import ErrorPopup from '../../components/common/ErrorPopup'
@@ -22,10 +22,13 @@ function mapApiOrderToCard(order) {
     id: order.id,
     restaurantName: order.restaurant_name,
     hostName: order.created_by_username,
+    hostId: order.created_by_user,
     pickupTime,
     discount: 'Group discount', // TODO: pull from tags if you add it there?
     spotsLeft,
     status: spotsLeft > 0 && order.status === 'open' ? 'open' : 'full',
+    hasJoined: order.has_joined ?? false,
+    isOwner: order.is_owner ?? false,
   }
 }
 
@@ -50,6 +53,9 @@ function GroupOrders() {
   const [createError, setCreateError] = useState(null)
   const [showCreateErrorPopup, setShowCreateErrorPopup] = useState(false)
   const [showAuthPopup, setShowAuthPopup] = useState(false)
+  const [joinError, setJoinError] = useState(null)
+  const [showJoinErrorPopup, setShowJoinErrorPopup] = useState(false)
+
 
 
   const loadGroupOrders = useCallback(async () => {
@@ -76,29 +82,6 @@ function GroupOrders() {
     loadGroupOrders()
   }, [loadGroupOrders])
 
-  // async function handleCreateSubmit(formData) {
-  //   // console.log('Create group order data from form:', formData)
-
-  //   try {
-  //     let payload = buildGroupOrderPayload(formData)
-  //     const user = await fetchCurrentUser()
-  //     if (user) {
-  //       payload.created_by_user = user.id   // or whatever field your API expects
-  //     }
-
-  //     const createdOrder = await createGroupOrder(payload, user.id)
-  //     console.log('Created group order:', createdOrder)
-
-  //     await loadGroupOrders()
-
-  //     setShowCreateForm(false)
-  //   } catch (err) {
-  //     console.error('Failed to create group order:', err)
-  //     const errorMessage = err?.message || 'Failed to create group order.'
-  //     setCreateError(errorMessage)
-  //     setShowCreateErrorPopup(true)
-  //   }
-  // }
   async function handleCreateSubmit(formData) {
     try {
       const storedUser = getStoredUser()
@@ -124,6 +107,24 @@ function GroupOrders() {
       setShowCreateErrorPopup(true)
     }
   }
+
+  async function handleJoinClick(group) {
+    const storedUser = getStoredUser()
+    if (!storedUser) {
+      setShowAuthPopup(true)
+      return
+    }
+
+    try {
+      await joinGroupOrder(group.id)
+      await loadGroupOrders()
+    } catch (err) {
+      const message = err?.message || 'Failed to join group order.'
+      setJoinError(message)
+      setShowJoinErrorPopup(true)
+    }
+  }
+
 
   function handleCreateClick() {
     const user = getStoredUser()
@@ -267,39 +268,58 @@ function GroupOrders() {
         {/* Group cards grid */}
         {!loading && !error && (
           <section className="group-orders-grid">
-            {filteredGroups.map(group => (
-              <article key={group.id} className="group-card">
-                <div className="group-card-header">
-                  <h4 className="group-card-restaurant">
-                    {group.restaurantName}
-                  </h4>
-                </div>
-                <div className="group-card-body">
-                  <p className="group-card-label">
-                    Host: <span>{group.hostName}</span>
-                  </p>
-                  <p className="group-card-label">
-                    Pickup time: <span>{group.pickupTime}</span>
-                  </p>
-                  <p className="group-card-label">
-                    Discount: <span>{group.discount}</span>
-                  </p>
-                  <p className="group-card-label">
-                    Spots left:{' '}
-                    <span className={group.spotsLeft === 0 ? 'spots-full' : ''}>
-                      {group.spotsLeft === 0 ? 'Full' : group.spotsLeft}
-                    </span>
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="group-card-join-button"
-                  disabled={group.spotsLeft === 0}
-                >
-                  {group.spotsLeft === 0 ? 'Group Full' : '+ Join Group'}
-                </button>
-              </article>
-            ))}
+            {filteredGroups.map(group => {
+              const isHost = group.isOwner ?? false
+              const hasJoined = group.hasJoined ?? false
+              const isFull = group.spotsLeft === 0 || group.status !== 'open'
+              const isDisabled = isFull || isHost || hasJoined
+
+
+              return (
+                <article key={group.id} className="group-card">
+                  <div className="group-card-header">
+                    <h4 className="group-card-restaurant">
+                      {group.restaurantName}
+                    </h4>
+                  </div>
+                  <div className="group-card-body">
+                    <p className="group-card-label">
+                      Host: <span>{group.hostName}</span>
+                    </p>
+                    <p className="group-card-label">
+                      Pickup time: <span>{group.pickupTime}</span>
+                    </p>
+                    <p className="group-card-label">
+                      Discount: <span>{group.discount}</span>
+                    </p>
+                    <p className="group-card-label">
+                      Spots left:{' '}
+                      <span className={group.spotsLeft === 0 ? 'spots-full' : ''}>
+                        {group.spotsLeft === 0 ? 'Full' : group.spotsLeft}
+                      </span>
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="group-card-join-button"
+                    disabled={isDisabled}
+                    onClick={() => {
+                      if (!isDisabled) {
+                        handleJoinClick(group)
+                      }
+                    }}
+                  >
+                    {isHost
+                      ? 'Your Group'
+                      : hasJoined
+                        ? 'Joined'
+                        : isFull
+                          ? 'Group Full'
+                          : '+ Join Group'}
+                  </button>
+                </article>
+              )
+            })}
 
             {filteredGroups.length === 0 && (
               <div className="group-orders-empty">
@@ -326,6 +346,16 @@ function GroupOrders() {
             }}
           />
         )}
+        {showJoinErrorPopup && (
+          <ErrorPopup
+            message={joinError}
+            onClose={() => {
+              setShowJoinErrorPopup(false)
+              setJoinError(null)
+            }}
+          />
+        )}
+
       </main>
     </div>
   )

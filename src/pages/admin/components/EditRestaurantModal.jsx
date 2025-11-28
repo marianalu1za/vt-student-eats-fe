@@ -7,6 +7,8 @@ function EditRestaurantModal({
   onSave,
   onCancel,
   users = [],
+  isSubmitting = false,
+  error = null,
 }) {
   const [form, setForm] = useState({
     name: '',
@@ -14,10 +16,9 @@ function EditRestaurantModal({
     owner: '',
     owner_id: '',
     address: '',
-    website_link: '',
-    x_coordinate: '',
-    y_coordinate: '',
+    website_link: ''
   })
+  const [errors, setErrors] = useState({})
 
   useEffect(() => {
     if (restaurant && open) {
@@ -39,10 +40,10 @@ function EditRestaurantModal({
         owner: restaurant.owner || '',
         owner_id: ownerId || '',
         address: restaurant.address || '',
-        website_link: restaurant.website_link || restaurant.website || '',
-        x_coordinate: restaurant.x_coordinate || '',
-        y_coordinate: restaurant.y_coordinate || '',
+        website_link: restaurant.website_link || restaurant.website || ''
       })
+      // Clear errors when modal opens with restaurant data
+      setErrors({})
     }
   }, [restaurant, open])
 
@@ -59,10 +60,45 @@ function EditRestaurantModal({
 
   const handleChange = (field) => (e) => {
     setForm(prev => ({ ...prev, [field]: e.target.value }))
+    // Clear error for this field when user starts typing
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
+    }
+  }
+
+  const validateForm = () => {
+    const newErrors = {}
+    
+    // Required fields (excluding owner)
+    if (!form.name || !form.name.trim()) {
+      newErrors.name = 'Name is required'
+    }
+    if (!form.phone_number || !form.phone_number.trim()) {
+      newErrors.phone_number = 'Phone number is required'
+    }
+    if (!form.address || !form.address.trim()) {
+      newErrors.address = 'Address is required'
+    }
+    if (!form.website_link || !form.website_link.trim()) {
+      newErrors.website_link = 'Website is required'
+    }
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    
+    // Validate form before submitting
+    if (!validateForm()) {
+      return
+    }
+    
     onSave?.(form)
   }
 
@@ -90,20 +126,28 @@ function EditRestaurantModal({
         <form className="edit-restaurant-form" onSubmit={handleSubmit}>
           <div className="edit-restaurant-grid">
             <label className="edit-restaurant-field">
-              <span>Name</span>
+              <span>Name <span className="required-asterisk">*</span></span>
               <input
                 type="text"
                 value={form.name}
                 onChange={handleChange('name')}
+                disabled={isSubmitting}
+                required
+                className={errors.name ? 'error' : ''}
               />
+              {errors.name && <span className="field-error">{errors.name}</span>}
             </label>
             <label className="edit-restaurant-field">
-              <span>Phone Number</span>
+              <span>Phone Number <span className="required-asterisk">*</span></span>
               <input
                 type="text"
                 value={form.phone_number}
                 onChange={handleChange('phone_number')}
+                disabled={isSubmitting}
+                required
+                className={errors.phone_number ? 'error' : ''}
               />
+              {errors.phone_number && <span className="field-error">{errors.phone_number}</span>}
             </label>
             <label className="edit-restaurant-field">
               <span>Owner</span>
@@ -117,7 +161,16 @@ function EditRestaurantModal({
                     owner_id,
                     owner: user ? `${user.firstName} ${user.lastName}` : '',
                   }))
+                  // Clear any owner-related errors (though owner is optional)
+                  if (errors.owner_id) {
+                    setErrors(prev => {
+                      const newErrors = { ...prev }
+                      delete newErrors.owner_id
+                      return newErrors
+                    })
+                  }
                 }}
+                disabled={isSubmitting}
               >
                 <option value="">Select owner</option>
                 {sortedUsers.map((user) => (
@@ -128,52 +181,52 @@ function EditRestaurantModal({
               </select>
             </label>
             <label className="edit-restaurant-field full-width">
-              <span>Address</span>
+              <span>Address <span className="required-asterisk">*</span></span>
               <input
                 type="text"
                 value={form.address}
                 onChange={handleChange('address')}
+                disabled={isSubmitting}
+                required
+                className={errors.address ? 'error' : ''}
               />
+              {errors.address && <span className="field-error">{errors.address}</span>}
             </label>
             <label className="edit-restaurant-field full-width">
-              <span>Website</span>
+              <span>Website <span className="required-asterisk">*</span></span>
               <input
                 type="text"
                 value={form.website_link}
                 onChange={handleChange('website_link')}
+                disabled={isSubmitting}
+                required
+                className={errors.website_link ? 'error' : ''}
               />
-            </label>
-            <label className="edit-restaurant-field">
-              <span>X coordinate</span>
-              <input
-                type="text"
-                value={form.x_coordinate}
-                onChange={handleChange('x_coordinate')}
-              />
-            </label>
-            <label className="edit-restaurant-field">
-              <span>Y coordinate</span>
-              <input
-                type="text"
-                value={form.y_coordinate}
-                onChange={handleChange('y_coordinate')}
-              />
+              {errors.website_link && <span className="field-error">{errors.website_link}</span>}
             </label>
           </div>
+
+          {error && (
+            <div className="edit-restaurant-error" role="alert">
+              {error}
+            </div>
+          )}
 
           <div className="edit-restaurant-actions">
             <button
               type="button"
               className="admin-btn edit-restaurant-cancel"
               onClick={onCancel}
+              disabled={isSubmitting}
             >
               Cancel
             </button>
             <button
               type="submit"
               className="admin-btn admin-btn-primary"
+              disabled={isSubmitting}
             >
-              Save changes
+              {isSubmitting ? 'Saving...' : 'Save changes'}
             </button>
           </div>
         </form>
