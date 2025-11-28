@@ -35,9 +35,9 @@ export async function getCsrfToken(forceRefresh = false) {
       method: 'GET',
       credentials: 'include', // Include cookies for session-based CSRF
     })
-    
+
     console.log('CSRF token response status:', response.status, response.statusText)
-    
+
     if (!response.ok) {
       const error = new Error('Failed to fetch CSRF token.')
       error.statusCode = response.status
@@ -45,7 +45,7 @@ export async function getCsrfToken(forceRefresh = false) {
     }
 
     const data = await response.json()
-    
+
     // Cache the token
     csrfTokenCache = data.csrfToken
 
@@ -73,14 +73,14 @@ export async function createAccount(formData) {
   try {
     // Get CSRF token before making POST request
     const token = await getCsrfToken()
-    
+
     // Transform form data to match API schema (snake_case)
     // Map role values: vt_staff_students -> "User", restaurant_manager -> "Restaurant Manager"
     const roleMap = {
       'vt_staff_students': 'User',
       'restaurant_manager': 'Restaurant Manager'
     }
-    
+
     const apiPayload = {
       email: formData.email,
       password: formData.password,
@@ -105,7 +105,7 @@ export async function createAccount(formData) {
       let errorMessage = 'Failed to create account.'
       try {
         const errorData = await response.json()
-        
+
         console.log('Error Data:', errorData)
 
         // Handle field-specific validation errors (e.g., {"email": ["error"], "role": ["error"]})
@@ -130,7 +130,7 @@ export async function createAccount(formData) {
         // If response is not JSON, use default message
       }
       // console.log('Error Message:', errorMessage)
-      
+
       // Format error message with status code for ErrorPopup display
       const error = new Error(`${errorMessage}`)
       error.statusCode = response.status
@@ -169,13 +169,13 @@ export async function login(credentials) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       const errorMessage = errorData.detail || errorData.message || errorData.error || `Login failed: ${response.status}`
-      
+
       // If CSRF token error, clear cache
       if (response.status === 403 && errorMessage.includes('CSRF')) {
         console.log('CSRF token error detected, clearing cache...')
         clearCsrfTokenCache()
       }
-      
+
       const error = new Error(errorMessage)
       error.statusCode = response.status
       throw error
@@ -242,12 +242,12 @@ export async function updateUserProfile(profileData) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       const errorMessage = errorData.detail || errorData.message || errorData.error || `Failed to update profile: ${response.status}`
-      
+
       // If CSRF token error, clear cache and retry once
       if (response.status === 403 && errorMessage.includes('CSRF')) {
         console.log('CSRF token error detected, clearing cache and retrying...')
         clearCsrfTokenCache()
-        
+
         // Retry with a fresh token
         const freshToken = await getCsrfToken(true)
         const retryResponse = await fetch(`${ACCOUNTS_API_BASE}/me/`, {
@@ -259,7 +259,7 @@ export async function updateUserProfile(profileData) {
           credentials: 'include',
           body: JSON.stringify(profileData),
         })
-        
+
         if (!retryResponse.ok) {
           const retryErrorData = await retryResponse.json().catch(() => ({}))
           const retryErrorMessage = retryErrorData.detail || retryErrorData.message || retryErrorData.error || `Failed to update profile: ${retryResponse.status}`
@@ -267,10 +267,10 @@ export async function updateUserProfile(profileData) {
           error.statusCode = retryResponse.status
           throw error
         }
-        
+
         return await retryResponse.json()
       }
-      
+
       // Handle field-specific validation errors
       if (typeof errorData === 'object' && !errorData.message && !errorData.error && !errorData.detail) {
         const fieldErrors = []
@@ -283,7 +283,7 @@ export async function updateUserProfile(profileData) {
           throw new Error(fieldErrors.join('\n'))
         }
       }
-      
+
       const error = new Error(errorMessage)
       error.statusCode = response.status
       throw error
@@ -300,9 +300,20 @@ export async function updateUserProfile(profileData) {
  * Gets the stored user data from localStorage
  * @returns {Object|null} User data if available, null otherwise
  */
+// export function getStoredUser() {
+//   try {
+//     const userStr = localStorage.getItem('user')
+//     return userStr ? JSON.parse(userStr) : null
+//   } catch (error) {
+//     console.error('Error parsing stored user data:', error)
+//     return null
+//   }
+// }
 export function getStoredUser() {
   try {
-    const userStr = localStorage.getItem('user')
+    // Prefer localStorage (remember me), fall back to sessionStorage
+    const userStr =
+      localStorage.getItem('user') || sessionStorage.getItem('user')
     return userStr ? JSON.parse(userStr) : null
   } catch (error) {
     console.error('Error parsing stored user data:', error)
@@ -310,13 +321,19 @@ export function getStoredUser() {
   }
 }
 
+
 /**
  * Removes the stored user data from localStorage
  * Useful for logout
  */
+// export function clearStoredUser() {
+//   localStorage.removeItem('user')
+// }
 export function clearStoredUser() {
   localStorage.removeItem('user')
+  sessionStorage.removeItem('user')
 }
+
 
 /**
  * Logs out the current user
@@ -360,49 +377,63 @@ export async function logout() {
 }
 
 /**
- * Fetches all users from the backend API
- * @returns {Promise<Array>} Array of user objects
- * @throws {Error} If the request fails
+ * Starts a password reset for the given email.
+ * Backend handles sending the email and further steps.
+ * @param {string} email - User's email
+ * @returns {Promise<Object>} Response data from the API
  */
-export async function getAllUsers() {
-  const url = `${ACCOUNTS_API_BASE}/users/`
-  
+export async function requestPasswordReset(email) {
   try {
-    console.log('Fetching all users from:', url)
-    
-    const response = await fetch(url, {
-      method: 'GET',
+    // Get CSRF token before making POST request
+    const token = await getCsrfToken()
+
+    const response = await fetch(`${ACCOUNTS_API_BASE}/password-recovery/`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-CSRFToken': token,
       },
       credentials: 'include',
+      body: JSON.stringify({ email }),
     })
 
     if (!response.ok) {
-      const errorText = await response.text()
-      console.error('API Error Response:', errorText)
-      
-      if (response.status === 404) {
-        throw new Error(`Users not found: ${errorText}`)
+      // Try to extract error message from response
+      let errorMessage = 'Failed to start password reset.'
+      let errorData = {}
+
+      try {
+        errorData = await response.json()
+        console.log('Password reset error data:', errorData)
+
+        // Example backend shape:
+        // { "email": ["User with this email does not exist."] }
+        if (errorData.email && Array.isArray(errorData.email) && errorData.email.length > 0) {
+          errorMessage = errorData.email.join(', ')
+        } else {
+          errorMessage =
+            errorData.message ||
+            errorData.error ||
+            errorData.detail ||
+            errorMessage
+        }
+      } catch {
+        // ignore JSON parse errors; keep default message
       }
-      
-      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
+
+      const error = new Error(errorMessage)
+      error.statusCode = response.status
+      throw error
     }
 
-    const data = await response.json()
-    return data
-  } catch (error) {
-    console.error('Error fetching users:', error)
-    
-    // Provide more specific error messages
-    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-      throw new Error(
-        `Failed to connect to backend API at ${url}. ` +
-        `Please ensure the backend server is running at ${API_BASE_URL}. ` +
-        `This might be a CORS issue or the server is not running.`
-      )
+    // On success the backend may or may not return JSON; handle both
+    try {
+      return await response.json()
+    } catch {
+      return {}
     }
-    
+  } catch (error) {
+    console.error('Error requesting password reset:', error)
     throw error
   }
 }
