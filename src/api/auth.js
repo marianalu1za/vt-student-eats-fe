@@ -377,6 +377,45 @@ export async function logout() {
 }
 
 /**
+ * Fetches all users from the backend API
+ * @returns {Promise<Array>} Array of user objects
+ * @throws {Error} If the request fails
+ */
+export async function getAllUsers() {
+  const url = `${ACCOUNTS_API_BASE}/users/`
+
+  try {
+    console.log('Fetching all users from:', url)
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      const errorMessage =
+        errorData.detail ||
+        errorData.message ||
+        errorData.error ||
+        `Failed to fetch users: ${response.status}`
+
+      const error = new Error(errorMessage)
+      error.statusCode = response.status
+      throw error
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('Error fetching all users:', error)
+    throw error
+  }
+}
+
+/**
  * Starts a password reset for the given email.
  * Backend handles sending the email and further steps.
  * @param {string} email - User's email
@@ -384,7 +423,6 @@ export async function logout() {
  */
 export async function requestPasswordReset(email) {
   try {
-    // Get CSRF token before making POST request
     const token = await getCsrfToken()
 
     const response = await fetch(`${ACCOUNTS_API_BASE}/password-recovery/`, {
@@ -398,7 +436,6 @@ export async function requestPasswordReset(email) {
     })
 
     if (!response.ok) {
-      // Try to extract error message from response
       let errorMessage = 'Failed to start password reset.'
       let errorData = {}
 
@@ -406,9 +443,11 @@ export async function requestPasswordReset(email) {
         errorData = await response.json()
         console.log('Password reset error data:', errorData)
 
-        // Example backend shape:
-        // { "email": ["User with this email does not exist."] }
-        if (errorData.email && Array.isArray(errorData.email) && errorData.email.length > 0) {
+        if (
+          errorData.email &&
+          Array.isArray(errorData.email) &&
+          errorData.email.length > 0
+        ) {
           errorMessage = errorData.email.join(', ')
         } else {
           errorMessage =
@@ -418,7 +457,7 @@ export async function requestPasswordReset(email) {
             errorMessage
         }
       } catch {
-        // ignore JSON parse errors; keep default message
+        // ignore JSON parse errors
       }
 
       const error = new Error(errorMessage)
@@ -426,7 +465,6 @@ export async function requestPasswordReset(email) {
       throw error
     }
 
-    // On success the backend may or may not return JSON; handle both
     try {
       return await response.json()
     } catch {
