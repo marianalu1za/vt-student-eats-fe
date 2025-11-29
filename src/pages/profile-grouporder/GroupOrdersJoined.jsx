@@ -6,6 +6,7 @@ import { useGroupOrderPagination } from './hooks/useGroupOrderPagination'
 import { formatDateTime } from './utils/formatDateTime'
 import { isActiveOrder } from './utils/orderFilters'
 import { leaveGroupOrder } from '../../api/grouporders-participants'
+import { cancelGroupOrder } from '../../api/groupOrders'
 import AdminSearchBar from '../admin/components/AdminSearchBar'
 import AdminPagination from '../admin/components/AdminPagination'
 import ConfirmDialog from '../../components/common/ConfirmDialog'
@@ -19,13 +20,15 @@ function GroupOrdersJoined() {
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [leaveError, setLeaveError] = useState(null)
   const [isLeaving, setIsLeaving] = useState(false)
-  
+
+  const isSelectedOwner = selectedOrder?.is_owner
+
   // Fetch joined group orders (active participants only, filtered by active orders)
   const { orders, loading, error, refetch } = useJoinedGroupOrders(isActiveOrder, true)
-  
+
   // Filter orders by search query
   const filteredOrders = useGroupOrderSearch(orders, searchQuery)
-  
+
   // Pagination
   const {
     page,
@@ -47,13 +50,22 @@ function GroupOrdersJoined() {
   }, [refetch])
 
   const handleLeaveClick = (order) => {
+    setIsLeaving(false)
     setSelectedOrder(order)
     setLeaveError(null)
     setIsLeaveDialogOpen(true)
   }
 
   const handleLeaveConfirm = async () => {
-    if (!selectedOrder || !selectedOrder.participant_id) {
+    if (!selectedOrder) {
+      setLeaveError('Invalid order data')
+      return
+    }
+
+    const isOwner = selectedOrder.is_owner
+
+    // For members we need a participant_id
+    if (!isOwner && !selectedOrder.participant_id) {
       setLeaveError('Invalid order data')
       return
     }
@@ -61,19 +73,28 @@ function GroupOrdersJoined() {
     try {
       setIsLeaving(true)
       setLeaveError(null)
-      // TODO: Implement leaveGroupOrder API call
-      await leaveGroupOrder(selectedOrder.participant_id)
+
+      if (isOwner) {
+        // Host cancels the entire order (status → cancelled)
+        await cancelGroupOrder(selectedOrder.id)
+      } else {
+        // Member leaves just their participant record
+        await leaveGroupOrder(selectedOrder.participant_id)
+      }
+
       setIsLeaveDialogOpen(false)
       setSelectedOrder(null)
-      // Refetch orders to update the list
       handleRefetch()
     } catch (err) {
-      console.error('Failed to leave group order', err)
-      setLeaveError(err.message || 'Failed to leave group order. Please try again.')
+      console.error('Failed to leave/cancel group order', err)
+      setLeaveError(
+        err.message || 'Failed to update group order. Please try again.'
+      )
     } finally {
       setIsLeaving(false)
     }
   }
+
 
   const handleLeaveCancel = () => {
     setIsLeaveDialogOpen(false)
@@ -163,7 +184,7 @@ function GroupOrdersJoined() {
                           disabled={isLeaving}
                           style={{ fontSize: '0.875rem', padding: '6px 12px' }}
                         >
-                          Leave Order
+                          {order.is_owner ? 'Cancel Order' : 'Leave Order'}
                         </button>
                       </td>
                     </tr>
@@ -183,13 +204,29 @@ function GroupOrdersJoined() {
       </div>
       <ConfirmDialog
         open={isLeaveDialogOpen}
-        title="Leave group order?"
+        title={isSelectedOwner ? 'Cancel group order?' : 'Leave group order?'}
         message={
           selectedOrder
-            ? `Are you sure you want to leave the group order from ${selectedOrder.restaurant_name || selectedOrder.restaurant?.name || 'this restaurant'}?`
+            ? isSelectedOwner
+              ? `Are you sure you want to cancel the group order from ${selectedOrder.restaurant_name ||
+              selectedOrder.restaurant?.name ||
+              'this restaurant'
+              }? This will remove it for everyone.`
+              : `Are you sure you want to leave the group order from ${selectedOrder.restaurant_name ||
+              selectedOrder.restaurant?.name ||
+              'this restaurant'
+              }?`
             : ''
         }
-        confirmLabel={isLeaving ? 'Leaving...' : 'Leave'}
+        confirmLabel={
+          isLeaving
+            ? isSelectedOwner
+              ? 'Cancelling...'
+              : 'Leaving...'
+            : isSelectedOwner
+              ? 'Cancel Order'
+              : 'Leave'
+        }
         onConfirm={handleLeaveConfirm}
         onCancel={handleLeaveCancel}
       />
