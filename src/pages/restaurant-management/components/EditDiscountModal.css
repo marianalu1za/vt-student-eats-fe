@@ -1,0 +1,193 @@
+.edit-discount-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1400;
+}
+
+.edit-discount-card {
+  width: 100%;
+  max-width: 640px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 22px 45px rgba(15, 23, 42, 0.18);
+  padding: 28px 32px 24px;
+}
+
+.edit-discount-title {
+  margin: 0 0 8px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.edit-discount-subtitle {
+  margin: 0 0 20px;
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+
+.edit-discount-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.edit-discount-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 20px;
+}
+
+.edit-discount-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: #4b5563;
+}
+
+.edit-discount-field span {
+  font-weight: 500;
+}
+
+.required-asterisk {
+  color: #dc2626;
+  margin-left: 2px;
+}
+
+.edit-discount-field input[type="text"],
+.edit-discount-field input[type="date"],
+.edit-discount-field textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.edit-discount-field textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.edit-discount-field input[type="checkbox"] {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.edit-discount-field input:focus,
+.edit-discount-field select:focus,
+.edit-discount-field textarea:focus {
+  outline: none;
+  border-color: #e68060;
+  box-shadow: 0 0 0 2px rgba(230, 128, 96, 0.2);
+}
+
+.edit-discount-field input.error,
+.edit-discount-field textarea.error {
+  border-color: #dc2626;
+}
+
+.edit-discount-field input.error:focus,
+.edit-discount-field textarea.error:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+}
+
+.field-error {
+  color: #dc2626;
+  font-size: 0.75rem;
+  margin-top: 2px;
+}
+
+.edit-discount-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.edit-discount-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.edit-discount-actions .admin-btn-danger {
+  margin-right: auto;
+}
+
+.edit-discount-cancel {
+  background: #ffffff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.admin-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.admin-btn-primary {
+  background-color: #0066cc;
+  color: #ffffff;
+}
+
+.admin-btn-primary:hover:not(:disabled) {
+  background-color: #0052a3;
+}
+
+.admin-btn-danger {
+  background-color: #dc3545;
+  color: #ffffff;
+}
+
+.admin-btn-danger:hover:not(:disabled) {
+  background-color: #c82333;
+}
+
+.edit-discount-cancel:hover:not(:disabled) {
+  background-color: #f9fafb;
+}
+
+.edit-discount-error {
+  padding: 12px;
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+.edit-discount-field input:disabled,
+.edit-discount-field textarea:disabled,
+.edit-discount-field input[type="checkbox"]:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.edit-discount-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .edit-discount-card {
+    margin: 0 16px;
+    padding: 24px 20px 20px;
+  }
+
+  .edit-discount-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

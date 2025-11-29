@@ -1,11 +1,19 @@
 import { useState, useEffect } from 'react'
-import { fetchDiscounts } from '../../api/discounts'
+import { fetchDiscounts, updateDiscount, createDiscount, deleteDiscount } from '../../api/discounts'
+import EditDiscountModal from './components/EditDiscountModal'
+import FloatingActionButton from '../../components/common/FloatingActionButton'
 import './DiscountManagement.css'
 
 function DiscountManagement({ restaurantId, restaurant }) {
   const [discounts, setDiscounts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [selectedDiscount, setSelectedDiscount] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
 
   useEffect(() => {
     const loadDiscounts = async () => {
@@ -31,6 +39,128 @@ function DiscountManagement({ restaurantId, restaurant }) {
 
     loadDiscounts()
   }, [restaurantId])
+
+  const handleDiscountClick = (discount) => {
+    setSelectedDiscount(discount)
+    setSubmitError(null)
+    setIsModalOpen(true)
+  }
+
+  const handleModalClose = () => {
+    setIsModalOpen(false)
+    setSelectedDiscount(null)
+    setSubmitError(null)
+  }
+
+  const handleDiscountUpdate = async (updateData) => {
+    if (!selectedDiscount || !selectedDiscount.id) {
+      setSubmitError('Invalid discount data')
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+      setSubmitError(null)
+      await updateDiscount(selectedDiscount.id, updateData)
+      
+      // Refresh discounts list
+      const loadDiscounts = async () => {
+        try {
+          const discountsData = await fetchDiscounts({ restaurant_id: restaurantId })
+          setDiscounts(discountsData || [])
+        } catch (err) {
+          console.error('Failed to refresh discounts:', err)
+        }
+      }
+      await loadDiscounts()
+      
+      // Close modal
+      handleModalClose()
+    } catch (err) {
+      console.error('Failed to update discount:', err)
+      setSubmitError(err.message || 'Failed to update discount. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleCreateDiscount = () => {
+    setSubmitError(null)
+    setIsCreateModalOpen(true)
+  }
+
+  const handleCreateModalClose = () => {
+    setIsCreateModalOpen(false)
+    setSubmitError(null)
+  }
+
+  const handleDiscountCreate = async (createData) => {
+    try {
+      setIsSubmitting(true)
+      setSubmitError(null)
+      await createDiscount(createData)
+      
+      // Refresh discounts list
+      const loadDiscounts = async () => {
+        try {
+          const discountsData = await fetchDiscounts({ restaurant_id: restaurantId })
+          setDiscounts(discountsData || [])
+        } catch (err) {
+          console.error('Failed to refresh discounts:', err)
+        }
+      }
+      await loadDiscounts()
+      
+      // Close modal
+      handleCreateModalClose()
+    } catch (err) {
+      console.error('Failed to create discount:', err)
+      setSubmitError(err.message || 'Failed to create discount. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleDiscountDelete = async () => {
+    if (!selectedDiscount || !selectedDiscount.id) {
+      setSubmitError('Invalid discount data')
+      return
+    }
+
+    // Confirm deletion
+    const confirmed = window.confirm(
+      `Are you sure you want to delete this discount?\n\n"${selectedDiscount.description || 'This discount'}"\n\nThis action cannot be undone.`
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    try {
+      setIsDeleting(true)
+      setSubmitError(null)
+      await deleteDiscount(selectedDiscount.id)
+      
+      // Refresh discounts list
+      const loadDiscounts = async () => {
+        try {
+          const discountsData = await fetchDiscounts({ restaurant_id: restaurantId })
+          setDiscounts(discountsData || [])
+        } catch (err) {
+          console.error('Failed to refresh discounts:', err)
+        }
+      }
+      await loadDiscounts()
+      
+      // Close modal
+      handleModalClose()
+    } catch (err) {
+      console.error('Failed to delete discount:', err)
+      setSubmitError(err.message || 'Failed to delete discount. Please try again.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -70,7 +200,12 @@ function DiscountManagement({ restaurantId, restaurant }) {
         ) : (
           <div className="discounts-list">
             {discounts.map((discount) => (
-              <div key={discount.id} className="discount-item">
+              <div 
+                key={discount.id} 
+                className="discount-item"
+                onClick={() => handleDiscountClick(discount)}
+                style={{ cursor: 'pointer' }}
+              >
                 <div className="discount-item-header">
                   <span className="discount-description">{discount.description || 'No description'}</span>
                   <span className={`discount-status-badge ${discount.is_active ? 'discount-active' : 'discount-inactive'}`}>
@@ -85,12 +220,43 @@ function DiscountManagement({ restaurantId, restaurant }) {
                     {new Date(discount.start_date).toLocaleDateString()} - {new Date(discount.due_date).toLocaleDateString()}
                   </p>
                 )}
-                {/* TODO: Add edit and delete buttons */}
               </div>
             ))}
           </div>
         )}
       </div>
+
+      <FloatingActionButton
+        icon="fa-solid fa-plus"
+        text="Add New Discount"
+        onClick={handleCreateDiscount}
+        title="Add New Discount"
+        variant="primary"
+      />
+
+      <EditDiscountModal
+        open={isModalOpen}
+        discount={selectedDiscount}
+        restaurantId={restaurantId}
+        onSave={handleDiscountUpdate}
+        onDelete={handleDiscountDelete}
+        onCancel={handleModalClose}
+        isSubmitting={isSubmitting}
+        isDeleting={isDeleting}
+        error={submitError}
+        mode="edit"
+      />
+
+      <EditDiscountModal
+        open={isCreateModalOpen}
+        discount={null}
+        restaurantId={restaurantId}
+        onSave={handleDiscountCreate}
+        onCancel={handleCreateModalClose}
+        isSubmitting={isSubmitting}
+        error={submitError}
+        mode="create"
+      />
     </div>
   )
 }

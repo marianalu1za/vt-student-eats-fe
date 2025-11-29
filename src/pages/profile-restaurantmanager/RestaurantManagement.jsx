@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { fetchRestaurants } from '../../api/restaurants'
 import { getStoredUser } from '../../api/auth'
 import RestaurantManagementCard from './components/RestaurantManagementCard'
+import FloatingActionButton from '../../components/common/FloatingActionButton'
 import './RestaurantManagement.css'
 
 function RestaurantManagement() {
@@ -111,14 +112,13 @@ function RestaurantManagement() {
         <h1>Restaurant Management</h1>
         <p>Manage your restaurants</p>
       </div>
-      <button 
-        className="floating-create-btn"
+      <FloatingActionButton
+        icon="fa-solid fa-plus"
+        text="Create Restaurant"
         onClick={handleCreateRestaurant}
         title="Create New Restaurant"
-      >
-        <i className="fa-solid fa-plus floating-create-btn-icon"></i>
-        <span className="floating-create-btn-text">Create Restaurant</span>
-      </button>
+        variant="primary"
+      />
 
       {restaurants.length === 0 ? (
         <div className="restaurant-management-empty">
