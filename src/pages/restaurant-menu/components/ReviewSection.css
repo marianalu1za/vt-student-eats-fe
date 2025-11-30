@@ -1,14 +1,10 @@
 .review-section {
-  padding: 1rem;
+  padding: 32px !important;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 }
 
-@media (min-width: 768px) {
-  .review-section {
-    padding: 2rem;
-  }
-}
 
 /* Header */
 .review-section-header {

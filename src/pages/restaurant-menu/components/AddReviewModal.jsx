@@ -95,7 +95,7 @@ function AddReviewModal({ isOpen, onClose, onSubmit, isSubmitting = false, error
 
             <div className="add-review-field">
               <label htmlFor="review-comment" className="add-review-label">
-                Comment (Optional)
+                Comment <span className="required-asterisk">*</span>
               </label>
               <textarea
                 id="review-comment"
@@ -105,7 +105,11 @@ function AddReviewModal({ isOpen, onClose, onSubmit, isSubmitting = false, error
                 placeholder="Share your experience..."
                 rows={4}
                 disabled={isSubmitting}
+                required
               />
+              {!comment.trim() && (
+                <p className="add-review-field-hint">Please enter a comment</p>
+              )}
             </div>
 
             {error && (
@@ -127,7 +131,7 @@ function AddReviewModal({ isOpen, onClose, onSubmit, isSubmitting = false, error
             <button
               type="submit"
               className="add-review-button-submit"
-              disabled={isSubmitting || rating < 1 || rating > 5}
+              disabled={isSubmitting || rating < 1 || rating > 5 || !comment.trim()}
             >
               {isSubmitting ? 'Submitting...' : 'Submit Review'}
             </button>

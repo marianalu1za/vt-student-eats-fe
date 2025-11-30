@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import './ReviewSection.css'
 import AddReviewModal from './AddReviewModal.jsx'
 import ErrorPopup from '../../../components/common/ErrorPopup.jsx'
-import { fetchRestaurantReviews } from '../../../api/review.js'
+import { fetchRestaurantReviews, createRestaurantReview } from '../../../api/reviews.js'
+import { getCurrentUser, getStoredUser } from '../../../api/auth.js'
 
 
 // Helper function to format date
@@ -18,13 +19,13 @@ function ReviewSection({ restaurantId, reviews: propReviews = [], overallRating:
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [overallRating, setOverallRating] = useState(propOverallRating || 0)
-  const [totalRatings, setTotalRatings] = useState(propTotalRatings || 0)
+  // Use overallRating from restaurant data, not calculated from reviews
+  const overallRating = propOverallRating || 0
+  const totalRatings = propTotalRatings || 0
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
-  // TODO: Add authError state when authentication check is implemented
-  // const [authError, setAuthError] = useState(null)
+  const [authError, setAuthError] = useState(null)
 
   // Helper: Map API format to display format
   function mapApiReviewsToDisplayFormat(apiReviews) {
@@ -44,26 +45,6 @@ function ReviewSection({ restaurantId, reviews: propReviews = [], overallRating:
     return mappedReviews.sort((a, b) => (b.rating || 0) - (a.rating || 0))
   }
 
-  // Calculate overall rating and total ratings from reviews
-  function calculateRatings(reviewList) {
-    if (!reviewList || reviewList.length === 0) {
-      setOverallRating(propOverallRating || 0)
-      setTotalRatings(propTotalRatings || 0)
-      return
-    }
-
-    const ratings = reviewList.map(r => r.rating).filter(r => r > 0)
-    if (ratings.length === 0) {
-      setOverallRating(propOverallRating || 0)
-      setTotalRatings(propTotalRatings || 0)
-      return
-    }
-
-    const sum = ratings.reduce((acc, rating) => acc + rating, 0)
-    const average = sum / ratings.length
-    setOverallRating(average)
-    setTotalRatings(ratings.length)
-  }
 
   // Fetch reviews from API when restaurantId changes
   useEffect(() => {
@@ -72,10 +53,8 @@ function ReviewSection({ restaurantId, reviews: propReviews = [], overallRating:
       if (propReviews.length > 0) {
         const mappedReviews = mapApiReviewsToDisplayFormat(propReviews)
         setReviews(mappedReviews)
-        calculateRatings(mappedReviews)
       } else {
         setReviews([])
-        calculateRatings([])
       }
       return
     }
@@ -89,12 +68,10 @@ function ReviewSection({ restaurantId, reviews: propReviews = [], overallRating:
         // Map API response to display format
         const mappedReviews = mapApiReviewsToDisplayFormat(reviewsData)
         setReviews(mappedReviews)
-        calculateRatings(mappedReviews)
       } catch (err) {
         console.error('Error fetching reviews:', err)
         setError(err.message || 'Failed to load reviews')
         setReviews([])
-        calculateRatings([])
       } finally {
         setLoading(false)
       }
@@ -169,18 +146,22 @@ function ReviewSection({ restaurantId, reviews: propReviews = [], overallRating:
   const canGoPrevious = scrollLeft > 0
 
   const handleAddReview = async () => {
-    // TODO: When backend API is ready, check authentication
-    // try {
-    //   await getCurrentUser()
-    //   setAuthError(null)
-    //   setIsModalOpen(true)
-    // } catch (err) {
-    //   setAuthError('Please log in to leave a review')
-    //   console.error('User not authenticated:', err)
-    // }
-    
-    // For now, just open the modal (authentication check pending)
-    setIsModalOpen(true)
+    try {
+      // Check if user is authenticated
+      const storedUser = getStoredUser()
+      if (!storedUser) {
+        setAuthError('Please log in to leave a review')
+        return
+      }
+      
+      // Verify user is still authenticated by checking current user
+      await getCurrentUser()
+      setAuthError(null)
+      setIsModalOpen(true)
+    } catch (err) {
+      setAuthError('Please log in to leave a review')
+      console.error('User not authenticated:', err)
+    }
   }
 
   const handleModalClose = () => {
@@ -189,39 +170,75 @@ function ReviewSection({ restaurantId, reviews: propReviews = [], overallRating:
   }
 
   const handleModalSubmit = async ({ rating, comment }) => {
-    // TODO: When backend API is ready, implement review submission
-    // if (!restaurantId) {
-    //   setSubmitError('Restaurant ID is missing')
-    //   return
-    // }
-    // try {
-    //   setIsSubmitting(true)
-    //   setSubmitError(null)
-    //   const newReview = await createRestaurantReview(restaurantId, {
-    //     rating,
-    //     comment: comment || '',
-    //   })
-    //   const mappedReview = {
-    //     id: newReview.id,
-    //     userName: newReview.user_name || 'Anonymous',
-    //     contributions: newReview.user_contributions || 0,
-    //     orderDate: newReview.created_at || new Date().toISOString(),
-    //     reviewText: newReview.comment || '',
-    //     rating: newReview.rating || rating,
-    //   }
-    //   setReviews((prevReviews) => [mappedReview, ...prevReviews])
-    //   setIsModalOpen(false)
-    //   setSubmitError(null)
-    // } catch (err) {
-    //   console.error('Error submitting review:', err)
-    //   setSubmitError(err.message || 'Failed to submit review. Please try again.')
-    // } finally {
-    //   setIsSubmitting(false)
-    // }
-    
-    // Show message that API still needs to be implemented
-    setSubmitError('API still needs to be implemented. Review submission is not yet available.')
-    console.log('Review submission pending API implementation:', { rating, comment, restaurantId })
+    if (!restaurantId) {
+      setSubmitError('Restaurant ID is missing')
+      return
+    }
+
+    // Validate comment (required by API, minLength: 1)
+    if (!comment || !comment.trim()) {
+      setSubmitError('Comment is required')
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+      setSubmitError(null)
+
+      // Get current user to get user ID
+      const currentUser = await getCurrentUser()
+      if (!currentUser || !currentUser.id) {
+        setSubmitError('Unable to identify user. Please log in and try again.')
+        setIsSubmitting(false)
+        return
+      }
+
+      // Create the review
+      const newReview = await createRestaurantReview(restaurantId, currentUser.id, {
+        rating,
+        comment: comment.trim(),
+      })
+
+      // Map the API response to display format
+      const mappedReview = {
+        id: newReview.id,
+        userName: newReview.user_name || currentUser.first_name + ' ' + currentUser.last_name || 'Anonymous',
+        orderDate: newReview.created_at || newReview.orderDate || new Date().toISOString(),
+        reviewText: newReview.comment || comment.trim(),
+        rating: newReview.rating || rating,
+      }
+
+      // Refresh reviews list from API to get the complete updated list
+      if (restaurantId) {
+        try {
+          const reviewsData = await fetchRestaurantReviews(restaurantId)
+          const mappedReviews = mapApiReviewsToDisplayFormat(reviewsData)
+          setReviews(mappedReviews)
+        } catch (fetchErr) {
+          // If refresh fails, still add the new review to local state
+          console.error('Error refreshing reviews:', fetchErr)
+          setReviews((prevReviews) => [mappedReview, ...prevReviews])
+        }
+      } else {
+        // If no restaurantId, just add to local state
+        setReviews((prevReviews) => [mappedReview, ...prevReviews])
+      }
+      
+      setIsModalOpen(false)
+      setSubmitError(null)
+    } catch (err) {
+      console.error('Error submitting review:', err)
+      // Extract error message
+      let errorMessage = 'Failed to submit review. Please try again.'
+      if (err.message) {
+        errorMessage = err.message
+      } else if (err.statusCode === 401 || err.statusCode === 403) {
+        errorMessage = 'Please log in to leave a review'
+      }
+      setSubmitError(errorMessage)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   // Helper function to render stars based on rating
@@ -255,13 +272,12 @@ function ReviewSection({ restaurantId, reviews: propReviews = [], overallRating:
 
   return (
     <>
-      {/* TODO: Show auth error popup when authentication check is implemented */}
-      {/* {authError && (
+      {authError && (
         <ErrorPopup
           message={authError}
           onClose={() => setAuthError(null)}
         />
-      )} */}
+      )}
       <AddReviewModal
         isOpen={isModalOpen}
         onClose={handleModalClose}
@@ -304,8 +320,8 @@ function ReviewSection({ restaurantId, reviews: propReviews = [], overallRating:
 
       {/* Content */}
       <div className="review-content">
-        {/* Overall Rating Display */}
-        {displayReviews.length > 0 && overallRating > 0 && (
+        {/* Overall Rating Display - from restaurant data, not calculated from reviews */}
+        {overallRating > 0 && (
           <div className="overall-rating-container">
             <div className="rating-box">
               <div className="rating-number-large">{overallRating.toFixed(1)}</div>
