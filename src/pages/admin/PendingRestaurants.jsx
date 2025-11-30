@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './AdminDashboard.css'
 import AdminSearchBar from './components/AdminSearchBar.jsx'
 import AdminPagination from './components/AdminPagination.jsx'
@@ -10,10 +11,10 @@ import { usePaginatedData } from './hooks/usePaginatedData'
 import { updateRestaurant } from '../../api/restaurants'
 
 function PendingRestaurants() {
+  const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRestaurant, setSelectedRestaurant] = useState(null)
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false)
-  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [approveError, setApproveError] = useState(null)
 
@@ -66,47 +67,22 @@ function PendingRestaurants() {
     setApproveError(null)
   }
 
-  const handleRejectClick = (restaurant) => {
-    setSelectedRestaurant(restaurant)
-    setIsRejectDialogOpen(true)
-  }
-
-  const handleRejectConfirm = async () => {
-    if (!selectedRestaurant) return
-    // TODO: Add API call to reject restaurant
-    console.log('Rejecting restaurant:', selectedRestaurant.id)
-    try {
-      // After rejection, refresh the list to remove the rejected restaurant
-      await refreshRestaurants()
-    } catch (error) {
-      console.error('Failed to refresh restaurants after rejection', error)
-    }
-    setIsRejectDialogOpen(false)
-    setSelectedRestaurant(null)
-  }
-
-  const handleRejectCancel = () => {
-    setIsRejectDialogOpen(false)
-    setSelectedRestaurant(null)
-  }
-
   const handleView = (restaurantId) => {
-    // TODO: Implement view menu functionality
-    console.log('View menu for restaurant:', restaurantId)
+    navigate(`/restaurants/${restaurantId}`)
   }
 
   return (
     <div>
       <div className="admin-page-header">
         <h1>Restaurants Pending for Approval</h1>
-        <p>Review and approve or reject restaurant applications</p>
+        <p>Review and approve restaurant applications</p>
       </div>
 
       <div className="admin-card">
         <AdminSearchBar 
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          placeholder="Search pending restaurants by name, owner name, or phone number..."
+          placeholder="Search pending restaurants by name or phone number..."
         />
         <div className="admin-table-wrapper">
           <div className="admin-table-scroll">
@@ -117,7 +93,6 @@ function PendingRestaurants() {
               <th>Restaurant Name</th>
               <th>Phone Number</th>
               <th>Owner ID</th>
-              <th>Owner Name</th>
               <th>Link</th>
               <th>Submitted At</th>
               <th>Status</th>
@@ -127,19 +102,19 @@ function PendingRestaurants() {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan="9" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
                   Loading pending restaurants...
                 </td>
               </tr>
             ) : fetchError ? (
               <tr>
-                <td colSpan="9" style={{ textAlign: 'center', padding: '40px', color: '#c1121f' }}>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: '#c1121f' }}>
                   {fetchError}
                 </td>
               </tr>
             ) : filteredRestaurants.length === 0 ? (
               <tr>
-                <td colSpan="9" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
                   {searchQuery ? 'No pending restaurants found matching your search' : 'No pending restaurants'}
                 </td>
               </tr>
@@ -149,7 +124,6 @@ function PendingRestaurants() {
                   <td>{restaurant.id}</td>
                   <td>{restaurant.name}</td>
                   <td>{restaurant.phone_number || restaurant.phoneNumber || 'N/A'}</td>
-                  <td>{restaurant.owner_id || 'N/A'}</td>
                   <td>{restaurant.owner || 'N/A'}</td>
                   <td>
                     {restaurant.website_link || restaurant.website ? (
@@ -180,16 +154,9 @@ function PendingRestaurants() {
                       </button>
                       <button 
                         className="admin-btn admin-btn-success" 
-                        style={{ marginRight: '8px' }}
                         onClick={() => handleApproveClick(restaurant)}
                       >
                         Approve
-                      </button>
-                      <button 
-                        className="admin-btn admin-btn-danger"
-                        onClick={() => handleRejectClick(restaurant)}
-                      >
-                        Reject
                       </button>
                     </div>
                   </td>
@@ -216,23 +183,11 @@ function PendingRestaurants() {
             ? `This will publish the restaurant: ${selectedRestaurant.name} to our website. Users will be able to view the menu on the VT Student Eats website.`
             : ''
         }
+        error={approveError}
         confirmLabel={isSubmitting ? 'Approving...' : 'Approve'}
         cancelLabel="Cancel"
         onConfirm={handleApproveConfirm}
         onCancel={handleApproveCancel}
-      />
-      <ConfirmDialog
-        open={isRejectDialogOpen}
-        title="Send rejection email?"
-        message={
-          selectedRestaurant
-            ? `This will reject the restaurant: ${selectedRestaurant.name} and remove their application.`
-            : ''
-        }
-        confirmLabel="Send email"
-        cancelLabel="Cancel"
-        onConfirm={handleRejectConfirm}
-        onCancel={handleRejectCancel}
       />
     </div>
   )

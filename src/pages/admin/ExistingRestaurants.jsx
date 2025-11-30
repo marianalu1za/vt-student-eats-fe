@@ -131,7 +131,7 @@ function ExistingRestaurants() {
               <th>ID</th>
               <th>Restaurant Name</th>
               <th>Phone Number</th>
-              <th>Owner</th>
+              <th>Owner ID</th>
               <th>Address</th>
               <th>Website</th>
               <th className="admin-table-actions-header">Actions</th>
@@ -226,6 +226,7 @@ function ExistingRestaurants() {
             ? `This will remove ${selectedRestaurant.name} from the approved list. The restaurant will not be visible to users.`
             : ''
         }
+        error={removeError}
         confirmLabel={isRemoving ? 'Removing...' : 'Remove'}
         cancelLabel="Cancel"
         onConfirm={handleRemoveConfirm}

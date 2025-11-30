@@ -6,6 +6,7 @@ function ConfirmDialog({
   message,
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
+  error = null,
   onConfirm,
   onCancel,
 }) {
@@ -30,6 +31,11 @@ function ConfirmDialog({
           {title}
         </h2>
         {message && <p className="confirm-message">{message}</p>}
+        {error && (
+          <div className="confirm-error" role="alert">
+            {error}
+          </div>
+        )}
         <div className="confirm-actions">
           <button type="button" className="admin-btn confirm-cancel" onClick={onCancel}>
             {cancelLabel}

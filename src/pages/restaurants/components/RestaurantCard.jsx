@@ -144,7 +144,7 @@ function RestaurantCard({ restaurant }) {
         <div className="restaurant-info">
           <div className="restaurant-header">
             <h3 className="restaurant-name">{restaurant.name}</h3>
-            <div className="rating-badge">{restaurant.ratings.toFixed(1)} ⭐</div>
+            <div className="rating-badge">{restaurant.ratings != null ? restaurant.ratings.toFixed(1) : '0'} ⭐</div>
           </div>
           <div className="restaurant-details">
             <div className="tags">

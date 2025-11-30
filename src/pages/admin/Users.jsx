@@ -71,7 +71,11 @@ function Users() {
       const role = (user.role || '').toLowerCase()
       const status = (user.status || '').toLowerCase()
       
-      return firstName.includes(query) ||
+      // Check if query matches ID (as string)
+      const userIdMatch = user.id !== undefined && String(user.id).includes(query)
+      
+      return userIdMatch ||
+        firstName.includes(query) ||
         lastName.includes(query) ||
         email.includes(query) ||
         role.includes(query) ||
@@ -131,7 +135,7 @@ function Users() {
         <AdminSearchBar 
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          placeholder="Search users by name, email, or role..."
+          placeholder="Search users by ID, name, email, or role..."
         />
         {loading ? (
           <div style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
