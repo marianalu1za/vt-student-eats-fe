@@ -38,12 +38,14 @@ function Login() {
       const response = await login(credentials)
       // console.log('Login successful:', response)
 
+      // Clear any existing user data from storage before storing new user data
+      // This prevents old user data from persisting after logout/login
+      localStorage.removeItem('user')
+      sessionStorage.removeItem('user')
+
       // Fetch current user data after successful login
       const userData = await getCurrentUser()
       // console.log('User data fetched:', userData)
-
-      // Store user data in localStorage for persistence across page refreshes
-      // localStorage.setItem('user', JSON.stringify(userData))
 
       // Store user data depending on "Remember me"
       if (rememberMe) {
