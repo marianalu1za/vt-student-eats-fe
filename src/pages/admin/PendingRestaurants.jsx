@@ -176,7 +176,7 @@ function PendingRestaurants() {
                           style={{ marginRight: '8px' }}
                           onClick={() => handleView(restaurant.id)}
                         >
-                        View Menu
+                        Preview Menu
                       </button>
                       <button 
                         className="admin-btn admin-btn-success" 
