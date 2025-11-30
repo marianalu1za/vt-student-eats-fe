@@ -226,6 +226,7 @@ function ExistingRestaurants() {
             ? `This will remove ${selectedRestaurant.name} from the approved list. The restaurant will not be visible to users.`
             : ''
         }
+        error={removeError}
         confirmLabel={isRemoving ? 'Removing...' : 'Remove'}
         cancelLabel="Cancel"
         onConfirm={handleRemoveConfirm}
