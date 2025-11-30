@@ -159,6 +159,14 @@ function RestaurantMenu() {
     return ['All'].concat(Array.from(resultSet).sort());
   }, [menuItems])
 
+  // Compute popular items from menu items
+  const popularItems = useMemo(() => {
+    if (!menuItems) return []
+    return menuItems
+      .filter(item => item.is_popular === true)
+      .slice(0, 3)
+  }, [menuItems])
+
   // Loading state
   if (restaurantLoading || menuLoading) {
     return (
@@ -265,34 +273,6 @@ function RestaurantMenu() {
       </div>
     )
   }
-  
-  // Mock data - replace with actual data later
-  const popularItems = [
-    // 🥙 CAVA — restaurantId: 1
-    { id: 1, restaurantId: 1, name: 'Spicy Lamb + Avocado Bowl', description: 'Spicy lamb with grains and avocado', price: '$12.99', image: '🥣' },
-    { id: 2, restaurantId: 1, name: 'Chicken + Rice Bowl', description: 'Grilled chicken and basmati rice', price: '$11.49', image: '🥗' },
-    { id: 3, restaurantId: 1, name: 'Greek Salad', description: 'Romaine, feta, and olives', price: '$9.99', image: '🥗' },
-  
-    // 🌯 CHIPOTLE — restaurantId: 5
-    { id: 4, restaurantId: 5, name: 'Chicken Burrito', description: 'Adobo chicken with rice and beans', price: '$8.50', image: '🌯' },
-    { id: 5, restaurantId: 5, name: 'Steak Burrito', description: 'Steak, guac, and brown rice', price: '$9.50', image: '🌯' },
-    { id: 6, restaurantId: 5, name: 'Barbacoa Tacos', description: 'Slow-cooked beef tacos', price: '$8.00', image: '🌮' },
-  
-    // 🍕 &PIZZA — restaurantId: 2
-    { id: 7, restaurantId: 2, name: 'Classic Pepperoni', description: 'Crispy pepperoni pizza', price: '$12.50', image: '🍕' },
-    { id: 8, restaurantId: 2, name: 'Veggie Supreme', description: 'Loaded veggie pizza', price: '$12.00', image: '🍄' },
-    { id: 9, restaurantId: 2, name: 'Margherita', description: 'Tomato, mozzarella, and basil', price: '$10.75', image: '🍅' },
-  
-    // 🍔 FIVE GUYS — restaurantId: 3
-    { id: 10, restaurantId: 3, name: 'Classic Burger', description: 'Beef patty with fresh toppings', price: '$8.99', image: '🍔' },
-    { id: 11, restaurantId: 3, name: 'Bacon Burger', description: 'Bacon and melted cheese', price: '$10.49', image: '🍔' },
-    { id: 12, restaurantId: 3, name: 'Fries', description: 'Crispy hand-cut fries', price: '$3.49', image: '🍟' },
-  
-    // 🥞 IHOP — restaurantId: 4
-    { id: 13, restaurantId: 4, name: 'Buttermilk Pancakes', description: 'Fluffy pancakes with syrup', price: '$7.99', image: '🥞' },
-    { id: 14, restaurantId: 4, name: 'Belgian Waffle', description: 'Crispy golden waffle', price: '$8.29', image: '🧇' },
-    { id: 15, restaurantId: 4, name: 'Breakfast Platter', description: 'Eggs, bacon, and hash browns', price: '$9.50', image: '🍳' }
-  ];
 
   // Helper function to format price with $ prefix
   const formatPrice = (price) => {
@@ -551,39 +531,38 @@ function RestaurantMenu() {
         </div>
 
         {/* Popular Items Section */}
-        <section className="popular-items-section">
-          {/* Search Bar */}
-          <div className="search-section">
-            <div className="menu-search-container">
-              <input
-                type="text"
-                className="menu-search-bar"
-                placeholder="Search Item bar"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <i className="fa-solid fa-magnifying-glass menu-search-icon"></i>
+        {popularItems.length > 0 && (
+          <section className="popular-items-section">
+            {/* Search Bar */}
+            <div className="search-section">
+              <div className="menu-search-container">
+                <input
+                  type="text"
+                  className="menu-search-bar"
+                  placeholder="Search Item bar"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <i className="fa-solid fa-magnifying-glass menu-search-icon"></i>
+              </div>
             </div>
-          </div>
-          <h2 className="section-title">Popular Items</h2>
-          <div className="popular-items-scroll">
-            {popularItems
-              .filter(item => item.restaurantId === Number(id))
-              .slice(0, 3)
-              .map(item => (
+            <h2 className="section-title">Popular Items</h2>
+            <div className="popular-items-scroll">
+              {popularItems.map(item => (
                 <article key={item.id} className="popular-item-card">
                   <div className="item-image-placeholder">
-                    <span className="item-image-icon">{item.image}</span>
+                    <span className="item-image-icon">{getItemEmoji(item)}</span>
                   </div>
                   <div className="item-info">
                     <h4 className="item-name">{item.name}</h4>
-                    <p className="item-description">{item.description}</p>
-                    <p className="item-price">{item.price}</p>
+                    <p className="item-description">{item.description || ''}</p>
+                    <p className="item-price">{formatPrice(item.price)}</p>
                   </div>
                 </article>
               ))}
-          </div>
-        </section>
+            </div>
+          </section>
+        )}
 
         {/* Discount Section */}
         <DiscountSection restaurantId={id} />

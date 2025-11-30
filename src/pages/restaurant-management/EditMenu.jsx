@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { MaterialReactTable } from 'material-react-table'
 import { MRT_Localization_EN } from 'material-react-table/locales/en'
-import { InputAdornment } from '@mui/material'
+import { InputAdornment, Checkbox } from '@mui/material'
 import './EditMenu.css'
 import { fetchMyMenuItems, createMenuItem, updateMenuItem, deleteMenuItem } from '../../api/restaurants'
 import ErrorPopup from '../../components/common/ErrorPopup'
@@ -53,8 +53,6 @@ function EditMenu({ restaurantId, restaurant }) {
 
   const handleCreateRow = async ({ exitCreatingMode, values }) => {
     try {
-      console.log('handleCreateRow called with:', { values })
-      
       // Ensure price is a number
       const priceValue = typeof values.price === 'string' ? parseFloat(values.price) : values.price
       
@@ -64,11 +62,10 @@ function EditMenu({ restaurantId, restaurant }) {
         name: values.name?.trim() || '',
         price: priceValue,
         tags: values.tags?.trim() || '',
+        // is_popular is not included - it's managed separately via the checkbox toggle
       }
       
-      console.log('Creating menu item:', createData)
       const newItem = await createMenuItem(createData)
-      console.log('Created item received:', newItem)
       
       setMenuItems(prevItems => [...prevItems, newItem])
       setSuccessMessage('Menu item created successfully!')
@@ -90,8 +87,6 @@ function EditMenu({ restaurantId, restaurant }) {
 
   const handleUpdateRow = async ({ exitEditingMode, row, values }) => {
     try {
-      console.log('handleUpdateRow called with:', { row: row?.original, values })
-      
       // Ensure price is a number
       const priceValue = typeof values.price === 'string' ? parseFloat(values.price) : values.price
       
@@ -100,15 +95,18 @@ function EditMenu({ restaurantId, restaurant }) {
         name: values.name?.trim() || '',
         price: priceValue,
         tags: values.tags?.trim() || '',
+        // is_popular is not included - it's managed separately via the checkbox toggle
       }
       
-      console.log('Updating menu item:', row.original.id, updateData)
       const updatedItem = await updateMenuItem(row.original.id, updateData)
-      console.log('Updated item received:', updatedItem)
       
-      setMenuItems(prevItems => prevItems.map(item => 
-        item.id === updatedItem.id ? updatedItem : item
-      ))
+      // Update the menu items state with the updated item
+      setMenuItems(prevItems => 
+        prevItems.map(item => 
+          item.id === updatedItem.id ? { ...item, ...updatedItem } : item
+        )
+      )
+      
       setSuccessMessage('Menu item updated successfully!')
       setShowSuccessPopup(true)
       exitEditingMode()
@@ -137,7 +135,7 @@ function EditMenu({ restaurantId, restaurant }) {
     try {
       setIsDeleting(true)
       await deleteMenuItem(itemToDelete.id)
-      setMenuItems(menuItems.filter(item => item.id !== itemToDelete.id))
+      setMenuItems(prevItems => prevItems.filter(item => item.id !== itemToDelete.id))
       setSuccessMessage('Menu item deleted successfully!')
       setShowSuccessPopup(true)
       setDeleteDialogOpen(false)
@@ -206,8 +204,67 @@ function EditMenu({ restaurantId, restaurant }) {
           placeholder: 'Comma-separated tags',
         },
       },
+      {
+        accessorKey: 'is_popular',
+        header: 'Popular',
+        size: 150,
+        enableEditing: false, // do not use MRT editing for this field
+        Cell: ({ row }) => {
+          const value = row.original.is_popular
+
+          return (
+            <Checkbox
+              checked={!!value}
+              onChange={async (e) => {
+                const newValue = e.target.checked
+
+                // If trying to check a new item, verify we don't exceed the limit of 3
+                if (newValue && !value) {
+                  const currentPopularCount = menuItems.filter(item => item.is_popular === true).length
+                  if (currentPopularCount >= 3) {
+                    // Already at max, show error and prevent change
+                    setError('You can only mark up to 3 items as popular. Please uncheck another popular item first.')
+                    setShowErrorPopup(true)
+                    return // Don't proceed with the change
+                  }
+                }
+
+                // optimistic UI update
+                setMenuItems((prev) =>
+                  prev.map((item) =>
+                    item.id === row.original.id
+                      ? { ...item, is_popular: newValue }
+                      : item
+                  )
+                )
+
+                try {
+                  // send PATCH to backend
+                  await updateMenuItem(row.original.id, {
+                    is_popular: newValue,
+                  })
+                } catch (err) {
+                  console.error('Failed to update is_popular', err)
+
+                  // revert on error
+                  setMenuItems((prev) =>
+                    prev.map((item) =>
+                      item.id === row.original.id
+                        ? { ...item, is_popular: value }
+                        : item
+                    )
+                  )
+                  
+                  setError(err.message || 'Failed to update popular status')
+                  setShowErrorPopup(true)
+                }
+              }}
+            />
+          )
+        },
+      },
     ],
-    []
+    [menuItems]
   )
 
   if (loading) {
