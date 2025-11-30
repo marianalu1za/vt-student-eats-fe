@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { useRef, useState, useEffect, useMemo } from 'react'
 import Sidebar from '../../components/common/Sidebar'
 import MyProfile from './MyProfile'
@@ -6,18 +6,38 @@ import GroupOrdersJoined from '../profile-grouporder/GroupOrdersJoined'
 import GroupOrdersHistory from '../profile-grouporder/GroupOrdersHistory'
 import ChangePassword from './ChangePassword'
 import RestaurantManagement from '../profile-restaurantmanager/RestaurantManagement'
-import { logout, getStoredUser } from '../../api/auth'
+import ProtectedRoute from '../../components/common/ProtectedRoute'
+import { logout, getCurrentUser } from '../../api/auth'
 import './ProfileLayout.css'
 
 function ProfileLayout() {
   const contentRef = useRef(null)
   const navigate = useNavigate()
+  const location = useLocation()
   const [currentUser, setCurrentUser] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const user = getStoredUser()
-    setCurrentUser(user)
-  }, [])
+    const loadUser = async () => {
+      try {
+        setLoading(true)
+        // Fetch user from API to ensure we have current, validated user data
+        const user = await getCurrentUser()
+        setCurrentUser(user)
+      } catch (error) {
+        console.error('Error loading user:', error)
+        // If not authenticated, redirect to login
+        if (error.statusCode === 401 || error.statusCode === 403) {
+          navigate('/login')
+        }
+        setCurrentUser(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadUser()
+  }, [location.pathname, navigate]) // Refresh when route changes
 
   // Check if user is a Restaurant Manager
   const isRestaurantManager = useMemo(() => {
@@ -76,6 +96,17 @@ function ProfileLayout() {
     },
   ], [profileMenuItems])
 
+  // Show loading state while fetching user
+  if (loading) {
+    return (
+      <div className="profile-layout">
+        <div className="profile-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+          <div>Loading...</div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="profile-layout">
       <Sidebar
@@ -88,9 +119,30 @@ function ProfileLayout() {
       <div className="profile-content" ref={contentRef}>
         <Routes>
           <Route path="" element={<MyProfile />} />
-          <Route path="group-orders-joined" element={<GroupOrdersJoined />} />
-          <Route path="group-orders-history" element={<GroupOrdersHistory />} />
-          <Route path="restaurant-management" element={<RestaurantManagement />} />
+          <Route 
+            path="group-orders-joined" 
+            element={
+              <ProtectedRoute requiredRole={null}>
+                <GroupOrdersJoined />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="group-orders-history" 
+            element={
+              <ProtectedRoute requiredRole={null}>
+                <GroupOrdersHistory />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="restaurant-management" 
+            element={
+              <ProtectedRoute requiredRole="restaurant_manager">
+                <RestaurantManagement />
+              </ProtectedRoute>
+            } 
+          />
           <Route path="change-password" element={<ChangePassword />} />
           <Route path="*" element={<Navigate to="/profile" replace />} />
         </Routes>

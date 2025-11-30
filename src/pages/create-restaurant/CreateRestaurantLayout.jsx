@@ -1,10 +1,11 @@
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import StepIndicator from './components/StepIndicator'
 import BasicInfo from './steps/BasicInfo'
 import OpeningHours from './steps/OpeningHours'
 import Tags from './steps/Tags'
 import Review from './steps/Review'
+import { getCurrentUser } from '../../api/auth'
 import './CreateRestaurantLayout.css'
 
 const STEPS = [
@@ -19,6 +20,46 @@ function CreateRestaurantLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const [formData, setFormData] = useState({})
+  const [loading, setLoading] = useState(true)
+
+  // Validate user is a restaurant manager on mount
+  useEffect(() => {
+    const validateAccess = async () => {
+      try {
+        setLoading(true)
+        const currentUser = await getCurrentUser()
+        
+        if (!currentUser) {
+          navigate('/login')
+          return
+        }
+
+        // Check if user is a restaurant manager
+        const roles = Array.isArray(currentUser.roles) ? currentUser.roles : [currentUser.roles]
+        const isRestaurantManager = roles.some(role => {
+          const roleStr = String(role).toLowerCase()
+          return roleStr.includes('restaurant') && roleStr.includes('manager')
+        })
+
+        if (!isRestaurantManager) {
+          // User doesn't have the required role, redirect to profile
+          navigate('/profile')
+          return
+        }
+      } catch (error) {
+        console.error('Error validating access:', error)
+        // If authentication error, redirect to login
+        if (error.statusCode === 401 || error.statusCode === 403) {
+          navigate('/login')
+          return
+        }
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    validateAccess()
+  }, [navigate])
 
   // Determine current step from URL
   const currentStepId = location.pathname.split('/').pop() || 'basic-info'
@@ -35,6 +76,17 @@ function CreateRestaurantLayout() {
 
   const updateFormData = (data) => {
     setFormData(prev => ({ ...prev, ...data }))
+  }
+
+  // Show loading state while validating access
+  if (loading) {
+    return (
+      <div className="create-restaurant-layout">
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+          <div>Loading...</div>
+        </div>
+      </div>
+    )
   }
 
   return (

@@ -1,7 +1,7 @@
 /**
  * API utility for fetching restaurant data from the backend
  */
-import { getCsrfToken } from './auth.js'
+import { getCsrfToken, clearCsrfTokenCache } from './auth.js'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
@@ -246,7 +246,8 @@ export async function updateRestaurant(id, restaurantData) {
   try {
     console.log('Updating restaurant at:', url)
      
-    const token = await getCsrfToken()
+    // Force refresh CSRF token to ensure we have a valid one
+    const token = await getCsrfToken(true)
 
     const apiPayload = {}
     
@@ -286,31 +287,64 @@ export async function updateRestaurant(id, restaurantData) {
       const errorText = await response.text()
       console.error('API Error Response:', errorText)
       
-      if (response.status === 404) {
-        throw new Error(`Restaurant not found: ${errorText}`)
-      }
-      
       // Try to parse error as JSON for better error messages
+      let errorData = {}
       let errorMessage = `HTTP error! status: ${response.status}`
       try {
-        const errorData = await JSON.parse(errorText)
-        if (errorData.message || errorData.error || errorData.detail) {
-          errorMessage = errorData.message || errorData.error || errorData.detail
-        } else if (typeof errorData === 'object') {
-          // Handle field-specific validation errors
-          const fieldErrors = []
-          for (const [field, errors] of Object.entries(errorData)) {
-            if (Array.isArray(errors) && errors.length > 0) {
-              fieldErrors.push(`${field}: ${errors.join(', ')}`)
-            }
-          }
-          if (fieldErrors.length > 0) {
-            errorMessage = fieldErrors.join('\n')
-          }
-        }
+        errorData = await JSON.parse(errorText)
+        errorMessage = errorData.message || errorData.error || errorData.detail || errorMessage
       } catch {
         // If not JSON, use the text as-is
         errorMessage = errorText || errorMessage
+      }
+
+      // If CSRF token error, clear cache and retry once
+      if (response.status === 403 && (errorMessage.includes('CSRF') || errorMessage.includes('csrf'))) {
+        console.log('CSRF token error detected, clearing cache and retrying...')
+        clearCsrfTokenCache()
+
+        // Retry with a fresh token
+        const freshToken = await getCsrfToken(true)
+        const retryResponse = await fetch(url, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': freshToken,
+          },
+          credentials: 'include',
+          body: JSON.stringify(apiPayload),
+        })
+
+        if (!retryResponse.ok) {
+          const retryErrorText = await retryResponse.text()
+          let retryErrorMessage = `HTTP error! status: ${retryResponse.status}`
+          try {
+            const retryErrorData = await JSON.parse(retryErrorText)
+            retryErrorMessage = retryErrorData.message || retryErrorData.error || retryErrorData.detail || retryErrorMessage
+          } catch {
+            retryErrorMessage = retryErrorText || retryErrorMessage
+          }
+          throw new Error(retryErrorMessage)
+        }
+
+        return await retryResponse.json()
+      }
+      
+      if (response.status === 404) {
+        throw new Error(`Restaurant not found: ${errorMessage}`)
+      }
+      
+      // Handle field-specific validation errors
+      if (typeof errorData === 'object' && !errorData.message && !errorData.error && !errorData.detail) {
+        const fieldErrors = []
+        for (const [field, errors] of Object.entries(errorData)) {
+          if (Array.isArray(errors) && errors.length > 0) {
+            fieldErrors.push(`${field}: ${errors.join(', ')}`)
+          }
+        }
+        if (fieldErrors.length > 0) {
+          errorMessage = fieldErrors.join('\n')
+        }
       }
       
       throw new Error(errorMessage)
@@ -360,7 +394,8 @@ export async function createMenuItem(menuItemData) {
   try {
     console.log('Creating menu item at:', url)
     
-    const token = await getCsrfToken()
+    // Force refresh CSRF token to ensure we have a valid one
+    const token = await getCsrfToken(true)
 
     const apiPayload = {
       restaurant: menuItemData.restaurant_id,
@@ -387,6 +422,49 @@ export async function createMenuItem(menuItemData) {
       let errorText = await response.text()
       console.error('API Error Response:', errorText)
       
+      // Try to parse error as JSON for better error messages
+      let errorData = {}
+      let errorMessage = `HTTP error! status: ${response.status}`
+      try {
+        errorData = await JSON.parse(errorText)
+        errorMessage = errorData.message || errorData.error || errorData.detail || errorMessage
+      } catch {
+        // If not JSON, use the text as-is
+        errorMessage = errorText || errorMessage
+      }
+
+      // If CSRF token error, clear cache and retry once
+      if (response.status === 403 && (errorMessage.includes('CSRF') || errorMessage.includes('csrf'))) {
+        console.log('CSRF token error detected, clearing cache and retrying...')
+        clearCsrfTokenCache()
+
+        // Retry with a fresh token
+        const freshToken = await getCsrfToken(true)
+        const retryResponse = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': freshToken,
+          },
+          credentials: 'include',
+          body: JSON.stringify(apiPayload),
+        })
+
+        if (!retryResponse.ok) {
+          const retryErrorText = await retryResponse.text()
+          let retryErrorMessage = `HTTP error! status: ${retryResponse.status}`
+          try {
+            const retryErrorData = await JSON.parse(retryErrorText)
+            retryErrorMessage = retryErrorData.message || retryErrorData.error || retryErrorData.detail || retryErrorMessage
+          } catch {
+            retryErrorMessage = retryErrorText || retryErrorMessage
+          }
+          throw new Error(retryErrorMessage)
+        }
+
+        return await retryResponse.json()
+      }
+      
       // Check if response is HTML (Django error page)
       if (contentType && contentType.includes('text/html')) {
         // Extract a meaningful error message from HTML if possible
@@ -403,27 +481,17 @@ export async function createMenuItem(menuItemData) {
         }
       }
       
-      // Try to parse error as JSON for better error messages
-      let errorMessage = `HTTP error! status: ${response.status}`
-      try {
-        const errorData = await JSON.parse(errorText)
-        if (errorData.message || errorData.error || errorData.detail) {
-          errorMessage = errorData.message || errorData.error || errorData.detail
-        } else if (typeof errorData === 'object') {
-          // Handle field-specific validation errors
-          const fieldErrors = []
-          for (const [field, errors] of Object.entries(errorData)) {
-            if (Array.isArray(errors) && errors.length > 0) {
-              fieldErrors.push(`${field}: ${errors.join(', ')}`)
-            }
-          }
-          if (fieldErrors.length > 0) {
-            errorMessage = fieldErrors.join('\n')
+      // Handle field-specific validation errors
+      if (typeof errorData === 'object' && !errorData.message && !errorData.error && !errorData.detail) {
+        const fieldErrors = []
+        for (const [field, errors] of Object.entries(errorData)) {
+          if (Array.isArray(errors) && errors.length > 0) {
+            fieldErrors.push(`${field}: ${errors.join(', ')}`)
           }
         }
-      } catch {
-        // If not JSON, use a generic error message
-        errorMessage = `HTTP error! status: ${response.status}`
+        if (fieldErrors.length > 0) {
+          errorMessage = fieldErrors.join('\n')
+        }
       }
       
       throw new Error(errorMessage)
@@ -463,7 +531,8 @@ export async function updateMenuItem(id, menuItemData) {
   try {
     console.log('Updating menu item at:', url)
     
-    const token = await getCsrfToken()
+    // Force refresh CSRF token to ensure we have a valid one
+    const token = await getCsrfToken(true)
 
     const apiPayload = {}
     
@@ -492,6 +561,49 @@ export async function updateMenuItem(id, menuItemData) {
       let errorText = await response.text()
       console.error('API Error Response:', errorText)
       
+      // Try to parse error as JSON for better error messages
+      let errorData = {}
+      let errorMessage = `HTTP error! status: ${response.status}`
+      try {
+        errorData = await JSON.parse(errorText)
+        errorMessage = errorData.message || errorData.error || errorData.detail || errorMessage
+      } catch {
+        // If not JSON, use the text as-is
+        errorMessage = errorText || errorMessage
+      }
+
+      // If CSRF token error, clear cache and retry once
+      if (response.status === 403 && (errorMessage.includes('CSRF') || errorMessage.includes('csrf'))) {
+        console.log('CSRF token error detected, clearing cache and retrying...')
+        clearCsrfTokenCache()
+
+        // Retry with a fresh token
+        const freshToken = await getCsrfToken(true)
+        const retryResponse = await fetch(url, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': freshToken,
+          },
+          credentials: 'include',
+          body: JSON.stringify(apiPayload),
+        })
+
+        if (!retryResponse.ok) {
+          const retryErrorText = await retryResponse.text()
+          let retryErrorMessage = `HTTP error! status: ${retryResponse.status}`
+          try {
+            const retryErrorData = await JSON.parse(retryErrorText)
+            retryErrorMessage = retryErrorData.message || retryErrorData.error || retryErrorData.detail || retryErrorMessage
+          } catch {
+            retryErrorMessage = retryErrorText || retryErrorMessage
+          }
+          throw new Error(retryErrorMessage)
+        }
+
+        return await retryResponse.json()
+      }
+      
       // Check if response is HTML (Django error page)
       if (contentType && contentType.includes('text/html')) {
         // Extract a meaningful error message from HTML if possible
@@ -512,27 +624,17 @@ export async function updateMenuItem(id, menuItemData) {
         throw new Error(`Menu item not found`)
       }
       
-      // Try to parse error as JSON for better error messages
-      let errorMessage = `HTTP error! status: ${response.status}`
-      try {
-        const errorData = await JSON.parse(errorText)
-        if (errorData.message || errorData.error || errorData.detail) {
-          errorMessage = errorData.message || errorData.error || errorData.detail
-        } else if (typeof errorData === 'object') {
-          // Handle field-specific validation errors
-          const fieldErrors = []
-          for (const [field, errors] of Object.entries(errorData)) {
-            if (Array.isArray(errors) && errors.length > 0) {
-              fieldErrors.push(`${field}: ${errors.join(', ')}`)
-            }
-          }
-          if (fieldErrors.length > 0) {
-            errorMessage = fieldErrors.join('\n')
+      // Handle field-specific validation errors
+      if (typeof errorData === 'object' && !errorData.message && !errorData.error && !errorData.detail) {
+        const fieldErrors = []
+        for (const [field, errors] of Object.entries(errorData)) {
+          if (Array.isArray(errors) && errors.length > 0) {
+            fieldErrors.push(`${field}: ${errors.join(', ')}`)
           }
         }
-      } catch {
-        // If not JSON, use a generic error message
-        errorMessage = `HTTP error! status: ${response.status}`
+        if (fieldErrors.length > 0) {
+          errorMessage = fieldErrors.join('\n')
+        }
       }
       
       throw new Error(errorMessage)
@@ -568,7 +670,8 @@ export async function deleteMenuItem(id) {
   try {
     console.log('Deleting menu item at:', url)
     
-    const token = await getCsrfToken()
+    // Force refresh CSRF token to ensure we have a valid one
+    const token = await getCsrfToken(true)
     
     const response = await fetch(url, {
       method: 'DELETE',
@@ -583,6 +686,48 @@ export async function deleteMenuItem(id) {
       const contentType = response.headers.get('content-type')
       let errorText = await response.text()
       console.error('API Error Response:', errorText)
+      
+      // Try to parse error as JSON for better error messages
+      let errorData = {}
+      let errorMessage = `HTTP error! status: ${response.status}`
+      try {
+        errorData = await JSON.parse(errorText)
+        errorMessage = errorData.message || errorData.error || errorData.detail || errorMessage
+      } catch {
+        // If not JSON, use the text as-is
+        errorMessage = errorText || errorMessage
+      }
+
+      // If CSRF token error, clear cache and retry once
+      if (response.status === 403 && (errorMessage.includes('CSRF') || errorMessage.includes('csrf'))) {
+        console.log('CSRF token error detected, clearing cache and retrying...')
+        clearCsrfTokenCache()
+
+        // Retry with a fresh token
+        const freshToken = await getCsrfToken(true)
+        const retryResponse = await fetch(url, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': freshToken,
+          },
+          credentials: 'include',
+        })
+
+        if (!retryResponse.ok) {
+          const retryErrorText = await retryResponse.text()
+          let retryErrorMessage = `HTTP error! status: ${retryResponse.status}`
+          try {
+            const retryErrorData = await JSON.parse(retryErrorText)
+            retryErrorMessage = retryErrorData.message || retryErrorData.error || retryErrorData.detail || retryErrorMessage
+          } catch {
+            retryErrorMessage = retryErrorText || retryErrorMessage
+          }
+          throw new Error(retryErrorMessage)
+        }
+
+        return
+      }
       
       // Check if response is HTML (Django error page)
       if (contentType && contentType.includes('text/html')) {
@@ -604,17 +749,7 @@ export async function deleteMenuItem(id) {
         throw new Error(`Menu item not found`)
       }
       
-      // Try to parse as JSON
-      try {
-        const errorData = JSON.parse(errorText)
-        if (errorData.detail || errorData.message || errorData.error) {
-          throw new Error(errorData.detail || errorData.message || errorData.error)
-        }
-      } catch {
-        // Not JSON, use generic error
-      }
-      
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(errorMessage)
     }
 
     // DELETE requests may not return a body

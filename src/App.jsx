@@ -9,6 +9,7 @@ import GroupOrders from './pages/group-orders/GroupOrders.jsx'
 import ProfileLayout from './pages/profile/ProfileLayout'
 import ManageRestaurantLayout from './pages/restaurant-management/ManageRestaurantLayout'
 import CreateRestaurantLayout from './pages/create-restaurant/CreateRestaurantLayout'
+import ProtectedRoute from './components/common/ProtectedRoute'
 import './App.css'
 
 function App() {
@@ -21,11 +22,46 @@ function App() {
         <Route path="/restaurants/:id" element={<RestaurantMenu />} />
         <Route path="/login" element={<Login />} />
         <Route path="/create-account" element={<CreateAccount />} />
-        <Route path="/admin/*" element={<AdminDashboard />} />
-        <Route path="/profile/manage-restaurant/:restaurantId/*" element={<ManageRestaurantLayout />} />
-        <Route path="/profile/*" element={<ProfileLayout />} />
-        <Route path="/profile/create-restaurant/*" element={<CreateRestaurantLayout />} />
-        <Route path="/group-orders" element={<GroupOrders />} />
+        <Route 
+          path="/admin/*" 
+          element={
+            <ProtectedRoute requiredRole="admin" wrongRoleRedirectTo="/restaurants">
+              <AdminDashboard />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/profile/manage-restaurant/:restaurantId/*" 
+          element={
+            <ProtectedRoute requiredRole="restaurant_manager" wrongRoleRedirectTo="/profile">
+              <ManageRestaurantLayout />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/profile/*" 
+          element={
+            <ProtectedRoute requiredRole={null}>
+              <ProfileLayout />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/profile/create-restaurant/*" 
+          element={
+            <ProtectedRoute requiredRole="restaurant_manager" wrongRoleRedirectTo="/profile">
+              <CreateRestaurantLayout />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/group-orders" 
+          element={
+            <ProtectedRoute requiredRole={null}>
+              <GroupOrders />
+            </ProtectedRoute>
+          } 
+        />
       </Routes>
     </BrowserRouter>
   )

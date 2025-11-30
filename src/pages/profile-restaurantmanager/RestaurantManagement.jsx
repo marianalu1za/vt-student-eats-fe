@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fetchRestaurants } from '../../api/restaurants'
-import { getStoredUser } from '../../api/auth'
+import { getCurrentUser } from '../../api/auth'
 import RestaurantManagementCard from './components/RestaurantManagementCard'
 import FloatingActionButton from '../../components/common/FloatingActionButton'
 import './RestaurantManagement.css'
@@ -18,11 +18,24 @@ function RestaurantManagement() {
         setLoading(true)
         setError(null)
 
-        // Get current user to check their ID
-        const currentUser = getStoredUser()
+        // Get current user from API to ensure we have validated, current user data
+        const currentUser = await getCurrentUser()
         if (!currentUser || !currentUser.id) {
           setRestaurants([])
           setLoading(false)
+          return
+        }
+
+        // Validate user is a restaurant manager
+        const roles = Array.isArray(currentUser.roles) ? currentUser.roles : [currentUser.roles]
+        const isRestaurantManager = roles.some(role => {
+          const roleStr = String(role).toLowerCase()
+          return roleStr.includes('restaurant') && roleStr.includes('manager')
+        })
+
+        if (!isRestaurantManager) {
+          // User doesn't have the required role, redirect to profile
+          navigate('/profile')
           return
         }
 
@@ -62,6 +75,11 @@ function RestaurantManagement() {
         setRestaurants(myRestaurants)
       } catch (err) {
         console.error('Failed to fetch restaurants', err)
+        // If authentication error, redirect to login
+        if (err.statusCode === 401 || err.statusCode === 403) {
+          navigate('/login')
+          return
+        }
         setError(err.message || 'Failed to load restaurants')
         setRestaurants([])
       } finally {
@@ -70,7 +88,7 @@ function RestaurantManagement() {
     }
 
     loadMyRestaurants()
-  }, [])
+  }, [navigate])
 
   const handleRestaurantClick = (restaurantId) => {
     navigate(`/restaurants/${restaurantId}`)

@@ -5,6 +5,7 @@ import RestaurantProfile from './RestaurantProfile'
 import EditMenu from './EditMenu'
 import DiscountManagement from './DiscountManagement'
 import { fetchRestaurant } from '../../api/restaurants'
+import { getCurrentUser } from '../../api/auth'
 import './ManageRestaurantLayout.css'
 
 function ManageRestaurantLayout() {
@@ -25,10 +26,60 @@ function ManageRestaurantLayout() {
       try {
         setLoading(true)
         setError(null)
+
+        // Validate user is authenticated and is a restaurant manager
+        const currentUser = await getCurrentUser()
+        if (!currentUser) {
+          navigate('/login')
+          return
+        }
+
+        // Check if user is a restaurant manager
+        const roles = Array.isArray(currentUser.roles) ? currentUser.roles : [currentUser.roles]
+        const isRestaurantManager = roles.some(role => {
+          const roleStr = String(role).toLowerCase()
+          return roleStr.includes('restaurant') && roleStr.includes('manager')
+        })
+
+        if (!isRestaurantManager) {
+          navigate('/profile')
+          return
+        }
+
+        // Fetch restaurant data
         const restaurantData = await fetchRestaurant(restaurantId)
+
+        // Validate that the restaurant belongs to the current user
+        let ownerId = null
+        if (restaurantData.owner_id !== undefined && restaurantData.owner_id !== null) {
+          ownerId = restaurantData.owner_id
+        } else if (restaurantData.owner !== undefined && restaurantData.owner !== null) {
+          if (typeof restaurantData.owner === 'number') {
+            ownerId = restaurantData.owner
+          } else if (typeof restaurantData.owner === 'object' && restaurantData.owner.id) {
+            ownerId = restaurantData.owner.id
+          } else if (typeof restaurantData.owner === 'string' && !isNaN(parseInt(restaurantData.owner, 10))) {
+            ownerId = parseInt(restaurantData.owner, 10)
+          }
+        } else if (restaurantData.ownerId !== undefined && restaurantData.ownerId !== null) {
+          ownerId = restaurantData.ownerId
+        }
+
+        // Check if restaurant belongs to current user
+        if (ownerId !== null && String(ownerId) !== String(currentUser.id)) {
+          // Restaurant doesn't belong to this user, redirect to restaurant management
+          navigate('/profile/restaurant-management')
+          return
+        }
+
         setRestaurant(restaurantData)
       } catch (err) {
         console.error('Failed to fetch restaurant:', err)
+        // If authentication error, redirect to login
+        if (err.statusCode === 401 || err.statusCode === 403) {
+          navigate('/login')
+          return
+        }
         setError(err.message || 'Failed to load restaurant')
       } finally {
         setLoading(false)
@@ -36,7 +87,7 @@ function ManageRestaurantLayout() {
     }
 
     loadRestaurant()
-  }, [restaurantId])
+  }, [restaurantId, navigate])
 
   const menuItems = [
     {
