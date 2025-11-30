@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import './ReviewSection.css'
 import AddReviewModal from './AddReviewModal.jsx'
 import ErrorPopup from '../../../components/common/ErrorPopup.jsx'
-import { fetchRestaurantReviews } from '../../../api/review.js'
+import { fetchRestaurantReviews } from '../../../api/reviews.js'
 
 
 // Helper function to format date
