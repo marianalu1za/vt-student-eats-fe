@@ -321,6 +321,33 @@ export function getStoredUser() {
   }
 }
 
+/**
+ * Stores user data in localStorage or sessionStorage
+ * Uses the same storage location that was used during login
+ * @param {Object} userData - User data to store
+ */
+export function storeUser(userData) {
+  try {
+    // Check if user was stored in localStorage (remember me) or sessionStorage
+    const hasLocalStorage = localStorage.getItem('user') !== null
+    const hasSessionStorage = sessionStorage.getItem('user') !== null
+    
+    if (hasLocalStorage) {
+      localStorage.setItem('user', JSON.stringify(userData))
+    } else if (hasSessionStorage) {
+      sessionStorage.setItem('user', JSON.stringify(userData))
+    } else {
+      // Default to localStorage if neither exists
+      localStorage.setItem('user', JSON.stringify(userData))
+    }
+    
+    // Dispatch a custom event to notify components of user data update
+    window.dispatchEvent(new CustomEvent('userProfileUpdated', { detail: userData }))
+  } catch (error) {
+    console.error('Error storing user data:', error)
+  }
+}
+
 
 /**
  * Removes the stored user data from localStorage

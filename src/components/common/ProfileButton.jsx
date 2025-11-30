@@ -12,9 +12,52 @@ function ProfileButton({
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef(null)
+  const [currentUser, setCurrentUser] = useState(() => user || getStoredUser())
 
-  // Use provided user prop or get from localStorage
-  const currentUser = user || getStoredUser()
+  // Update user when prop changes
+  useEffect(() => {
+    if (user) {
+      setCurrentUser(user)
+    }
+  }, [user])
+
+  // Listen for profile updates
+  useEffect(() => {
+    const handleProfileUpdate = (event) => {
+      // Update from event detail if available (from custom event)
+      if (event.detail) {
+        setCurrentUser(event.detail)
+      } else {
+        // For storage events, re-read from localStorage
+        const updatedUser = getStoredUser()
+        if (updatedUser) {
+          setCurrentUser(updatedUser)
+        }
+      }
+    }
+
+    const handleStorageChange = (event) => {
+      // Only react to changes to 'user' key
+      if (event.key === 'user' || !event.key) {
+        const updatedUser = getStoredUser()
+        if (updatedUser) {
+          setCurrentUser(updatedUser)
+        }
+      }
+    }
+
+    // Listen for custom event (from same tab)
+    window.addEventListener('userProfileUpdated', handleProfileUpdate)
+    
+    // Also listen for storage changes (in case user updates in another tab)
+    window.addEventListener('storage', handleStorageChange)
+
+    return () => {
+      window.removeEventListener('userProfileUpdated', handleProfileUpdate)
+      window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [])
+
   // API returns first_name, last_name, and roles (snake_case)
   const userName = currentUser 
     ? `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() 
