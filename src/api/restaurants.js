@@ -229,6 +229,161 @@ export async function getRestaurantTags() {
 }
 
 /**
+ * Creates a new restaurant using POST request
+ * @param {Object} restaurantData - The restaurant data to create
+ * @param {string} restaurantData.name - Restaurant name (required)
+ * @param {string} [restaurantData.address] - Restaurant address
+ * @param {string} [restaurantData.phone_number] - Restaurant phone number
+ * @param {string} [restaurantData.website_link] - Restaurant website link
+ * @param {Object} [restaurantData.open_hours] - Restaurant opening hours
+ * @param {number} [restaurantData.owner] - Restaurant owner ID (if not provided, will use current user)
+ * @param {Array} [restaurantData.tags] - Array of tag names
+ * @returns {Promise<Object>} Created restaurant object
+ * @throws {Error} If creation fails or validation errors occur
+ */
+export async function createRestaurant(restaurantData) {
+  const url = `${API_BASE_URL}/api/restaurants/`
+  
+  try {
+    console.log('Creating restaurant at:', url)
+     
+    // Force refresh CSRF token to ensure we have a valid one
+    const token = await getCsrfToken(true)
+
+    const apiPayload = {}
+    
+    // Required fields
+    if (restaurantData.name) {
+      apiPayload.name = restaurantData.name
+    }
+    
+    // Optional fields
+    if (restaurantData.address !== undefined && restaurantData.address !== null && restaurantData.address !== '') {
+      apiPayload.address = restaurantData.address
+    }
+    if (restaurantData.phone_number !== undefined && restaurantData.phone_number !== null && restaurantData.phone_number !== '') {
+      apiPayload.phone_number = restaurantData.phone_number
+    }
+    if (restaurantData.website_link !== undefined && restaurantData.website_link !== null && restaurantData.website_link !== '') {
+      apiPayload.website_link = restaurantData.website_link
+    }
+    if (restaurantData.open_hours !== undefined && restaurantData.open_hours !== null) {
+      apiPayload.open_hours = restaurantData.open_hours
+    }
+    if (restaurantData.owner !== undefined && restaurantData.owner !== null) {
+      apiPayload.owner = parseInt(restaurantData.owner, 10)
+    }
+    console.log('apiPayload:', apiPayload)
+    // Set is_active to false as per requirement
+    apiPayload.is_active = false
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': token,
+      },
+      credentials: 'include',
+      body: JSON.stringify(apiPayload),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('API Error Response:', errorText)
+      
+      // Try to parse error as JSON for better error messages
+      let errorData = {}
+      let errorMessage = `HTTP error! status: ${response.status}`
+      try {
+        errorData = JSON.parse(errorText)
+        errorMessage = errorData.message || errorData.error || errorData.detail || errorMessage
+      } catch {
+        // If not JSON, use the text as-is
+        errorMessage = errorText || errorMessage
+      }
+
+      // If CSRF token error, clear cache and retry once
+      if (response.status === 403 && (errorMessage.includes('CSRF') || errorMessage.includes('csrf'))) {
+        console.log('CSRF token error detected, clearing cache and retrying...')
+        clearCsrfTokenCache()
+
+        // Retry with a fresh token
+        const freshToken = await getCsrfToken(true)
+        const retryResponse = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': freshToken,
+          },
+          credentials: 'include',
+          body: JSON.stringify(apiPayload),
+        })
+
+        if (!retryResponse.ok) {
+          const retryErrorText = await retryResponse.text()
+          let retryErrorMessage = `HTTP error! status: ${retryResponse.status}`
+          try {
+            const retryErrorData = JSON.parse(retryErrorText)
+            retryErrorMessage = retryErrorData.message || retryErrorData.error || retryErrorData.detail || retryErrorMessage
+          } catch {
+            retryErrorMessage = retryErrorText || retryErrorMessage
+          }
+          throw new Error(retryErrorMessage)
+        }
+
+        const createdRestaurant = await retryResponse.json()
+        
+        // Handle tags if provided
+        if (restaurantData.tags && restaurantData.tags.length > 0) {
+          // Tags will be handled separately if needed - for now just log
+          console.log('Tags to be associated:', restaurantData.tags)
+        }
+        
+        return createdRestaurant
+      }
+      
+      // Handle field-specific validation errors
+      if (typeof errorData === 'object' && !errorData.message && !errorData.error && !errorData.detail) {
+        const fieldErrors = []
+        for (const [field, errors] of Object.entries(errorData)) {
+          if (Array.isArray(errors) && errors.length > 0) {
+            fieldErrors.push(`${field}: ${errors.join(', ')}`)
+          }
+        }
+        if (fieldErrors.length > 0) {
+          errorMessage = fieldErrors.join('\n')
+        }
+      }
+      
+      throw new Error(errorMessage)
+    }
+
+    const createdRestaurant = await response.json()
+    
+    // Handle tags if provided (tags might need to be handled separately via another API)
+    if (restaurantData.tags && restaurantData.tags.length > 0) {
+      console.log('Tags to be associated:', restaurantData.tags)
+      // TODO: If tags need to be added via separate API call, handle it here
+    }
+    
+    return createdRestaurant
+  } catch (error) {
+    console.error('Error creating restaurant:', error)
+    
+    // Provide more specific error messages
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error(
+        `Failed to connect to backend API at ${url}. ` +
+        `Please ensure the backend server is running at http://localhost:8000. ` +
+        `This might be a CORS issue or the server is not running.`
+      )
+    }
+    
+    throw error
+  }
+}
+
+/**
  * Updates a restaurant by ID using PATCH request
  * @param {string|number} id - The restaurant ID to update
  * @param {Object} restaurantData - The restaurant data to update

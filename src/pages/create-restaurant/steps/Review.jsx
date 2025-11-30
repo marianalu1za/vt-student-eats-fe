@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { createRestaurant } from '../../../api/restaurants'
+import { getCurrentUser } from '../../../api/auth'
 import './Steps.css'
 
 // Format open hours for display
@@ -37,6 +39,7 @@ function Review({ formData, updateFormData, navigate, clearFormData }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState(null)
   const [displayFormData, setDisplayFormData] = useState(formData)
+  const [ownerInfo, setOwnerInfo] = useState(null)
 
   // Load formData from localStorage as fallback and sync with prop
   useEffect(() => {
@@ -61,6 +64,21 @@ function Review({ formData, updateFormData, navigate, clearFormData }) {
     }
   }, [formData, updateFormData])
 
+  // Fetch owner information on mount
+  useEffect(() => {
+    const loadOwnerInfo = async () => {
+      try {
+        const currentUser = await getCurrentUser()
+        if (currentUser) {
+          setOwnerInfo(currentUser)
+        }
+      } catch (error) {
+        console.error('Error loading owner information:', error)
+      }
+    }
+    loadOwnerInfo()
+  }, [])
+
   // Debug: Log formData when component mounts or formData changes
   useEffect(() => {
     console.log('Review component - formData:', formData)
@@ -72,7 +90,6 @@ function Review({ formData, updateFormData, navigate, clearFormData }) {
   }
 
   const handleCreateRestaurant = async () => {
-    // TODO: Implement API call to create restaurant
     setIsSubmitting(true)
     setError(null)
     
@@ -82,15 +99,40 @@ function Review({ formData, updateFormData, navigate, clearFormData }) {
       : formData
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      // TODO: await createRestaurant(dataToSubmit)
+      // Get current user to set as owner
+      const currentUser = await getCurrentUser()
+      if (!currentUser || !currentUser.id) {
+        throw new Error('Unable to get current user information. Please log in again.')
+      }
+      
+      // Prepare restaurant data for API
+      const restaurantData = {
+        name: dataToSubmit.name,
+        address: dataToSubmit.address || null,
+        phone_number: dataToSubmit.phone_number || null,
+        website_link: dataToSubmit.website_link || null,
+        open_hours: dataToSubmit.open_hours || null,
+        owner: currentUser.id,
+        tags: dataToSubmit.tags || [],
+        // is_active will be set to false in the createRestaurant function
+      }
+      // Validate required fields
+      if (!restaurantData.name || !restaurantData.name.trim()) {
+        throw new Error('Restaurant name is required.')
+      }
+      if (!restaurantData.address || !restaurantData.address.trim()) {
+        throw new Error('Restaurant address is required.')
+      }
+      
+      // Create restaurant via API
+      await createRestaurant(restaurantData)
       
       // Clear form data after successful creation
       if (clearFormData) {
         clearFormData()
       }
       
+      // Navigate to restaurant management page
       navigate('/profile/restaurant-management')
     } catch (err) {
       console.error('Failed to create restaurant:', err)
@@ -110,6 +152,23 @@ function Review({ formData, updateFormData, navigate, clearFormData }) {
       </div>
 
       <div className="admin-card">
+        {/* Owner Information Section */}
+        {ownerInfo && (
+          <div className="review-section">
+            <h3>Owner Information</h3>
+            <div className="review-item">
+              <label>Name:</label>
+              <span>
+                {[ownerInfo.first_name, ownerInfo.last_name].filter(Boolean).join(' ') || 'Not provided'}
+              </span>
+            </div>
+            <div className="review-item">
+              <label>Email:</label>
+              <span>{ownerInfo.email || 'Not provided'}</span>
+            </div>
+          </div>
+        )}
+
         <div className="review-section">
           <h3>Restaurant Information</h3>
           <div className="review-item">
