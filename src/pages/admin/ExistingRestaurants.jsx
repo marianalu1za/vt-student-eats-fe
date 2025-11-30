@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { updateRestaurant } from '../../api/restaurants'
 import './AdminDashboard.css'
 import AdminSearchBar from './components/AdminSearchBar.jsx'
@@ -12,6 +13,7 @@ import { usePaginatedData } from './hooks/usePaginatedData'
 import { useRestaurantManagers } from './hooks/useRestaurantManagers'
 
 function ExistingRestaurants() {
+  const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRestaurant, setSelectedRestaurant] = useState(null)
   const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false)
@@ -104,6 +106,10 @@ function ExistingRestaurants() {
     setSubmitError(null)
   }
 
+  const handleMenuClick = (restaurant) => {
+    navigate(`/restaurants/${restaurant.id}`)
+  }
+
   return (
     <div>
       <div className="admin-page-header">
@@ -175,7 +181,11 @@ function ExistingRestaurants() {
                 </td>
                 <td className="admin-table-actions-cell">
                   <div className="admin-table-actions">
-                    <button className="admin-btn admin-btn-primary" style={{ marginRight: '8px' }}>
+                    <button 
+                      className="admin-btn admin-btn-primary" 
+                      style={{ marginRight: '8px' }}
+                      onClick={() => handleMenuClick(restaurant)}
+                    >
                       Menu
                     </button>
                     <button
