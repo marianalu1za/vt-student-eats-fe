@@ -458,7 +458,9 @@ function RestaurantMenu() {
             <div className="restaurant-main-info">
               <div className="restaurant-name-rating">
                 <h1 className="restaurant-name-header">{restaurant.name}</h1>
-                <div className="rating-badge-large">{restaurant.ratings.toFixed(1)} ⭐</div>
+                <div className="rating-badge-large">
+                  {restaurant.ratings != null ? restaurant.ratings.toFixed(1) : 'N/A'} ⭐
+                </div>
               </div>
               {restaurant.tags && restaurant.tags.length > 0 && (
                 <ul className="restaurant-tags-section">
