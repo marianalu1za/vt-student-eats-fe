@@ -105,6 +105,18 @@
   border-left-color: #e68060;
 }
 
+/* Action buttons (with onClick) should not look selected when not active */
+.nav-item-action:not(.nav-item-focused):not(:hover):not(:active) {
+  background-color: transparent;
+  color: #b0b0b0;
+  border-left-color: transparent;
+}
+
+.nav-item-action.nav-item-focused {
+  background-color: #ad6767;
+  color: #ffffff;
+}
+
 .nav-item-sign-out {
   color: #ff6b6b;
   margin-top: auto;

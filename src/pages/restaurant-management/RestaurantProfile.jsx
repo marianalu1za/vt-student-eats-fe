@@ -1,4 +1,8 @@
 import { useState, useEffect } from 'react'
+import { updateRestaurant } from '../../api/restaurants'
+import EditRestaurantInfoModal from './components/EditRestaurantInfoModal'
+import ErrorPopup from '../../components/common/ErrorPopup'
+import ConfirmationMessage from '../../components/common/ConfirmationMessage'
 import './RestaurantProfile.css'
 
 // Format open hours for display
@@ -31,14 +35,65 @@ function formatOpenHours(openHours) {
   return formattedHours.length > 0 ? formattedHours : null
 }
 
-function RestaurantProfile({ restaurantId, restaurant }) {
+function RestaurantProfile({ restaurantId, restaurant, onRestaurantUpdate }) {
   const [restaurantData, setRestaurantData] = useState(restaurant || null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState(null)
+  const [showErrorPopup, setShowErrorPopup] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false)
 
   useEffect(() => {
     if (restaurant) {
       setRestaurantData(restaurant)
     }
   }, [restaurant])
+
+  const handleEditClick = () => {
+    setIsEditModalOpen(true)
+    setError(null)
+  }
+
+  const handleEditCancel = () => {
+    setIsEditModalOpen(false)
+    setError(null)
+  }
+
+  const handleEditSave = async (formData) => {
+    if (!restaurantId) return
+
+    try {
+      setIsSubmitting(true)
+      setError(null)
+      
+      const updatedRestaurant = await updateRestaurant(restaurantId, {
+        address: formData.address,
+        phone_number: formData.phone_number,
+        open_hours: formData.open_hours,
+      })
+      
+      setRestaurantData(updatedRestaurant)
+      setSuccessMessage('Restaurant information updated successfully!')
+      setShowSuccessPopup(true)
+      setIsEditModalOpen(false)
+      
+      // Notify parent component to refresh restaurant data
+      if (onRestaurantUpdate) {
+        onRestaurantUpdate(updatedRestaurant)
+      }
+    } catch (err) {
+      console.error('Failed to update restaurant:', err)
+      let errorMessage = err.message || 'Failed to update restaurant information'
+      errorMessage = errorMessage.replace(/<[^>]*>/g, '').trim()
+      if (errorMessage.length > 500) {
+        errorMessage = errorMessage.substring(0, 500) + '...'
+      }
+      setError(errorMessage)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   if (!restaurantData) {
     return (
@@ -60,7 +115,16 @@ function RestaurantProfile({ restaurantId, restaurant }) {
 
       <div className="admin-card">
         <div className="restaurant-profile-info">
-          <h2>{restaurantData.name || `Restaurant ${restaurantData.id}`}</h2>
+          <div className="restaurant-profile-header">
+            <h2>{restaurantData.name || `Restaurant ${restaurantData.id}`}</h2>
+            <button
+              className="admin-btn admin-btn-primary"
+              onClick={handleEditClick}
+              style={{ fontSize: '0.875rem', padding: '8px 16px' }}
+            >
+              Edit Information
+            </button>
+          </div>
           
           <div className="restaurant-profile-section">
             <h3>Basic Information</h3>
@@ -102,9 +166,37 @@ function RestaurantProfile({ restaurantId, restaurant }) {
             </div>
           )}
 
-          {/* TODO: Add edit functionality */}
         </div>
       </div>
+
+      <EditRestaurantInfoModal
+        open={isEditModalOpen}
+        restaurant={restaurantData}
+        onSave={handleEditSave}
+        onCancel={handleEditCancel}
+        isSubmitting={isSubmitting}
+        error={error}
+      />
+
+      {showErrorPopup && (
+        <ErrorPopup
+          message={error}
+          onClose={() => {
+            setShowErrorPopup(false)
+            setError(null)
+          }}
+        />
+      )}
+
+      {showSuccessPopup && (
+        <ConfirmationMessage
+          message={successMessage}
+          onClose={() => {
+            setShowSuccessPopup(false)
+            setSuccessMessage('')
+          }}
+        />
+      )}
     </div>
   )
 }

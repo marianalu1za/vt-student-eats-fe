@@ -85,7 +85,15 @@ function Sidebar({
                   // Blur the button after click to remove focus state
                   e.currentTarget.blur()
                 }}
-                className={`nav-item ${item.isSignOut ? 'nav-item-sign-out' : ''}`}
+                onBlur={(e) => {
+                  // Ensure button doesn't look selected after losing focus
+                  e.currentTarget.classList.remove('nav-item-focused')
+                }}
+                onFocus={(e) => {
+                  // Add a temporary class for focus state that can be easily removed
+                  e.currentTarget.classList.add('nav-item-focused')
+                }}
+                className={`nav-item nav-item-action ${item.isSignOut ? 'nav-item-sign-out' : ''}`}
                 type="button"
               >
                 <span className="nav-icon">{item.icon}</span>

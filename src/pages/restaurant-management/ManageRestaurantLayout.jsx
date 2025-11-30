@@ -55,6 +55,11 @@ function ManageRestaurantLayout() {
       label: 'Discount Management',
     },
     {
+      icon: '👁️',
+      label: 'View Restaurant',
+      onClick: () => navigate(`/restaurants/${restaurantId}`),
+    },
+    {
       icon: '←',
       label: 'Back to Restaurant Management',
       onClick: () => navigate('/profile/restaurant-management'),
@@ -96,7 +101,7 @@ function ManageRestaurantLayout() {
       />
       <div className="manage-restaurant-content" ref={contentRef}>
         <Routes>
-          <Route path="profile" element={<RestaurantProfile restaurantId={restaurantId} restaurant={restaurant} />} />
+          <Route path="profile" element={<RestaurantProfile restaurantId={restaurantId} restaurant={restaurant} onRestaurantUpdate={setRestaurant} />} />
           <Route path="menu" element={<EditMenu restaurantId={restaurantId} restaurant={restaurant} />} />
           <Route path="discounts" element={<DiscountManagement restaurantId={restaurantId} restaurant={restaurant} />} />
           <Route path="" element={<Navigate to={`/profile/manage-restaurant/${restaurantId}/profile`} replace />} />

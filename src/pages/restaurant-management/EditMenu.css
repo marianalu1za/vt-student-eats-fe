@@ -30,3 +30,42 @@
   padding: 16px;
 }
 
+/* Material React Table styling overrides */
+.edit-menu-mrt-wrapper {
+  width: 100%;
+}
+
+.edit-menu-mrt-wrapper .MuiTableContainer-root {
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.edit-menu-mrt-wrapper .MuiTableHead-root {
+  background-color: #f8f9fa;
+}
+
+.edit-menu-mrt-wrapper .MuiTableHead-root .MuiTableCell-head {
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.edit-menu-mrt-wrapper .MuiTableBody-root .MuiTableRow-root:hover {
+  background-color: #f8f9fa;
+}
+
+.edit-menu-mrt-wrapper .MuiToolbar-root {
+  padding: 16px;
+}
+
+.edit-menu-mrt-wrapper .MuiButton-root {
+  text-transform: none;
+  font-weight: 500;
+}
+
+/* Ensure Material React Table fits within admin card */
+.admin-card .edit-menu-mrt-wrapper {
+  margin: 0;
+  padding: 0;
+}
+

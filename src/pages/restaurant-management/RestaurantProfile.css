@@ -2,8 +2,17 @@
   padding: 20px;
 }
 
+.restaurant-profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
 .restaurant-profile-info h2 {
-  margin: 0 0 24px 0;
+  margin: 0;
   font-size: 1.5rem;
   color: #333;
 }
