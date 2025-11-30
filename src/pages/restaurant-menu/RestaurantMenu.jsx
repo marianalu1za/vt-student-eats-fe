@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import './RestaurantMenu.css'
 import '../restaurants/components/Skeleton.css'
@@ -50,6 +50,7 @@ function RestaurantMenu() {
 
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
+  const discountSectionRef = useRef(null)
 
   useEffect(() => {
     if (!id) {
@@ -506,7 +507,22 @@ function RestaurantMenu() {
                     Visit Website
                   </a>
                 )}
-                <button className="action-button discount-button">
+                <button 
+                  className="action-button discount-button"
+                  onClick={() => {
+                    if (discountSectionRef.current) {
+                      const header = document.querySelector('.header')
+                      const headerHeight = header ? header.offsetHeight : 0
+                      const elementPosition = discountSectionRef.current.getBoundingClientRect().top
+                      const offsetPosition = elementPosition + window.pageYOffset - headerHeight - 10
+                      
+                      window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                      })
+                    }
+                  }}
+                >
                   Discount Info
                 </button>
                 <button className="action-button group-order-button">
@@ -532,22 +548,22 @@ function RestaurantMenu() {
 
         {/* Popular Items Section */}
         {popularItems.length > 0 && (
-          <section className="popular-items-section">
-            {/* Search Bar */}
-            <div className="search-section">
-              <div className="menu-search-container">
-                <input
-                  type="text"
-                  className="menu-search-bar"
-                  placeholder="Search Item bar"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <i className="fa-solid fa-magnifying-glass menu-search-icon"></i>
-              </div>
+        <section className="popular-items-section">
+          {/* Search Bar */}
+          <div className="search-section">
+            <div className="menu-search-container">
+              <input
+                type="text"
+                className="menu-search-bar"
+                placeholder="Search Item bar"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <i className="fa-solid fa-magnifying-glass menu-search-icon"></i>
             </div>
-            <h2 className="section-title">Popular Items</h2>
-            <div className="popular-items-scroll">
+          </div>
+          <h2 className="section-title">Popular Items</h2>
+          <div className="popular-items-scroll">
               {popularItems.map(item => (
                 <article key={item.id} className="popular-item-card">
                   <div className="item-image-placeholder">
@@ -560,12 +576,14 @@ function RestaurantMenu() {
                   </div>
                 </article>
               ))}
-            </div>
-          </section>
+          </div>
+        </section>
         )}
 
         {/* Discount Section */}
+        <div ref={discountSectionRef}>
         <DiscountSection restaurantId={id} />
+        </div>
 
         {/* Review Section */}
         <ReviewSection restaurantId={id} overallRating={restaurant.ratings} />
