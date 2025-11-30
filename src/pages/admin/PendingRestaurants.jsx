@@ -81,7 +81,7 @@ function PendingRestaurants() {
         <AdminSearchBar 
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          placeholder="Search pending restaurants by name, owner name, or phone number..."
+          placeholder="Search pending restaurants by name or phone number..."
         />
         <div className="admin-table-wrapper">
           <div className="admin-table-scroll">
@@ -92,7 +92,6 @@ function PendingRestaurants() {
               <th>Restaurant Name</th>
               <th>Phone Number</th>
               <th>Owner ID</th>
-              <th>Owner Name</th>
               <th>Link</th>
               <th>Submitted At</th>
               <th>Status</th>
@@ -102,19 +101,19 @@ function PendingRestaurants() {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan="9" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
                   Loading pending restaurants...
                 </td>
               </tr>
             ) : fetchError ? (
               <tr>
-                <td colSpan="9" style={{ textAlign: 'center', padding: '40px', color: '#c1121f' }}>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: '#c1121f' }}>
                   {fetchError}
                 </td>
               </tr>
             ) : filteredRestaurants.length === 0 ? (
               <tr>
-                <td colSpan="9" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
                   {searchQuery ? 'No pending restaurants found matching your search' : 'No pending restaurants'}
                 </td>
               </tr>
@@ -124,7 +123,6 @@ function PendingRestaurants() {
                   <td>{restaurant.id}</td>
                   <td>{restaurant.name}</td>
                   <td>{restaurant.phone_number || restaurant.phoneNumber || 'N/A'}</td>
-                  <td>{restaurant.owner_id || 'N/A'}</td>
                   <td>{restaurant.owner || 'N/A'}</td>
                   <td>
                     {restaurant.website_link || restaurant.website ? (

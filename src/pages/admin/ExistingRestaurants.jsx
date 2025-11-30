@@ -131,7 +131,7 @@ function ExistingRestaurants() {
               <th>ID</th>
               <th>Restaurant Name</th>
               <th>Phone Number</th>
-              <th>Owner</th>
+              <th>Owner ID</th>
               <th>Address</th>
               <th>Website</th>
               <th className="admin-table-actions-header">Actions</th>
