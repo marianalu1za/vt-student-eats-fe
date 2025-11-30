@@ -15,11 +15,25 @@ const STEPS = [
   { id: 'review', path: 'review', label: 'Step 4', title: 'Form Review', description: 'Review and create restaurant' },
 ]
 
+const FORM_DATA_STORAGE_KEY = 'create-restaurant-form-data'
+
 function CreateRestaurantLayout() {
   const contentRef = useRef(null)
   const navigate = useNavigate()
   const location = useLocation()
-  const [formData, setFormData] = useState({})
+  
+  // Initialize formData from localStorage or empty object
+  const getInitialFormData = () => {
+    try {
+      const stored = localStorage.getItem(FORM_DATA_STORAGE_KEY)
+      return stored ? JSON.parse(stored) : {}
+    } catch (error) {
+      console.error('Error loading form data from localStorage:', error)
+      return {}
+    }
+  }
+  
+  const [formData, setFormData] = useState(getInitialFormData)
   const [loading, setLoading] = useState(true)
 
   // Validate user is a restaurant manager on mount
@@ -75,7 +89,26 @@ function CreateRestaurantLayout() {
   }
 
   const updateFormData = (data) => {
-    setFormData(prev => ({ ...prev, ...data }))
+    setFormData(prev => {
+      const updated = { ...prev, ...data }
+      // Persist to localStorage
+      try {
+        localStorage.setItem(FORM_DATA_STORAGE_KEY, JSON.stringify(updated))
+      } catch (error) {
+        console.error('Error saving form data to localStorage:', error)
+      }
+      return updated
+    })
+  }
+
+  // Clear form data from localStorage after successful creation
+  const clearFormData = () => {
+    try {
+      localStorage.removeItem(FORM_DATA_STORAGE_KEY)
+      setFormData({})
+    } catch (error) {
+      console.error('Error clearing form data from localStorage:', error)
+    }
   }
 
   // Show loading state while validating access
@@ -99,10 +132,10 @@ function CreateRestaurantLayout() {
       />
       <div className="create-restaurant-content" ref={contentRef}>
         <Routes>
-          <Route path="basic-info" element={<BasicInfo formData={formData} updateFormData={updateFormData} navigate={navigate} />} />
-          <Route path="opening-hours" element={<OpeningHours formData={formData} updateFormData={updateFormData} navigate={navigate} />} />
-          <Route path="tags" element={<Tags formData={formData} updateFormData={updateFormData} navigate={navigate} />} />
-          <Route path="review" element={<Review formData={formData} updateFormData={updateFormData} navigate={navigate} />} />
+          <Route path="basic-info" element={<BasicInfo formData={formData} updateFormData={updateFormData} navigate={navigate} clearFormData={clearFormData} />} />
+          <Route path="opening-hours" element={<OpeningHours formData={formData} updateFormData={updateFormData} navigate={navigate} clearFormData={clearFormData} />} />
+          <Route path="tags" element={<Tags formData={formData} updateFormData={updateFormData} navigate={navigate} clearFormData={clearFormData} />} />
+          <Route path="review" element={<Review formData={formData} updateFormData={updateFormData} navigate={navigate} clearFormData={clearFormData} />} />
           <Route path="" element={<Navigate to="/profile/create-restaurant/basic-info" replace />} />
           <Route path="*" element={<Navigate to="/profile/create-restaurant/basic-info" replace />} />
         </Routes>
