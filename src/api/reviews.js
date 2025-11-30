@@ -139,17 +139,26 @@ export async function getRestaurantReviews(restaurantId) {
 /**
  * Creates a new review for a restaurant
  * @param {string|number} restaurantId - The restaurant ID
+ * @param {number} userId - The user ID
  * @param {Object} reviewData - Review data
  * @param {number} reviewData.rating - Rating from 1 to 5
- * @param {string} reviewData.comment - Optional comment text
+ * @param {string} reviewData.comment - Comment text (required, minLength: 1)
  * @returns {Promise<Object>} Created review object
  */
-export async function createRestaurantReview(restaurantId, reviewData) {
+export async function createRestaurantReview(restaurantId, userId, reviewData) {
   try {
     // Get CSRF token before making POST request
     const token = await getCsrfToken(true)
 
-    const url = `${API_BASE_URL}/api/restaurants/${restaurantId}/reviews/`
+    // Construct the request body according to API spec: rating, comment, user, restaurant
+    const requestBody = {
+      rating: reviewData.rating,
+      comment: reviewData.comment,
+      user: userId,
+      restaurant: restaurantId,
+    }
+
+    const url = `${API_BASE_URL}/api/reviews/`
     
     const response = await fetch(url, {
       method: 'POST',
@@ -158,7 +167,7 @@ export async function createRestaurantReview(restaurantId, reviewData) {
         'X-CSRFToken': token,
       },
       credentials: 'include',
-      body: JSON.stringify(reviewData),
+      body: JSON.stringify(requestBody),
     })
 
     if (!response.ok) {
@@ -179,7 +188,7 @@ export async function createRestaurantReview(restaurantId, reviewData) {
             'X-CSRFToken': freshToken,
           },
           credentials: 'include',
-          body: JSON.stringify(reviewData),
+          body: JSON.stringify(requestBody),
         })
         
         if (!retryResponse.ok) {
