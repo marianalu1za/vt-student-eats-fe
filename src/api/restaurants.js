@@ -114,14 +114,40 @@ export async function fetchMenuItems(restaurantId) {
     })
 
     if (!response.ok) {
-      const errorText = await response.text()
+      const contentType = response.headers.get('content-type')
+      let errorText = await response.text()
       console.error('API Error Response:', errorText)
       
-      if (response.status === 404) {
-        throw new Error(`Menu items not found: ${errorText}`)
+      // Check if response is HTML (Django error page)
+      if (contentType && contentType.includes('text/html')) {
+        // Extract a meaningful error message from HTML if possible
+        const titleMatch = errorText.match(/<title>(.*?)<\/title>/i)
+        const errorTitle = titleMatch ? titleMatch[1] : 'Server Error'
+        
+        // Check for common Django errors
+        if (errorText.includes('no such column') || errorText.includes('column') && errorText.includes('does not exist')) {
+          throw new Error('Database schema error. Please run database migrations.')
+        } else if (errorText.includes('OperationalError') || errorText.includes('DatabaseError')) {
+          throw new Error('Database error occurred. Please check the backend logs.')
+        } else {
+          throw new Error(`Server error: ${errorTitle}. Please check the backend logs for details.`)
+        }
       }
       
-      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
+      // Try to parse as JSON
+      try {
+        const errorData = JSON.parse(errorText)
+        if (errorData.detail || errorData.message || errorData.error) {
+          throw new Error(errorData.detail || errorData.message || errorData.error)
+        }
+      } catch {
+        // Not JSON, use text as-is but limit length
+        const shortError = errorText.length > 200 ? errorText.substring(0, 200) + '...' : errorText
+        if (response.status === 404) {
+          throw new Error(`Menu items not found`)
+        }
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
     }
 
     const data = await response.json()
@@ -242,6 +268,9 @@ export async function updateRestaurant(id, restaurantData) {
     if (restaurantData.is_active !== undefined) {
       apiPayload.is_active = restaurantData.is_active
     }
+    if (restaurantData.open_hours !== undefined) {
+      apiPayload.open_hours = restaurantData.open_hours
+    }
     
     const response = await fetch(url, {
       method: 'PATCH',
@@ -291,6 +320,309 @@ export async function updateRestaurant(id, restaurantData) {
     return data
   } catch (error) {
     console.error('Error updating restaurant:', error)
+    
+    // Provide more specific error messages
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error(
+        `Failed to connect to backend API at ${url}. ` +
+        `Please ensure the backend server is running at http://localhost:8000. ` +
+        `This might be a CORS issue or the server is not running.`
+      )
+    }
+    
+    throw error
+  }
+}
+
+/**
+ * Fetches menu items for the authenticated restaurant owner's restaurant
+ * @param {string|number} restaurantId - The restaurant ID to fetch menu items for
+ * @returns {Promise<Array>} Array of menu item objects
+ * @throws {Error} If menu items are not found (404) or other HTTP errors occur
+ */
+export async function fetchMyMenuItems(restaurantId) {
+  return fetchMenuItems(restaurantId)
+}
+
+/**
+ * Creates a new menu item for a restaurant
+ * @param {Object} menuItemData - The menu item data
+ * @param {string|number} menuItemData.restaurant_id - Restaurant ID
+ * @param {string} menuItemData.name - Menu item name (required)
+ * @param {number|string} menuItemData.price - Menu item price (required, must be > 0)
+ * @param {string} [menuItemData.tags] - Comma-separated tags
+ * @returns {Promise<Object>} Created menu item object
+ * @throws {Error} If creation fails or validation errors occur
+ */
+export async function createMenuItem(menuItemData) {
+  const url = `${API_BASE_URL}/api/menu-items/`
+  
+  try {
+    console.log('Creating menu item at:', url)
+    
+    const token = await getCsrfToken()
+
+    const apiPayload = {
+      restaurant_id: menuItemData.restaurant_id,
+      name: menuItemData.name,
+      price: parseFloat(menuItemData.price),
+    }
+    
+    if (menuItemData.tags !== undefined && menuItemData.tags !== null) {
+      apiPayload.tags = menuItemData.tags
+    }
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': token,
+      },
+      credentials: 'include',
+      body: JSON.stringify(apiPayload),
+    })
+
+    if (!response.ok) {
+      const contentType = response.headers.get('content-type')
+      let errorText = await response.text()
+      console.error('API Error Response:', errorText)
+      
+      // Check if response is HTML (Django error page)
+      if (contentType && contentType.includes('text/html')) {
+        // Extract a meaningful error message from HTML if possible
+        const titleMatch = errorText.match(/<title>(.*?)<\/title>/i)
+        const errorTitle = titleMatch ? titleMatch[1] : 'Server Error'
+        
+        // Check for common Django errors
+        if (errorText.includes('no such column') || errorText.includes('column') && errorText.includes('does not exist')) {
+          throw new Error('Database schema error. Please run database migrations.')
+        } else if (errorText.includes('OperationalError') || errorText.includes('DatabaseError')) {
+          throw new Error('Database error occurred. Please check the backend logs.')
+        } else {
+          throw new Error(`Server error: ${errorTitle}. Please check the backend logs for details.`)
+        }
+      }
+      
+      // Try to parse error as JSON for better error messages
+      let errorMessage = `HTTP error! status: ${response.status}`
+      try {
+        const errorData = await JSON.parse(errorText)
+        if (errorData.message || errorData.error || errorData.detail) {
+          errorMessage = errorData.message || errorData.error || errorData.detail
+        } else if (typeof errorData === 'object') {
+          // Handle field-specific validation errors
+          const fieldErrors = []
+          for (const [field, errors] of Object.entries(errorData)) {
+            if (Array.isArray(errors) && errors.length > 0) {
+              fieldErrors.push(`${field}: ${errors.join(', ')}`)
+            }
+          }
+          if (fieldErrors.length > 0) {
+            errorMessage = fieldErrors.join('\n')
+          }
+        }
+      } catch {
+        // If not JSON, use a generic error message
+        errorMessage = `HTTP error! status: ${response.status}`
+      }
+      
+      throw new Error(errorMessage)
+    }
+
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error('Error creating menu item:', error)
+    
+    // Provide more specific error messages
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error(
+        `Failed to connect to backend API at ${url}. ` +
+        `Please ensure the backend server is running at http://localhost:8000. ` +
+        `This might be a CORS issue or the server is not running.`
+      )
+    }
+    
+    throw error
+  }
+}
+
+/**
+ * Updates a menu item by ID using PATCH request
+ * @param {string|number} id - The menu item ID to update
+ * @param {Object} menuItemData - The menu item data to update
+ * @param {string} [menuItemData.name] - Menu item name
+ * @param {number|string} [menuItemData.price] - Menu item price (must be > 0)
+ * @param {string} [menuItemData.tags] - Comma-separated tags
+ * @returns {Promise<Object>} Updated menu item object
+ * @throws {Error} If the menu item is not found (404) or other HTTP errors occur
+ */
+export async function updateMenuItem(id, menuItemData) {
+  const url = `${API_BASE_URL}/api/menu-items/${id}/`
+  
+  try {
+    console.log('Updating menu item at:', url)
+    
+    const token = await getCsrfToken()
+
+    const apiPayload = {}
+    
+    if (menuItemData.name !== undefined) {
+      apiPayload.name = menuItemData.name
+    }
+    if (menuItemData.price !== undefined) {
+      apiPayload.price = parseFloat(menuItemData.price)
+    }
+    if (menuItemData.tags !== undefined) {
+      apiPayload.tags = menuItemData.tags
+    }
+    
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': token,
+      },
+      credentials: 'include',
+      body: JSON.stringify(apiPayload),
+    })
+
+    if (!response.ok) {
+      const contentType = response.headers.get('content-type')
+      let errorText = await response.text()
+      console.error('API Error Response:', errorText)
+      
+      // Check if response is HTML (Django error page)
+      if (contentType && contentType.includes('text/html')) {
+        // Extract a meaningful error message from HTML if possible
+        const titleMatch = errorText.match(/<title>(.*?)<\/title>/i)
+        const errorTitle = titleMatch ? titleMatch[1] : 'Server Error'
+        
+        // Check for common Django errors
+        if (errorText.includes('no such column') || errorText.includes('column') && errorText.includes('does not exist')) {
+          throw new Error('Database schema error. Please run database migrations.')
+        } else if (errorText.includes('OperationalError') || errorText.includes('DatabaseError')) {
+          throw new Error('Database error occurred. Please check the backend logs.')
+        } else {
+          throw new Error(`Server error: ${errorTitle}. Please check the backend logs for details.`)
+        }
+      }
+      
+      if (response.status === 404) {
+        throw new Error(`Menu item not found`)
+      }
+      
+      // Try to parse error as JSON for better error messages
+      let errorMessage = `HTTP error! status: ${response.status}`
+      try {
+        const errorData = await JSON.parse(errorText)
+        if (errorData.message || errorData.error || errorData.detail) {
+          errorMessage = errorData.message || errorData.error || errorData.detail
+        } else if (typeof errorData === 'object') {
+          // Handle field-specific validation errors
+          const fieldErrors = []
+          for (const [field, errors] of Object.entries(errorData)) {
+            if (Array.isArray(errors) && errors.length > 0) {
+              fieldErrors.push(`${field}: ${errors.join(', ')}`)
+            }
+          }
+          if (fieldErrors.length > 0) {
+            errorMessage = fieldErrors.join('\n')
+          }
+        }
+      } catch {
+        // If not JSON, use a generic error message
+        errorMessage = `HTTP error! status: ${response.status}`
+      }
+      
+      throw new Error(errorMessage)
+    }
+
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error('Error updating menu item:', error)
+    
+    // Provide more specific error messages
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error(
+        `Failed to connect to backend API at ${url}. ` +
+        `Please ensure the backend server is running at http://localhost:8000. ` +
+        `This might be a CORS issue or the server is not running.`
+      )
+    }
+    
+    throw error
+  }
+}
+
+/**
+ * Deletes a menu item by ID
+ * @param {string|number} id - The menu item ID to delete
+ * @returns {Promise<void>}
+ * @throws {Error} If the menu item is not found (404) or other HTTP errors occur
+ */
+export async function deleteMenuItem(id) {
+  const url = `${API_BASE_URL}/api/menu-items/${id}/`
+  
+  try {
+    console.log('Deleting menu item at:', url)
+    
+    const token = await getCsrfToken()
+    
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': token,
+      },
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      const contentType = response.headers.get('content-type')
+      let errorText = await response.text()
+      console.error('API Error Response:', errorText)
+      
+      // Check if response is HTML (Django error page)
+      if (contentType && contentType.includes('text/html')) {
+        // Extract a meaningful error message from HTML if possible
+        const titleMatch = errorText.match(/<title>(.*?)<\/title>/i)
+        const errorTitle = titleMatch ? titleMatch[1] : 'Server Error'
+        
+        // Check for common Django errors
+        if (errorText.includes('no such column') || errorText.includes('column') && errorText.includes('does not exist')) {
+          throw new Error('Database schema error. Please run database migrations.')
+        } else if (errorText.includes('OperationalError') || errorText.includes('DatabaseError')) {
+          throw new Error('Database error occurred. Please check the backend logs.')
+        } else {
+          throw new Error(`Server error: ${errorTitle}. Please check the backend logs for details.`)
+        }
+      }
+      
+      if (response.status === 404) {
+        throw new Error(`Menu item not found`)
+      }
+      
+      // Try to parse as JSON
+      try {
+        const errorData = JSON.parse(errorText)
+        if (errorData.detail || errorData.message || errorData.error) {
+          throw new Error(errorData.detail || errorData.message || errorData.error)
+        }
+      } catch {
+        // Not JSON, use generic error
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    // DELETE requests may not return a body
+    if (response.status === 204 || response.status === 200) {
+      return
+    }
+  } catch (error) {
+    console.error('Error deleting menu item:', error)
     
     // Provide more specific error messages
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {

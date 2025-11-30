@@ -1,0 +1,172 @@
+.edit-restaurant-info-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.edit-restaurant-info-card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 32px;
+}
+
+.edit-restaurant-info-title {
+  margin: 0 0 8px 0;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.edit-restaurant-info-subtitle {
+  margin: 0 0 24px 0;
+  font-size: 0.95rem;
+  color: #666;
+}
+
+.edit-restaurant-info-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.edit-restaurant-info-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.edit-restaurant-info-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.edit-restaurant-info-field span {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.required-asterisk {
+  color: #dc3545;
+}
+
+.edit-restaurant-info-field input,
+.edit-restaurant-info-field textarea {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.edit-restaurant-info-field input:focus,
+.edit-restaurant-info-field textarea:focus {
+  outline: none;
+  border-color: #e68060;
+  box-shadow: 0 0 0 3px rgba(230, 128, 96, 0.1);
+}
+
+.edit-restaurant-info-field input.error,
+.edit-restaurant-info-field textarea.error {
+  border-color: #dc3545;
+}
+
+.edit-restaurant-info-field input:disabled,
+.edit-restaurant-info-field textarea:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.field-error {
+  color: #dc2626;
+  font-size: 0.75rem;
+  margin-top: 2px;
+}
+
+.edit-restaurant-info-field.full-width {
+  width: 100%;
+}
+
+.edit-restaurant-info-error {
+  padding: 12px;
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+.edit-restaurant-info-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.edit-restaurant-info-cancel {
+  background: #ffffff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.edit-restaurant-info-cancel:hover:not(:disabled) {
+  background-color: #f9fafb;
+}
+
+.admin-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.admin-btn-primary {
+  background-color: #e68060;
+  color: #ffffff;
+}
+
+.admin-btn-primary:hover:not(:disabled) {
+  background-color: #d4734f;
+}
+
+.admin-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .edit-restaurant-info-card {
+    margin: 0;
+    padding: 24px 20px;
+    max-height: 95vh;
+  }
+
+  .edit-restaurant-info-actions {
+    flex-direction: column-reverse;
+  }
+
+  .edit-restaurant-info-actions .admin-btn {
+    width: 100%;
+  }
+}
+
