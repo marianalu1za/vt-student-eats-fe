@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './AdminDashboard.css'
 import AdminSearchBar from './components/AdminSearchBar.jsx'
 import AdminPagination from './components/AdminPagination.jsx'
@@ -10,6 +11,7 @@ import { usePaginatedData } from './hooks/usePaginatedData'
 import { updateRestaurant } from '../../api/restaurants'
 
 function PendingRestaurants() {
+  const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRestaurant, setSelectedRestaurant] = useState(null)
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false)
@@ -66,8 +68,7 @@ function PendingRestaurants() {
   }
 
   const handleView = (restaurantId) => {
-    // TODO: Implement view menu functionality
-    console.log('View menu for restaurant:', restaurantId)
+    navigate(`/restaurants/${restaurantId}`)
   }
 
   return (
