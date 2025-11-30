@@ -28,6 +28,25 @@ function GroupOrders() {
     return saved ? parseInt(saved, 10) : 10
   })
 
+  // Helper function to determine status based on pick_up_time
+  const getOrderStatus = (orderStatus, pickUpTime) => {
+    // If pick_up_time is in the past, status should be 'PASSED'
+    if (pickUpTime) {
+      try {
+        const pickUpDate = new Date(pickUpTime)
+        const now = new Date()
+        if (pickUpDate < now) {
+          return 'PASSED'
+        }
+      } catch (e) {
+        // If date parsing fails, use original status
+        console.error('Error parsing pick_up_time:', e)
+      }
+    }
+    // Otherwise use the status from the API
+    return orderStatus || 'unknown'
+  }
+
   useEffect(() => {
     let isMounted = true
 
@@ -40,17 +59,21 @@ function GroupOrders() {
         if (isMounted) {
           // Map API response to component format
           const mappedOrders = Array.isArray(apiData) 
-            ? apiData.map(order => ({
-                id: order.id,
-                host: order.created_by_username || order.created_by_user || 'N/A',
-                restaurant: order.restaurant_name || order.restaurant || 'N/A',
-                restaurant_id: order.restaurant || null,
-                created_by_user: order.created_by_user || null,
-                pick_up_time: order.pick_up_time || null,
-                max_capacity: order.max_capacity || 0,
-                current_capacity: order.current_capacity || 0,
-                status: order.status || 'unknown'
-              }))
+            ? apiData.map(order => {
+                const pickUpTime = order.pick_up_time || null
+                const determinedStatus = getOrderStatus(order.status, pickUpTime)
+                return {
+                  id: order.id,
+                  host: order.created_by_username || order.created_by_user || 'N/A',
+                  restaurant: order.restaurant_name || order.restaurant || 'N/A',
+                  restaurant_id: order.restaurant || null,
+                  created_by_user: order.created_by_user || null,
+                  pick_up_time: pickUpTime,
+                  max_capacity: order.max_capacity || 0,
+                  current_capacity: order.current_capacity || 0,
+                  status: determinedStatus
+                }
+              })
             : []
           
           setOrders(mappedOrders)
@@ -175,17 +198,21 @@ function GroupOrders() {
       // Refresh the group orders list after successful update
       const apiData = await fetchGroupOrders()
       const mappedOrders = Array.isArray(apiData) 
-        ? apiData.map(order => ({
-            id: order.id,
-            host: order.created_by_username || order.created_by_user || 'N/A',
-            restaurant: order.restaurant_name || order.restaurant || 'N/A',
-            restaurant_id: order.restaurant || null,
-            created_by_user: order.created_by_user || null,
-            pick_up_time: order.pick_up_time || null,
-            max_capacity: order.max_capacity || 0,
-            current_capacity: order.current_capacity || 0,
-            status: order.status || 'unknown'
-          }))
+        ? apiData.map(order => {
+            const pickUpTime = order.pick_up_time || null
+            const determinedStatus = getOrderStatus(order.status, pickUpTime)
+            return {
+              id: order.id,
+              host: order.created_by_username || order.created_by_user || 'N/A',
+              restaurant: order.restaurant_name || order.restaurant || 'N/A',
+              restaurant_id: order.restaurant || null,
+              created_by_user: order.created_by_user || null,
+              pick_up_time: pickUpTime,
+              max_capacity: order.max_capacity || 0,
+              current_capacity: order.current_capacity || 0,
+              status: determinedStatus
+            }
+          })
         : []
       setOrders(mappedOrders)
       
@@ -224,17 +251,21 @@ function GroupOrders() {
       // Refresh the group orders list after successful deletion
       const apiData = await fetchGroupOrders()
       const mappedOrders = Array.isArray(apiData) 
-        ? apiData.map(order => ({
-            id: order.id,
-            host: order.created_by_username || order.created_by_user || 'N/A',
-            restaurant: order.restaurant_name || order.restaurant || 'N/A',
-            restaurant_id: order.restaurant || null,
-            created_by_user: order.created_by_user || null,
-            pick_up_time: order.pick_up_time || null,
-            max_capacity: order.max_capacity || 0,
-            current_capacity: order.current_capacity || 0,
-            status: order.status || 'unknown'
-          }))
+        ? apiData.map(order => {
+            const pickUpTime = order.pick_up_time || null
+            const determinedStatus = getOrderStatus(order.status, pickUpTime)
+            return {
+              id: order.id,
+              host: order.created_by_username || order.created_by_user || 'N/A',
+              restaurant: order.restaurant_name || order.restaurant || 'N/A',
+              restaurant_id: order.restaurant || null,
+              created_by_user: order.created_by_user || null,
+              pick_up_time: pickUpTime,
+              max_capacity: order.max_capacity || 0,
+              current_capacity: order.current_capacity || 0,
+              status: determinedStatus
+            }
+          })
         : []
       setOrders(mappedOrders)
       
@@ -317,6 +348,7 @@ function GroupOrders() {
                 const getStatusDisplay = (status) => {
                   const statusLower = (status || '').toLowerCase()
                   if (statusLower === 'open') return 'Open'
+                  if (statusLower === 'passed') return 'Passed'
                   /* TODO: Add more statuses */
                   return status || 'Unknown'
                 }
@@ -324,6 +356,7 @@ function GroupOrders() {
                 const getStatusClass = (status) => {
                   const statusLower = (status || '').toLowerCase()
                   if (statusLower === 'open') return 'admin-status-approved'
+                  if (statusLower === 'passed') return 'admin-status-ended'
                   // if (statusLower === 'closed' || statusLower === 'ended') return 'admin-status-ended'
                   return 'admin-status-pending'
                 }
