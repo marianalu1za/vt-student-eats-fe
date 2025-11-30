@@ -406,6 +406,9 @@ export async function createMenuItem(menuItemData) {
     if (menuItemData.tags !== undefined && menuItemData.tags !== null) {
       apiPayload.tags = menuItemData.tags
     }
+    if (menuItemData.is_popular !== undefined) {
+      apiPayload.is_popular = menuItemData.is_popular
+    }
     
     const response = await fetch(url, {
       method: 'POST',
@@ -544,6 +547,9 @@ export async function updateMenuItem(id, menuItemData) {
     }
     if (menuItemData.tags !== undefined) {
       apiPayload.tags = menuItemData.tags
+    }
+    if (menuItemData.is_popular !== undefined) {
+      apiPayload.is_popular = Boolean(menuItemData.is_popular)
     }
     
     const response = await fetch(url, {
