@@ -184,6 +184,7 @@ function PendingRestaurants() {
             ? `This will publish the restaurant: ${selectedRestaurant.name} to our website. Users will be able to view the menu on the VT Student Eats website.`
             : ''
         }
+        error={approveError}
         confirmLabel={isSubmitting ? 'Approving...' : 'Approve'}
         cancelLabel="Cancel"
         onConfirm={handleApproveConfirm}
