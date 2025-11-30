@@ -209,7 +209,18 @@ function ProfileButton({
             </>
           )}
           
-          {/* Admin: no additional menu items, just Profile and Log out */}
+          {/* Admin menu items */}
+          {userRole === 'admin' && (
+            <>
+              <div 
+                className="profile-dropdown-item"
+                onClick={() => handleMenuItemClick('/admin')}
+              >
+                <span className="profile-dropdown-icon">⚙️</span>
+                <span>Admin Portal</span>
+              </div>
+            </>
+          )}
           
           <div className="profile-dropdown-divider"></div>
           <div 
