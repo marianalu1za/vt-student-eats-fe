@@ -13,7 +13,6 @@ function PendingRestaurants() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRestaurant, setSelectedRestaurant] = useState(null)
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false)
-  const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [approveError, setApproveError] = useState(null)
 
@@ -66,30 +65,6 @@ function PendingRestaurants() {
     setApproveError(null)
   }
 
-  const handleRejectClick = (restaurant) => {
-    setSelectedRestaurant(restaurant)
-    setIsRejectDialogOpen(true)
-  }
-
-  const handleRejectConfirm = async () => {
-    if (!selectedRestaurant) return
-    // TODO: Add API call to reject restaurant
-    console.log('Rejecting restaurant:', selectedRestaurant.id)
-    try {
-      // After rejection, refresh the list to remove the rejected restaurant
-      await refreshRestaurants()
-    } catch (error) {
-      console.error('Failed to refresh restaurants after rejection', error)
-    }
-    setIsRejectDialogOpen(false)
-    setSelectedRestaurant(null)
-  }
-
-  const handleRejectCancel = () => {
-    setIsRejectDialogOpen(false)
-    setSelectedRestaurant(null)
-  }
-
   const handleView = (restaurantId) => {
     // TODO: Implement view menu functionality
     console.log('View menu for restaurant:', restaurantId)
@@ -99,7 +74,7 @@ function PendingRestaurants() {
     <div>
       <div className="admin-page-header">
         <h1>Restaurants Pending for Approval</h1>
-        <p>Review and approve or reject restaurant applications</p>
+        <p>Review and approve restaurant applications</p>
       </div>
 
       <div className="admin-card">
@@ -180,16 +155,9 @@ function PendingRestaurants() {
                       </button>
                       <button 
                         className="admin-btn admin-btn-success" 
-                        style={{ marginRight: '8px' }}
                         onClick={() => handleApproveClick(restaurant)}
                       >
                         Approve
-                      </button>
-                      <button 
-                        className="admin-btn admin-btn-danger"
-                        onClick={() => handleRejectClick(restaurant)}
-                      >
-                        Reject
                       </button>
                     </div>
                   </td>
@@ -220,19 +188,6 @@ function PendingRestaurants() {
         cancelLabel="Cancel"
         onConfirm={handleApproveConfirm}
         onCancel={handleApproveCancel}
-      />
-      <ConfirmDialog
-        open={isRejectDialogOpen}
-        title="Send rejection email?"
-        message={
-          selectedRestaurant
-            ? `This will reject the restaurant: ${selectedRestaurant.name} and remove their application.`
-            : ''
-        }
-        confirmLabel="Send email"
-        cancelLabel="Cancel"
-        onConfirm={handleRejectConfirm}
-        onCancel={handleRejectCancel}
       />
     </div>
   )
