@@ -363,7 +363,7 @@ export async function createMenuItem(menuItemData) {
     const token = await getCsrfToken()
 
     const apiPayload = {
-      restaurant_id: menuItemData.restaurant_id,
+      restaurant: menuItemData.restaurant_id,
       name: menuItemData.name,
       price: parseFloat(menuItemData.price),
     }

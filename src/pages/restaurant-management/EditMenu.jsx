@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { MaterialReactTable } from 'material-react-table'
 import { MRT_Localization_EN } from 'material-react-table/locales/en'
+import { InputAdornment } from '@mui/material'
 import './EditMenu.css'
 import { fetchMyMenuItems, createMenuItem, updateMenuItem, deleteMenuItem } from '../../api/restaurants'
 import ErrorPopup from '../../components/common/ErrorPopup'
@@ -50,53 +51,71 @@ function EditMenu({ restaurantId, restaurant }) {
     loadMenuItems()
   }, [loadMenuItems])
 
-  const handleSaveRow = async ({ exitEditingMode, row, values }) => {
+  const handleCreateRow = async ({ exitCreatingMode, values }) => {
     try {
-      console.log('handleSaveRow called with:', { row: row?.original, values })
+      console.log('handleCreateRow called with:', { values })
       
       // Ensure price is a number
       const priceValue = typeof values.price === 'string' ? parseFloat(values.price) : values.price
       
-      if (row) {
-        // Update existing item
-        const updateData = {
-          name: values.name?.trim() || '',
-          price: priceValue,
-          tags: values.tags?.trim() || '',
-        }
-        
-        console.log('Updating menu item:', row.original.id, updateData)
-        const updatedItem = await updateMenuItem(row.original.id, updateData)
-        console.log('Updated item received:', updatedItem)
-        
-        setMenuItems(prevItems => prevItems.map(item => 
-          item.id === updatedItem.id ? updatedItem : item
-        ))
-        setSuccessMessage('Menu item updated successfully!')
-        setShowSuccessPopup(true)
-        exitEditingMode()
-      } else {
-        // Create new item
-        const createData = {
-          restaurant_id: restaurantId,
-          name: values.name?.trim() || '',
-          price: priceValue,
-          tags: values.tags?.trim() || '',
-        }
-        
-        console.log('Creating menu item:', createData)
-        const newItem = await createMenuItem(createData)
-        console.log('Created item received:', newItem)
-        
-        setMenuItems(prevItems => [...prevItems, newItem])
-        setSuccessMessage('Menu item created successfully!')
-        setShowSuccessPopup(true)
-        exitEditingMode()
+      // Create new item
+      const createData = {
+        restaurant_id: restaurantId,
+        name: values.name?.trim() || '',
+        price: priceValue,
+        tags: values.tags?.trim() || '',
       }
+      
+      console.log('Creating menu item:', createData)
+      const newItem = await createMenuItem(createData)
+      console.log('Created item received:', newItem)
+      
+      setMenuItems(prevItems => [...prevItems, newItem])
+      setSuccessMessage('Menu item created successfully!')
+      setShowSuccessPopup(true)
+      exitCreatingMode()
     } catch (err) {
-      console.error('Failed to save menu item:', err)
+      console.error('Failed to create menu item:', err)
       // Ensure error message is user-friendly
-      let errorMessage = err.message || 'Failed to save menu item'
+      let errorMessage = err.message || 'Failed to create menu item'
+      errorMessage = errorMessage.replace(/<[^>]*>/g, '').trim()
+      if (errorMessage.length > 500) {
+        errorMessage = errorMessage.substring(0, 500) + '...'
+      }
+      setError(errorMessage)
+      setShowErrorPopup(true)
+      // Don't exit creating mode on error so user can fix and retry
+    }
+  }
+
+  const handleUpdateRow = async ({ exitEditingMode, row, values }) => {
+    try {
+      console.log('handleUpdateRow called with:', { row: row?.original, values })
+      
+      // Ensure price is a number
+      const priceValue = typeof values.price === 'string' ? parseFloat(values.price) : values.price
+      
+      // Update existing item
+      const updateData = {
+        name: values.name?.trim() || '',
+        price: priceValue,
+        tags: values.tags?.trim() || '',
+      }
+      
+      console.log('Updating menu item:', row.original.id, updateData)
+      const updatedItem = await updateMenuItem(row.original.id, updateData)
+      console.log('Updated item received:', updatedItem)
+      
+      setMenuItems(prevItems => prevItems.map(item => 
+        item.id === updatedItem.id ? updatedItem : item
+      ))
+      setSuccessMessage('Menu item updated successfully!')
+      setShowSuccessPopup(true)
+      exitEditingMode()
+    } catch (err) {
+      console.error('Failed to update menu item:', err)
+      // Ensure error message is user-friendly
+      let errorMessage = err.message || 'Failed to update menu item'
       errorMessage = errorMessage.replace(/<[^>]*>/g, '').trim()
       if (errorMessage.length > 500) {
         errorMessage = errorMessage.substring(0, 500) + '...'
@@ -165,6 +184,11 @@ function EditMenu({ restaurantId, restaurant }) {
         muiEditTextFieldProps: {
           type: 'number',
           required: true,
+          placeholder: '0.00',
+          InputProps: {
+            startAdornment: <InputAdornment position="start">$</InputAdornment>,
+          },
+          helperText: 'Enter price in dollars (e.g., 9.99 for $9.99)',
           inputProps: {
             min: 0.01,
             step: 0.01,
@@ -215,9 +239,13 @@ function EditMenu({ restaurantId, restaurant }) {
           enableSorting={true}
           enableBottomToolbar={true}
           enableTopToolbar={true}
-          localization={MRT_Localization_EN}
-          onEditingRowSave={handleSaveRow}
-          onCreatingRowSave={handleSaveRow}
+          localization={{
+            ...MRT_Localization_EN,
+            createRow: 'Create New Menu Item',
+            editRow: 'Edit Menu Item',
+          }}
+          onEditingRowSave={handleUpdateRow}
+          onCreatingRowSave={handleCreateRow}
           renderRowActions={({ row, table }) => (
             <div style={{ display: 'flex', gap: '8px' }}>
               <button
