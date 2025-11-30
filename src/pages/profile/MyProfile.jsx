@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { getCurrentUser, updateUserProfile } from '../../api/auth'
+import { getCurrentUser, updateUserProfile, storeUser } from '../../api/auth'
 import { useNavigate } from 'react-router-dom'
 import './MyProfile.css'
 
@@ -184,6 +184,8 @@ function MyProfile() {
       }
       setFormData(syncedFormData)
       setOriginalData(syncedFormData)
+      // Update stored user data in localStorage/sessionStorage to sync with ProfileButton
+      storeUser(updatedProfile)
       setIsEditing(false)
       setValidationErrors({})
     } catch (err) {
