@@ -23,7 +23,30 @@ function DiscountSection({ restaurantId }) {
         setLoading(true)
         setError(null)
         const discountsData = await fetchActiveDiscountsForRestaurant(restaurantId)
-        setDiscounts(discountsData || [])
+        
+        // Filter out discounts where due_date has passed
+        const today = new Date()
+        today.setHours(0, 0, 0, 0) // Reset time to compare dates only
+        
+        const validDiscounts = (discountsData || []).filter((discount) => {
+          if (!discount.due_date) {
+            // If no due_date, include the discount
+            return true
+          }
+          
+          try {
+            const dueDate = new Date(discount.due_date)
+            dueDate.setHours(0, 0, 0, 0) // Reset time to compare dates only
+            // Include discount if due_date is today or in the future
+            return dueDate >= today
+          } catch (e) {
+            // If date parsing fails, include the discount to be safe
+            console.warn('Error parsing discount due_date:', discount.due_date, e)
+            return true
+          }
+        })
+        
+        setDiscounts(validDiscounts)
       } catch (err) {
         console.error('Error fetching discounts:', err)
         setError(err.message || 'Failed to load discounts')
