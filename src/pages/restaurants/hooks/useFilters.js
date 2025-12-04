@@ -27,12 +27,17 @@ export function useFilters() {
   }
 
   // Handle cuisine checkbox change - apply immediately
+  // Maximum 3 cuisines can be selected
   const handleCuisineChange = (cuisine) => {
-    const newSelectedCuisines = appliedCuisines.includes(cuisine)
-      ? appliedCuisines.filter((c) => c !== cuisine)
-      : [...appliedCuisines, cuisine]
-    
-    setAppliedCuisines(newSelectedCuisines)
+    if (appliedCuisines.includes(cuisine)) {
+      // If already selected, remove it
+      setAppliedCuisines(appliedCuisines.filter((c) => c !== cuisine))
+    } else {
+      // If not selected, only add if less than 3 are selected
+      if (appliedCuisines.length < 3) {
+        setAppliedCuisines([...appliedCuisines, cuisine])
+      }
+    }
   }
 
   // Clear filters
