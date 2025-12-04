@@ -76,7 +76,7 @@ function RestaurantMap() {
 
   // Helper function to format distance label based on location source
   const formatDistanceLabel = (distance) => {
-    const locationSource = userLocation ? 'from current location' : 'from the university'
+    const locationSource = userLocation ? 'from current location' : 'from VT innovation campus'
     return `Up to ${distance} miles (${locationSource})`
   }
 
