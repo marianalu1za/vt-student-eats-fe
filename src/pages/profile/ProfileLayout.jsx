@@ -7,7 +7,7 @@ import GroupOrdersHistory from '../profile-grouporder/GroupOrdersHistory'
 import ChangePassword from './ChangePassword'
 import RestaurantManagement from '../profile-restaurantmanager/RestaurantManagement'
 import ProtectedRoute from '../../components/common/ProtectedRoute'
-import { logout, getCurrentUser } from '../../api/auth'
+import { getCurrentUser } from '../../api/auth'
 import './ProfileLayout.css'
 
 function ProfileLayout() {
@@ -59,17 +59,6 @@ function ProfileLayout() {
     })
   }, [currentUser])
 
-  const handleSignOut = async () => {
-    try {
-      await logout()
-      navigate('/login')
-    } catch (error) {
-      console.error('Error signing out:', error)
-      // Still redirect to login even if API call fails
-      navigate('/login')
-    }
-  }
-
   // Build menu items based on user role
   const profileMenuItems = useMemo(() => {
     const baseItems = [
@@ -109,16 +98,6 @@ function ProfileLayout() {
     return baseItems
   }, [isRestaurantManager, isAdmin])
 
-  const menuItemsWithSignOut = useMemo(() => [
-    ...profileMenuItems,
-    {
-      icon: '🚪',
-      label: 'Sign Out',
-      isSignOut: true,
-      onClick: handleSignOut,
-    },
-  ], [profileMenuItems])
-
   // Show loading state while fetching user
   if (loading) {
     return (
@@ -134,7 +113,7 @@ function ProfileLayout() {
     <div className="profile-layout">
       <Sidebar
         title="My Account"
-        menuItems={menuItemsWithSignOut}
+        menuItems={profileMenuItems}
         contentRef={contentRef}
         showBrand={true}
         brandLink="/"
