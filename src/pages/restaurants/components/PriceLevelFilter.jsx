@@ -1,14 +1,16 @@
 import { PRICE_LEVELS } from '../constants'
 import "./CuisineFilter.css";
 
-function PriceLevelFilter({ appliedPriceLevels, onPriceLevelChange }) {
+function PriceLevelFilter({ appliedPriceLevel, onPriceLevelChange }) {
   return (
     <div className="filter-dropdown">
       {PRICE_LEVELS.map((PriceLevel) => (
         <label key={PriceLevel} className="filter-option">
           <input
-            type="checkbox"
-            checked={appliedPriceLevels.includes(PriceLevel)}
+            type="radio"
+            name="price-level"
+            value={PriceLevel}
+            checked={appliedPriceLevel === PriceLevel}
             onChange={() => onPriceLevelChange(PriceLevel)}
           />
           {PriceLevel}

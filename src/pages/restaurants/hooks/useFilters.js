@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { PRICE_RANGE, DISTANCE_RANGE } from '../constants'
 
 export function useFilters() {
-  // Price range state
-  const [appliedPriceLevels, setAppliedPriceLevels] = useState([])
+  // Price range state - single selection only
+  const [appliedPriceLevel, setAppliedPriceLevel] = useState(null)
 
   // Distance state (only max, min is always 0)
   const [distanceMax, setDistanceMax] = useState(DISTANCE_RANGE.DEFAULT_MAX)
@@ -12,13 +12,9 @@ export function useFilters() {
   // Cuisine filter state
   const [appliedCuisines, setAppliedCuisines] = useState([])
 
-  // Apply price filter
+  // Apply price filter - single selection (toggle: if same price selected, deselect)
   const handlePriceLevelChange = (priceLevel) => {
-    const newSelectedPriceLevels = appliedPriceLevels.includes(priceLevel)
-      ? appliedPriceLevels.filter((c) => c !== priceLevel)
-      : [...appliedPriceLevels, priceLevel]
-    
-    setAppliedPriceLevels(newSelectedPriceLevels)
+    setAppliedPriceLevel(appliedPriceLevel === priceLevel ? null : priceLevel)
   }
 
   // Apply distance filter
@@ -46,7 +42,7 @@ export function useFilters() {
   }
 
   const clearPriceFilter = () => {
-    setAppliedPriceLevels([])
+    setAppliedPriceLevel(null)
   }
 
   const clearDistanceFilter = () => {
@@ -55,13 +51,13 @@ export function useFilters() {
   }
 
   // Check if filters are applied
-  const isPriceFilterApplied = appliedPriceLevels.length > 0
+  const isPriceFilterApplied = appliedPriceLevel !== null
   const isDistanceFilterApplied = appliedDistanceMax !== DISTANCE_RANGE.DEFAULT_MAX
   const isCuisineFilterApplied = appliedCuisines.length > 0
 
   return {
     // Price state
-    appliedPriceLevels,
+    appliedPriceLevel,
     handlePriceLevelChange,
     clearPriceFilter,
     isPriceFilterApplied,
