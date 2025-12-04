@@ -534,20 +534,22 @@ function RestaurantMenu() {
                     </a>
                   </li>
                 )}
-                {((calculatedDistance !== null && calculatedDistance !== undefined) || restaurant.distance) && (() => {
-                  const isUsingCalculated = calculatedDistance !== null && calculatedDistance !== undefined
-                  const distance = isUsingCalculated
-                    ? Number(calculatedDistance).toFixed(2)
-                    : restaurant.distance
-                  const walkMinutes = isUsingCalculated
-                    ? calculatedWalkMinutes
-                    : restaurant.walk_minutes
+                {(restaurant.distance || calculatedDistance !== null) && (() => {
+                  let distance, walkMinutes
+                  
+                  if (hasUserLocation && calculatedDistance !== null) {
+                    distance = Number(calculatedDistance).toFixed(2)
+                    walkMinutes = calculatedWalkMinutes
+                  } else {
+                    distance = restaurant.distance
+                    walkMinutes = restaurant.walk_minutes
+                  }
                   
                   return (
                     <li className="metadata-item">
                       <i className="fa-solid fa-walking metadata-icon"></i>
                       <span className="metadata-content">
-                        {formatDistanceText(distance, walkMinutes, isUsingCalculated)}
+                        {formatDistanceText(distance, walkMinutes, hasUserLocation)}
                       </span>
                     </li>
                   )
