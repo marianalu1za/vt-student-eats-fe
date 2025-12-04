@@ -77,11 +77,11 @@ function AdminDashboard() {
       <Sidebar title="Admin Panel" menuItems={adminMenuItems} contentRef={contentRef} showBrand={true}/>
       <div className="admin-content" ref={contentRef}>
         <Routes>
+          <Route path="" element={<Navigate to="/admin/restaurants" replace />} />
           <Route path="users" element={<Users />} />
           <Route path="restaurants" element={<ExistingRestaurants />} />
           <Route path="pending" element={<PendingRestaurants />} />
           <Route path="group-orders" element={<GroupOrders />} />
-          {/* <Route path="*" element={<Navigate to="/admin/users" replace />} /> */}
         </Routes>
       </div>
     </div>
