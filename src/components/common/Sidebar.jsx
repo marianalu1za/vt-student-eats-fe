@@ -1,7 +1,8 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { useRef, useEffect } from 'react'
 import './Sidebar.css'
 import Logo from './Logo'
+import { logout } from '../../api/auth'
 
 function Sidebar({
   title = 'Admin Panel',
@@ -12,6 +13,21 @@ function Sidebar({
 }) {
   const sidebarRef = useRef(null);
   const dragging = useRef(false);
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    try {
+      await logout()
+      navigate('/login')
+      // Force page reload to update Header component
+      window.location.reload()
+    } catch (error) {
+      console.error('Error signing out:', error)
+      // Still redirect to login even if API call fails
+      navigate('/login')
+      window.location.reload()
+    }
+  };
 
   useEffect(() => {
     const updateContentMargin = (width) => {
@@ -115,6 +131,26 @@ function Sidebar({
           )
         })}
       </nav>
+
+      <div className="sidebar-footer">
+        <button
+          onClick={(e) => {
+            handleSignOut()
+            e.currentTarget.blur()
+          }}
+          onBlur={(e) => {
+            e.currentTarget.classList.remove('nav-item-focused')
+          }}
+          onFocus={(e) => {
+            e.currentTarget.classList.add('nav-item-focused')
+          }}
+          className="nav-item nav-item-action nav-item-sign-out"
+          type="button"
+        >
+          <span className="nav-icon">🚪</span>
+          <span className="nav-text">Sign Out</span>
+        </button>
+      </div>
     </div>
   );
 }
