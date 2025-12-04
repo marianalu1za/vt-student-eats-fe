@@ -38,7 +38,7 @@ function RestaurantMap() {
   } = useDropdowns()
 
   const {
-    appliedPriceLevels,
+    appliedPriceLevel,
     handlePriceLevelChange,
     clearPriceFilter,
     isPriceFilterApplied,
@@ -144,14 +144,14 @@ function RestaurantMap() {
     // Apply filters using filter functions
     results = filterByDistance(results, isDistanceFilterApplied, appliedDistanceMax)
     results = filterByCuisine(results, isCuisineFilterApplied, appliedCuisines)
-    results = filterByPrice(results, isPriceFilterApplied, appliedPriceLevels)
+    results = filterByPrice(results, isPriceFilterApplied, appliedPriceLevel)
 
     return results
   }, [
     restaurants,
     searchQuery,
     appliedCuisines,
-    appliedPriceLevels,
+    appliedPriceLevel,
     appliedDistanceMax,
     isCuisineFilterApplied,
     isPriceFilterApplied,
@@ -272,13 +272,13 @@ function RestaurantMap() {
             }
             isActive={showPriceDropdown}
             isApplied={isPriceFilterApplied}
-            appliedRange={appliedPriceLevels.length > 0 ? appliedPriceLevels.join(', ') : null}
+            appliedRange={appliedPriceLevel || null}
             onToggle={() => toggleDropdown('price')}
             onClear={handleClearPriceFilter}
           >
             {showPriceDropdown && (
               <PriceLevelFilter
-                appliedPriceLevels={appliedPriceLevels}
+                appliedPriceLevel={appliedPriceLevel}
                 onPriceLevelChange={handlePriceLevelChange}
               />
             )}

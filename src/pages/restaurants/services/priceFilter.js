@@ -2,11 +2,11 @@
  * Filters restaurants by price level
  * @param {Array} restaurants - Array of restaurant objects
  * @param {boolean} isPriceFilterApplied - Whether price filter is active
- * @param {Array} appliedPriceLevels - Array of selected price levels (e.g., ['$', '$$'])
+ * @param {string|null} appliedPriceLevel - Selected price level (e.g., '$', '$$', or null)
  * @returns {Array} Filtered restaurants array
  */
-export function filterByPrice(restaurants, isPriceFilterApplied, appliedPriceLevels) {
-  if (!isPriceFilterApplied || !appliedPriceLevels || appliedPriceLevels.length === 0) {
+export function filterByPrice(restaurants, isPriceFilterApplied, appliedPriceLevel) {
+  if (!isPriceFilterApplied || !appliedPriceLevel) {
     return restaurants
   }
 
@@ -16,7 +16,7 @@ export function filterByPrice(restaurants, isPriceFilterApplied, appliedPriceLev
     }
 
     const priceLevelSymbol = '$'.repeat(restaurant.priceLevel)
-    return appliedPriceLevels.includes(priceLevelSymbol)
+    return priceLevelSymbol === appliedPriceLevel
   })
 }
 

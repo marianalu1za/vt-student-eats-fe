@@ -42,7 +42,7 @@ function RestaurantList() {
 
   const {
     // Price
-    appliedPriceLevels,
+    appliedPriceLevel,
     handlePriceLevelChange,
     clearPriceFilter,
     isPriceFilterApplied,
@@ -61,11 +61,6 @@ function RestaurantList() {
   } = useFilters()
 
   // Apply filters and close dropdowns
-  const handleApplyPrice = () => {
-    applyPriceFilter()
-    toggleDropdown('price')
-  }
-
   const handleApplyDistance = async () => {
     applyDistanceFilter()
     toggleDropdown('distance')
@@ -153,7 +148,7 @@ function RestaurantList() {
     // 2) Apply filters using filter functions
     result = filterByDistance(result, isDistanceFilterApplied, appliedDistanceMax);
     result = filterByCuisine(result, isCuisineFilterApplied, appliedCuisines);
-    result = filterByPrice(result, isPriceFilterApplied, appliedPriceLevels);
+    result = filterByPrice(result, isPriceFilterApplied, appliedPriceLevel);
 
     return result;
   }, [
@@ -162,7 +157,7 @@ function RestaurantList() {
     isDistanceFilterApplied,
     appliedDistanceMax,
     appliedCuisines,
-    appliedPriceLevels,
+    appliedPriceLevel,
     isCuisineFilterApplied,
     isPriceFilterApplied,
   ]);
@@ -170,7 +165,7 @@ function RestaurantList() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchQuery, appliedPriceLevels, appliedDistanceMax, appliedCuisines])
+  }, [searchQuery, appliedPriceLevel, appliedDistanceMax, appliedCuisines])
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredRestaurants.length / ITEMS_PER_PAGE)
@@ -261,13 +256,13 @@ function RestaurantList() {
                   }
                   isActive={showPriceDropdown}
                   isApplied={isPriceFilterApplied}
-                  appliedRange={appliedPriceLevels.length > 0 ? appliedPriceLevels.join(', ') : null}
+                  appliedRange={appliedPriceLevel || null}
                   onToggle={() => toggleDropdown('price')}
                   onClear={handleClearPriceFilter}
                 >
                   {showPriceDropdown && (
                     <PriceLevelFilter
-                      appliedPriceLevels={appliedPriceLevels}
+                      appliedPriceLevel={appliedPriceLevel}
                       onPriceLevelChange={handlePriceLevelChange}
                     />
                   )}
