@@ -49,6 +49,16 @@ function ProfileLayout() {
     })
   }, [currentUser])
 
+  // Check if user is an Admin
+  const isAdmin = useMemo(() => {
+    if (!currentUser?.roles) return false
+    const roles = Array.isArray(currentUser.roles) ? currentUser.roles : [currentUser.roles]
+    return roles.some(role => {
+      const roleStr = String(role).toLowerCase()
+      return roleStr === 'admin'
+    })
+  }, [currentUser])
+
   const handleSignOut = async () => {
     try {
       await logout()
@@ -75,16 +85,19 @@ function ProfileLayout() {
           label: 'Restaurant Management',
         }
       )
-    } else {
-      // For regular users, show group orders items
+    } else if (!isAdmin) {
+      // For regular users (not admin), show group orders items
+      // Admin users will only see "My Profile" in the sidebar
+      // Group orders items are accessible via ProfileButton dropdown submenu
       baseItems.push(
         { path: '/profile/group-orders-joined', icon: '👥', label: 'Group Orders I Joined' },
         { path: '/profile/group-orders-history', icon: '📜', label: 'Group Orders History' }
       )
     }
+    // If admin, only show "My Profile" (baseItems already has it)
 
     return baseItems
-  }, [isRestaurantManager])
+  }, [isRestaurantManager, isAdmin])
 
   const menuItemsWithSignOut = useMemo(() => [
     ...profileMenuItems,
