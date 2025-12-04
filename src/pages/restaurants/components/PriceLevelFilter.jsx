@@ -7,9 +7,7 @@ function PriceLevelFilter({ appliedPriceLevel, onPriceLevelChange }) {
       {PRICE_LEVELS.map((PriceLevel) => (
         <label key={PriceLevel} className="filter-option">
           <input
-            type="radio"
-            name="price-level"
-            value={PriceLevel}
+            type="checkbox"
             checked={appliedPriceLevel === PriceLevel}
             onChange={() => onPriceLevelChange(PriceLevel)}
           />
