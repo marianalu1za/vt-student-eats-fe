@@ -1,7 +1,6 @@
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { useRef, useEffect, useState } from 'react'
 import Sidebar from '../../components/common/Sidebar'
-import ProfileButton from '../../components/common/ProfileButton'
 import Users from './Users'
 import ExistingRestaurants from './ExistingRestaurants'
 import PendingRestaurants from './PendingRestaurants'
@@ -19,7 +18,6 @@ const adminMenuItems = [
 function AdminDashboard() {
   const contentRef = useRef(null)
   const navigate = useNavigate()
-  const [showProfileButton, setShowProfileButton] = useState(true)
   const [loading, setLoading] = useState(true)
 
   // Validate user is an admin on mount
@@ -63,15 +61,6 @@ function AdminDashboard() {
     validateAccess()
   }, [navigate])
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowProfileButton(window.scrollY <= 150)
-    }
-
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
   // Show loading state while validating access
   if (loading) {
     return (
@@ -86,19 +75,13 @@ function AdminDashboard() {
   return (
       <div className="admin-dashboard">
       <Sidebar title="Admin Panel" menuItems={adminMenuItems} contentRef={contentRef} showBrand={true}/>
-        <div className={`admin-floating-profile ${showProfileButton ? '' : 'hidden'}`}>
-        <ProfileButton
-          label="Open profile"
-          onClick={() => console.log('Opening admin profile')}
-        />
-      </div>
       <div className="admin-content" ref={contentRef}>
         <Routes>
+          <Route path="" element={<Navigate to="/admin/restaurants" replace />} />
           <Route path="users" element={<Users />} />
           <Route path="restaurants" element={<ExistingRestaurants />} />
           <Route path="pending" element={<PendingRestaurants />} />
           <Route path="group-orders" element={<GroupOrders />} />
-          {/* <Route path="*" element={<Navigate to="/admin/users" replace />} /> */}
         </Routes>
       </div>
     </div>
