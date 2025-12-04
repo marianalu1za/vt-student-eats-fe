@@ -17,6 +17,7 @@ import { useFilters } from './hooks/useFilters.js'
 // import { PRICE_RANGE, DISTANCE_RANGE } from './constants'
 import { getUserLocation } from './services/location.js';
 import { changeTransformedData } from './services/distance.js'
+import { filterByDistance, filterByCuisine, filterByPrice } from './services/filters.js'
 import { RestaurantCardSkeleton } from './components/skeletons'
 
 const ITEMS_PER_PAGE = 6
@@ -27,7 +28,8 @@ function RestaurantList() {
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [cuisineTypes, setCuisineTypes] = useState([]);
+  const [cuisineTypes, setCuisineTypes] = useState([])
+  const [hasUserLocation, setHasUserLocation] = useState(false)
   const navigate = useNavigate()
 
   // Custom hooks for dropdowns and filters
@@ -79,6 +81,12 @@ function RestaurantList() {
     clearDistanceFilter()
   }
 
+  // Helper function to format distance label based on location source
+  const formatDistanceLabel = (distance) => {
+    const locationSource = hasUserLocation ? 'from current location' : 'from VT innovation campus'
+    return `Up to ${distance} miles (${locationSource})`
+  }
+
   const handleClearCuisineFilter = (e) => {
     e.stopPropagation()
     clearCuisineFilter()
@@ -99,9 +107,16 @@ function RestaurantList() {
         
         const transformedData = transformRestaurantData(activeRestaurants)
 
-        // Luke: Distance Changes go here
+        // Calculate distance only if user shared their current location
         const userLoc = await getUserLocation();
-        changeTransformedData(transformedData, userLoc);
+        const hasUserLoc = userLoc?.source === 'browser'
+        setHasUserLocation(hasUserLoc)
+        
+        // Only recalculate distances if user shared their location
+        // Otherwise, keep the database distance (from university)
+        if (hasUserLoc) {
+          changeTransformedData(transformedData, userLoc);
+        }
 
         // Now that correct distances are in we can set the data on the page
         setRestaurants(transformedData)
@@ -119,7 +134,6 @@ function RestaurantList() {
   useEffect(() => {
     const fetchCuisineTypes = async () => {
       const data = await getRestaurantTags();
-    debugger
       setCuisineTypes(data);
     };
     fetchCuisineTypes();
@@ -136,26 +150,10 @@ function RestaurantList() {
       );
     }
 
-    // 2) Distance filter: keep within appliedDistanceMax and sort by distance ASC
-    if (isDistanceFilterApplied && appliedDistanceMax != null) {
-      result = result
-        .filter(r => typeof r.distance === 'number' && r.distance <= appliedDistanceMax)
-        .sort((a, b) => a.distance - b.distance);
-    }
-
-    // (later you can plug price + cuisine here)
-    if (isCuisineFilterApplied && appliedCuisines.length > 0) {
-      result = result.filter(r =>
-        appliedCuisines.some(cuisine => r.tags.includes(cuisine))
-      );
-    }
-
-    if (isPriceFilterApplied && appliedPriceLevels.length > 0) {
-      debugger;
-      result = result.filter(r =>
-        appliedPriceLevels.some(price => '$'.repeat(r.priceLevel) === price)
-      );
-    }
+    // 2) Apply filters using filter functions
+    result = filterByDistance(result, isDistanceFilterApplied, appliedDistanceMax);
+    result = filterByCuisine(result, isCuisineFilterApplied, appliedCuisines);
+    result = filterByPrice(result, isPriceFilterApplied, appliedPriceLevels);
 
     return result;
   }, [
@@ -165,6 +163,8 @@ function RestaurantList() {
     appliedDistanceMax,
     appliedCuisines,
     appliedPriceLevels,
+    isCuisineFilterApplied,
+    isPriceFilterApplied,
   ]);
 
   // Reset to page 1 when filters change
@@ -281,7 +281,7 @@ function RestaurantList() {
                   }
                   isActive={showDistanceDropdown}
                   isApplied={isDistanceFilterApplied}
-                  appliedRange={isDistanceFilterApplied ? `Up to ${appliedDistanceMax} miles` : null}
+                  appliedRange={isDistanceFilterApplied ? formatDistanceLabel(appliedDistanceMax) : null}
                   onToggle={() => toggleDropdown('distance')}
                   onClear={handleClearDistanceFilter}
                 >
@@ -291,7 +291,7 @@ function RestaurantList() {
                       valueMax={distanceMax}
                       onChangeMax={setDistanceMax}
                       onApply={handleApplyDistance}
-                      formatDisplay={(max) => `Up to ${max} miles`}
+                      formatDisplay={(max) => formatDistanceLabel(max)}
                       formatSliderValue={(val) => `${val} miles`}
                       singleHandle={true}
                     />

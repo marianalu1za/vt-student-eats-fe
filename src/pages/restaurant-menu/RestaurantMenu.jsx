@@ -8,6 +8,8 @@ import { getDetailImage } from '../../utils/imageUtils.js'
 import { MenuItemSkeleton, PopularItemSkeleton } from '../restaurants/components/skeletons'
 import DiscountSection from './components/DiscountSection.jsx'
 import ReviewSection from './components/ReviewSection.jsx'
+import { getUserLocation } from '../restaurants/services/location.js'
+import { haversineMiles } from '../restaurants/services/distance.js'
 
 // Format open hours for display
 function formatOpenHours(openHours) {
@@ -50,7 +52,16 @@ function RestaurantMenu() {
 
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
+  const [calculatedDistance, setCalculatedDistance] = useState(null)
+  const [calculatedWalkMinutes, setCalculatedWalkMinutes] = useState(null)
+  const [hasUserLocation, setHasUserLocation] = useState(false)
   const discountSectionRef = useRef(null)
+
+  // Helper function to format distance text with location source
+  const formatDistanceText = (distance, walkMinutes, isCalculated) => {
+    const locationSource = isCalculated ? 'current location' : ' VT Innovation Campus'
+    return `${distance} miles away (${walkMinutes} min walk) from ${locationSource}`
+  }
 
   useEffect(() => {
     if (!id) {
@@ -66,6 +77,42 @@ function RestaurantMenu() {
         setRestaurantError(null)
         const restaurantData = await fetchRestaurant(id)
         setRestaurant(restaurantData)
+        
+        // Calculate actual distance if user shared their location
+        // Use raw API field names: x_coordinate/y_coordinate or latitude/longitude
+        const lat = restaurantData?.y_coordinate ?? null
+        const lng = restaurantData?.x_coordinate ?? null
+        
+        if (restaurantData && lat != null && lng != null) {
+          try {
+            const userLoc = await getUserLocation()
+            const hasUserLoc = userLoc?.source === 'browser'
+            setHasUserLocation(hasUserLoc)
+            
+            if (hasUserLoc) {
+              const restaurantCoords = {
+                lat: Number(lat),
+                lng: Number(lng)
+              }
+              const distance = haversineMiles(userLoc, restaurantCoords)
+              setCalculatedDistance(distance)
+              
+              // Calculate walk minutes: assume 3 mph walking speed = 20 minutes per mile
+              const walkMinutes = Math.round(distance * 20)
+              setCalculatedWalkMinutes(walkMinutes)
+              
+            } else {
+              // Reset calculated values if using default location
+              setCalculatedDistance(null)
+              setCalculatedWalkMinutes(null)
+            }
+          } catch (locErr) {
+            console.warn('Failed to get user location for distance calculation:', locErr)
+            setCalculatedDistance(null)
+            setCalculatedWalkMinutes(null)
+            setHasUserLocation(false)
+          }
+        }
       } catch (err) {
         if (err.message?.includes('Restaurant not found') || err.message?.includes('404')) {
           setRestaurantError('Restaurant not found')
@@ -487,14 +534,26 @@ function RestaurantMenu() {
                     </a>
                   </li>
                 )}
-                {restaurant.distance && (
-                  <li className="metadata-item">
-                    <i className="fa-solid fa-walking metadata-icon"></i>
-                    <span className="metadata-content">
-                      {restaurant.distance} miles away ({restaurant.walk_minutes} min walk)
-                    </span>
-                  </li>
-                )}
+                {(restaurant.distance || calculatedDistance !== null) && (() => {
+                  let distance, walkMinutes
+                  
+                  if (hasUserLocation && calculatedDistance !== null) {
+                    distance = Number(calculatedDistance).toFixed(2)
+                    walkMinutes = calculatedWalkMinutes
+                  } else {
+                    distance = restaurant.distance
+                    walkMinutes = restaurant.walk_minutes
+                  }
+                  
+                  return (
+                    <li className="metadata-item">
+                      <i className="fa-solid fa-walking metadata-icon"></i>
+                      <span className="metadata-content">
+                        {formatDistanceText(distance, walkMinutes, hasUserLocation)}
+                      </span>
+                    </li>
+                  )
+                })()}
               </ul>
               
               {/* Action Buttons Row */}

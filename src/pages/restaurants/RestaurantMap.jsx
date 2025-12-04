@@ -19,6 +19,7 @@ import { useDropdowns } from './hooks/useDropdowns.js'
 import { useFilters } from './hooks/useFilters.js'
 import { getUserLocation } from './services/location.js'
 import { changeTransformedData } from './services/distance.js'
+import { filterByDistance, filterByCuisine, filterByPrice } from './services/filters.js'
 
 function RestaurantMap() {
   // Arlington, VA coordinates
@@ -73,6 +74,12 @@ function RestaurantMap() {
     clearDistanceFilter()
   }
 
+  // Helper function to format distance label based on location source
+  const formatDistanceLabel = (distance) => {
+    const locationSource = userLocation ? 'from current location' : 'from VT innovation campus'
+    return `Up to ${distance} miles (${locationSource})`
+  }
+
   useEffect(() => {
     const loadRestaurants = async () => {
       try {
@@ -85,8 +92,12 @@ function RestaurantMap() {
         const transformedData = transformRestaurantData(activeRestaurants)
         
         const locationResult = await getUserLocation()
-        changeTransformedData(transformedData, locationResult)
-        if (locationResult?.source === 'browser') {
+        const hasUserLoc = locationResult?.source === 'browser'
+        
+        // Only recalculate distances if user shared their location
+        // Otherwise, keep the database distance (from university)
+        if (hasUserLoc) {
+          changeTransformedData(transformedData, locationResult)
           setUserLocation([locationResult.lat, locationResult.lng])
         } else {
           setUserLocation(null)
@@ -130,36 +141,10 @@ function RestaurantMap() {
       )
     }
 
-    if (isDistanceFilterApplied && appliedDistanceMax != null) {
-      results = results
-        .filter(
-          (restaurant) =>
-            typeof restaurant.distance === 'number' && restaurant.distance <= appliedDistanceMax
-        )
-        .sort((a, b) => a.distance - b.distance)
-    }
-
-    if (isCuisineFilterApplied && appliedCuisines.length > 0) {
-      results = results.filter((restaurant) => {
-        const restaurantTags = restaurant.tags || []
-        return appliedCuisines.some((cuisine) =>
-          restaurantTags.some((tag) =>
-            tag.toLowerCase().includes(cuisine.toLowerCase())
-          )
-        )
-      })
-    }
-
-    if (isPriceFilterApplied && appliedPriceLevels.length > 0) {
-      results = results.filter((restaurant) => {
-        if (restaurant.priceLevel == null) {
-          return false
-        }
-
-        const priceLevelSymbol = '$'.repeat(restaurant.priceLevel)
-        return appliedPriceLevels.includes(priceLevelSymbol)
-      })
-    }
+    // Apply filters using filter functions
+    results = filterByDistance(results, isDistanceFilterApplied, appliedDistanceMax)
+    results = filterByCuisine(results, isCuisineFilterApplied, appliedCuisines)
+    results = filterByPrice(results, isPriceFilterApplied, appliedPriceLevels)
 
     return results
   }, [
@@ -307,7 +292,7 @@ function RestaurantMap() {
             }
             isActive={showDistanceDropdown}
             isApplied={isDistanceFilterApplied}
-            appliedRange={isDistanceFilterApplied ? `Up to ${appliedDistanceMax} miles` : null}
+            appliedRange={isDistanceFilterApplied ? formatDistanceLabel(appliedDistanceMax) : null}
             onToggle={() => toggleDropdown('distance')}
             onClear={handleClearDistanceFilter}
           >
@@ -317,7 +302,7 @@ function RestaurantMap() {
                 valueMax={distanceMax}
                 onChangeMax={setDistanceMax}
                 onApply={handleApplyDistance}
-                formatDisplay={(max) => `Up to ${max} miles`}
+                formatDisplay={(max) => formatDistanceLabel(max)}
                 formatSliderValue={(val) => `${val} miles`}
                 singleHandle={true}
               />
