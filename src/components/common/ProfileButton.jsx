@@ -217,7 +217,7 @@ function ProfileButton({
                 onClick={() => handleMenuItemClick('/admin')}
               >
                 <span className="profile-dropdown-icon">⚙️</span>
-                <span>Admin Portal</span>
+                <span>Admin Dashboard</span>
               </div>
             </>
           )}
