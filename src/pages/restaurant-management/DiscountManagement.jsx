@@ -162,6 +162,28 @@ function DiscountManagement({ restaurantId, restaurant }) {
     }
   }
 
+  // Helper function to format date without timezone issues
+  const formatDateString = (dateString) => {
+    if (!dateString) return ''
+    
+    try {
+      // Parse the date string (YYYY-MM-DD format) as local date
+      const [year, month, day] = dateString.split('T')[0].split('-').map(Number)
+      const date = new Date(year, month - 1, day) // month is 0-indexed
+      
+      // Format as YYYY/MM/DD to match the displayed format
+      const formattedYear = date.getFullYear()
+      const formattedMonth = String(date.getMonth() + 1).padStart(2, '0')
+      const formattedDay = String(date.getDate()).padStart(2, '0')
+      
+      return `${formattedYear}/${formattedMonth}/${formattedDay}`
+    } catch (e) {
+      console.warn('Error formatting date:', dateString, e)
+      // Fallback to original string if parsing fails
+      return dateString
+    }
+  }
+
   if (loading) {
     return (
       <div className="profile-page-content">
@@ -217,7 +239,7 @@ function DiscountManagement({ restaurantId, restaurant }) {
                 )}
                 {discount.start_date && discount.due_date && (
                   <p className="discount-dates">
-                    {new Date(discount.start_date).toLocaleDateString()} - {new Date(discount.due_date).toLocaleDateString()}
+                    {formatDateString(discount.start_date)} - {formatDateString(discount.due_date)}
                   </p>
                 )}
               </div>
