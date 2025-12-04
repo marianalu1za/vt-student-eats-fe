@@ -92,8 +92,12 @@ function RestaurantMap() {
         const transformedData = transformRestaurantData(activeRestaurants)
         
         const locationResult = await getUserLocation()
-        changeTransformedData(transformedData, locationResult)
-        if (locationResult?.source === 'browser') {
+        const hasUserLoc = locationResult?.source === 'browser'
+        
+        // Only recalculate distances if user shared their location
+        // Otherwise, keep the database distance (from university)
+        if (hasUserLoc) {
+          changeTransformedData(transformedData, locationResult)
           setUserLocation([locationResult.lat, locationResult.lng])
         } else {
           setUserLocation(null)

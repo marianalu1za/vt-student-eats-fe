@@ -107,11 +107,16 @@ function RestaurantList() {
         
         const transformedData = transformRestaurantData(activeRestaurants)
 
-        // Luke: Distance Changes go here
+        // Calculate distance only if user shared their current location
         const userLoc = await getUserLocation();
-        changeTransformedData(transformedData, userLoc);
-        // Track if location is from user's current location (browser) or default (university)
-        setHasUserLocation(userLoc?.source === 'browser')
+        const hasUserLoc = userLoc?.source === 'browser'
+        setHasUserLocation(hasUserLoc)
+        
+        // Only recalculate distances if user shared their location
+        // Otherwise, keep the database distance (from university)
+        if (hasUserLoc) {
+          changeTransformedData(transformedData, userLoc);
+        }
 
         // Now that correct distances are in we can set the data on the page
         setRestaurants(transformedData)
