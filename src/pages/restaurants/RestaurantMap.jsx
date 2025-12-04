@@ -76,8 +76,14 @@ function RestaurantMap() {
   useEffect(() => {
     const loadRestaurants = async () => {
       try {
-        const apiData = await fetchRestaurants()
-        const transformedData = transformRestaurantData(apiData)
+        const apiData = await fetchRestaurants()  
+        // Filter to only show restaurants where is_active is true
+        const activeRestaurants = Array.isArray(apiData)
+          ? apiData.filter(restaurant => restaurant.is_active === true)
+          : []
+        
+        const transformedData = transformRestaurantData(activeRestaurants)
+        
         const locationResult = await getUserLocation()
         changeTransformedData(transformedData, locationResult)
         if (locationResult?.source === 'browser') {
