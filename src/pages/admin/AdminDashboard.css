@@ -5,20 +5,6 @@
   position: relative;
 }
 
-.admin-floating-profile {
-  position: fixed;
-  top: 24px;
-  right: 24px;
-  z-index: 1100;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.admin-floating-profile.hidden {
-  opacity: 0;
-  transform: translateY(-10px);
-  pointer-events: none;
-}
-
 .admin-content {
   flex: 1;
   padding: 32px;
