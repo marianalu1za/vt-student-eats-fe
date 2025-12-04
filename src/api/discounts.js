@@ -99,7 +99,7 @@ export async function updateDiscount(discountId, discountData) {
   
   try {
     const { getCsrfToken } = await import('./auth.js')
-    const token = await getCsrfToken()
+    const token = await getCsrfToken(true)
     
     console.log('Updating discount at:', url)
     
@@ -182,7 +182,7 @@ export async function createDiscount(discountData) {
   
   try {
     const { getCsrfToken } = await import('./auth.js')
-    const token = await getCsrfToken()
+    const token = await getCsrfToken(true)
     
     console.log('Creating discount at:', url)
     
@@ -255,7 +255,7 @@ export async function deleteDiscount(discountId) {
   
   try {
     const { getCsrfToken } = await import('./auth.js')
-    const token = await getCsrfToken()
+    const token = await getCsrfToken(true)
     
     console.log('Deleting discount at:', url)
     
