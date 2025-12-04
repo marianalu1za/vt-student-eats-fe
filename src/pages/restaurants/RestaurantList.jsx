@@ -28,7 +28,8 @@ function RestaurantList() {
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [cuisineTypes, setCuisineTypes] = useState([]);
+  const [cuisineTypes, setCuisineTypes] = useState([])
+  const [hasUserLocation, setHasUserLocation] = useState(false)
   const navigate = useNavigate()
 
   // Custom hooks for dropdowns and filters
@@ -80,6 +81,12 @@ function RestaurantList() {
     clearDistanceFilter()
   }
 
+  // Helper function to format distance label based on location source
+  const formatDistanceLabel = (distance) => {
+    const locationSource = hasUserLocation ? 'from current location' : 'from the university'
+    return `Up to ${distance} miles (${locationSource})`
+  }
+
   const handleClearCuisineFilter = (e) => {
     e.stopPropagation()
     clearCuisineFilter()
@@ -103,6 +110,8 @@ function RestaurantList() {
         // Luke: Distance Changes go here
         const userLoc = await getUserLocation();
         changeTransformedData(transformedData, userLoc);
+        // Track if location is from user's current location (browser) or default (university)
+        setHasUserLocation(userLoc?.source === 'browser')
 
         // Now that correct distances are in we can set the data on the page
         setRestaurants(transformedData)
@@ -267,7 +276,7 @@ function RestaurantList() {
                   }
                   isActive={showDistanceDropdown}
                   isApplied={isDistanceFilterApplied}
-                  appliedRange={isDistanceFilterApplied ? `Up to ${appliedDistanceMax} miles` : null}
+                  appliedRange={isDistanceFilterApplied ? formatDistanceLabel(appliedDistanceMax) : null}
                   onToggle={() => toggleDropdown('distance')}
                   onClear={handleClearDistanceFilter}
                 >
@@ -277,7 +286,7 @@ function RestaurantList() {
                       valueMax={distanceMax}
                       onChangeMax={setDistanceMax}
                       onApply={handleApplyDistance}
-                      formatDisplay={(max) => `Up to ${max} miles`}
+                      formatDisplay={(max) => formatDistanceLabel(max)}
                       formatSliderValue={(val) => `${val} miles`}
                       singleHandle={true}
                     />

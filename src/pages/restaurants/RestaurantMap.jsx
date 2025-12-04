@@ -74,6 +74,12 @@ function RestaurantMap() {
     clearDistanceFilter()
   }
 
+  // Helper function to format distance label based on location source
+  const formatDistanceLabel = (distance) => {
+    const locationSource = userLocation ? 'from current location' : 'from the university'
+    return `Up to ${distance} miles (${locationSource})`
+  }
+
   useEffect(() => {
     const loadRestaurants = async () => {
       try {
@@ -282,7 +288,7 @@ function RestaurantMap() {
             }
             isActive={showDistanceDropdown}
             isApplied={isDistanceFilterApplied}
-            appliedRange={isDistanceFilterApplied ? `Up to ${appliedDistanceMax} miles` : null}
+            appliedRange={isDistanceFilterApplied ? formatDistanceLabel(appliedDistanceMax) : null}
             onToggle={() => toggleDropdown('distance')}
             onClear={handleClearDistanceFilter}
           >
@@ -292,7 +298,7 @@ function RestaurantMap() {
                 valueMax={distanceMax}
                 onChangeMax={setDistanceMax}
                 onApply={handleApplyDistance}
-                formatDisplay={(max) => `Up to ${max} miles`}
+                formatDisplay={(max) => formatDistanceLabel(max)}
                 formatSliderValue={(val) => `${val} miles`}
                 singleHandle={true}
               />
