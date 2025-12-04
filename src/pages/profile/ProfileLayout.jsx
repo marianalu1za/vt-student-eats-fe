@@ -76,6 +76,17 @@ function ProfileLayout() {
       { path: '/profile', icon: '👤', label: 'My Profile' },
     ]
 
+    if (isAdmin) {
+      // For Admin users, show Admin Dashboard
+      baseItems.push(
+        {
+          path: '/admin',
+          icon: '⚙️',
+          label: 'Admin Dashboard',
+        }
+      )
+    }
+
     if (isRestaurantManager) {
       // For Restaurant Managers, show Restaurant Management
       baseItems.push(
@@ -87,14 +98,13 @@ function ProfileLayout() {
       )
     } else if (!isAdmin) {
       // For regular users (not admin), show group orders items
-      // Admin users will only see "My Profile" in the sidebar
+      // Admin users will only see "My Profile" and "Admin Dashboard" in the sidebar
       // Group orders items are accessible via ProfileButton dropdown submenu
       baseItems.push(
         { path: '/profile/group-orders-joined', icon: '👥', label: 'Group Orders I Joined' },
         { path: '/profile/group-orders-history', icon: '📜', label: 'Group Orders History' }
       )
     }
-    // If admin, only show "My Profile" (baseItems already has it)
 
     return baseItems
   }, [isRestaurantManager, isAdmin])
