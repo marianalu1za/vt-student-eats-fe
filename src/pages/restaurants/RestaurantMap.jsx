@@ -19,6 +19,7 @@ import { useDropdowns } from './hooks/useDropdowns.js'
 import { useFilters } from './hooks/useFilters.js'
 import { getUserLocation } from './services/location.js'
 import { changeTransformedData } from './services/distance.js'
+import { filterByDistance, filterByCuisine, filterByPrice } from './services/filters.js'
 
 function RestaurantMap() {
   // Arlington, VA coordinates
@@ -130,36 +131,10 @@ function RestaurantMap() {
       )
     }
 
-    if (isDistanceFilterApplied && appliedDistanceMax != null) {
-      results = results
-        .filter(
-          (restaurant) =>
-            typeof restaurant.distance === 'number' && restaurant.distance <= appliedDistanceMax
-        )
-        .sort((a, b) => a.distance - b.distance)
-    }
-
-    if (isCuisineFilterApplied && appliedCuisines.length > 0) {
-      results = results.filter((restaurant) => {
-        const restaurantTags = restaurant.tags || []
-        return appliedCuisines.some((cuisine) =>
-          restaurantTags.some((tag) =>
-            tag.toLowerCase().includes(cuisine.toLowerCase())
-          )
-        )
-      })
-    }
-
-    if (isPriceFilterApplied && appliedPriceLevels.length > 0) {
-      results = results.filter((restaurant) => {
-        if (restaurant.priceLevel == null) {
-          return false
-        }
-
-        const priceLevelSymbol = '$'.repeat(restaurant.priceLevel)
-        return appliedPriceLevels.includes(priceLevelSymbol)
-      })
-    }
+    // Apply filters using filter functions
+    results = filterByDistance(results, isDistanceFilterApplied, appliedDistanceMax)
+    results = filterByCuisine(results, isCuisineFilterApplied, appliedCuisines)
+    results = filterByPrice(results, isPriceFilterApplied, appliedPriceLevels)
 
     return results
   }, [
