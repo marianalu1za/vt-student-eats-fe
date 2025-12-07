@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getRestaurantTags } from '../../../api/restaurants'
+import { getRestaurantTags } from '../../../api/tags'
 import './Steps.css'
 import './Tags.css'
 
