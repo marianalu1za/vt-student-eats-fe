@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom'
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useMemo } from 'react'
 import Sidebar from '../../components/common/Sidebar'
 import RestaurantProfile from './RestaurantProfile'
 import EditMenu from './EditMenu'
@@ -15,6 +15,7 @@ function ManageRestaurantLayout() {
   const [restaurant, setRestaurant] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     const loadRestaurant = async () => {
@@ -34,14 +35,19 @@ function ManageRestaurantLayout() {
           return
         }
 
-        // Check if user is a restaurant manager
+        // Check if user is a restaurant manager or admin
         const roles = Array.isArray(currentUser.roles) ? currentUser.roles : [currentUser.roles]
         const isRestaurantManager = roles.some(role => {
           const roleStr = String(role).toLowerCase()
           return roleStr.includes('restaurant') && roleStr.includes('manager')
         })
+        const adminStatus = roles.some(role => {
+          const roleStr = String(role).toLowerCase()
+          return roleStr.includes('admin')
+        })
+        setIsAdmin(adminStatus)
 
-        if (!isRestaurantManager) {
+        if (!isRestaurantManager && !adminStatus) {
           navigate('/profile')
           return
         }
@@ -65,8 +71,8 @@ function ManageRestaurantLayout() {
           ownerId = restaurantData.ownerId
         }
 
-        // Check if restaurant belongs to current user
-        if (ownerId !== null && String(ownerId) !== String(currentUser.id)) {
+        // Check if restaurant belongs to current user (admins can access any restaurant)
+        if (!adminStatus && ownerId !== null && String(ownerId) !== String(currentUser.id)) {
           // Restaurant doesn't belong to this user, redirect to restaurant management
           navigate('/profile/restaurant-management')
           return
@@ -89,7 +95,7 @@ function ManageRestaurantLayout() {
     loadRestaurant()
   }, [restaurantId, navigate])
 
-  const menuItems = [
+  const menuItems = useMemo(() => [
     {
       path: `/profile/manage-restaurant/${restaurantId}/profile`,
       icon: '🏪',
@@ -113,9 +119,9 @@ function ManageRestaurantLayout() {
     {
       icon: '←',
       label: 'Back to Restaurant Management',
-      onClick: () => navigate('/profile/restaurant-management'),
+      onClick: () => navigate(isAdmin ? '/admin/restaurants' : '/profile/restaurant-management'),
     },
-  ]
+  ], [restaurantId, navigate, isAdmin])
 
   if (loading) {
     return (
