@@ -157,13 +157,13 @@ function Users() {
                   <th>Last Name</th>
                   <th>Email</th>
                   <th>Role</th>
-                  <th className="admin-table-actions-header">Actions</th>
+                  {/* <th className="admin-table-actions-header">Actions</th> */}
                 </tr>
               </thead>
               <tbody>
                 {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
+                    <td colSpan="5" style={{ textAlign: 'center', padding: '40px', color: '#6c757d' }}>
                       {searchQuery ? 'No users found matching your search' : 'No users'}
                     </td>
                   </tr>
@@ -175,7 +175,7 @@ function Users() {
                     <td>{user.lastName}</td>
                     <td>{user.email}</td>
                     <td>{user.role}</td>
-                    <td className="admin-table-actions-cell">
+                    {/* <td className="admin-table-actions-cell">
                       <div className="admin-table-actions">
                         <button className="admin-btn admin-btn-secondary" style={{ marginRight: '8px' }}>
                           Edit
@@ -187,7 +187,7 @@ function Users() {
                           Delete
                         </button>
                       </div>
-                    </td>
+                    </td> */}
                   </tr>
                   ))
                 )}
