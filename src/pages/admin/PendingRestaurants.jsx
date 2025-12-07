@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import './AdminDashboard.css'
 import AdminSearchBar from './components/AdminSearchBar.jsx'
 import AdminPagination from './components/AdminPagination.jsx'
-import ConfirmDialog from '../../components/common/ConfirmDialog.jsx'
+import PriceSelectionModal from './components/PriceSelectionModal.jsx'
 import { useRestaurants } from './hooks/useRestaurants'
 import { usePagination } from './hooks/usePagination'
 import { useRestaurantSearch } from './hooks/useRestaurantSearch'
@@ -15,6 +15,7 @@ function PendingRestaurants() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRestaurant, setSelectedRestaurant] = useState(null)
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false)
+  const [selectedPriceLevel, setSelectedPriceLevel] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [approveError, setApproveError] = useState(null)
 
@@ -34,24 +35,34 @@ function PendingRestaurants() {
 
   const handleApproveClick = (restaurant) => {
     setSelectedRestaurant(restaurant)
+    setSelectedPriceLevel(null)
+    setApproveError(null)
     setIsApproveDialogOpen(true)
   }
 
   const handleApproveConfirm = async () => {
-    if (!selectedRestaurant || isSubmitting) return
+    if (!selectedRestaurant || !selectedPriceLevel || isSubmitting) return
     
     try {
       setIsSubmitting(true)
       setApproveError(null)
       
-      // Send PATCH request to set is_active to true
-      await updateRestaurant(selectedRestaurant.id, { is_active: true })
+      // Convert price level string to number (1-5 corresponding to number of $ signs)
+      // '$' -> 1, '$$' -> 2, '$$$' -> 3, '$$$$' -> 4, '$$$$$' -> 5
+      const priceLevelNumber = selectedPriceLevel.length
+      
+      // Send PATCH request to set is_active to true and price_level
+      await updateRestaurant(selectedRestaurant.id, { 
+        is_active: true,
+        price_level: priceLevelNumber
+      })
       
       // After approval, refresh the list to remove the approved restaurant
       await refreshRestaurants()
       
       setIsApproveDialogOpen(false)
       setSelectedRestaurant(null)
+      setSelectedPriceLevel(null)
       setApproveError(null)
     } catch (error) {
       console.error('Failed to approve restaurant', error)
@@ -64,6 +75,7 @@ function PendingRestaurants() {
   const handleApproveCancel = () => {
     setIsApproveDialogOpen(false)
     setSelectedRestaurant(null)
+    setSelectedPriceLevel(null)
     setApproveError(null)
   }
 
@@ -175,15 +187,17 @@ function PendingRestaurants() {
           onRowsPerPageChange={handleRowsPerPageChange}
         />
       </div>
-      <ConfirmDialog
+      <PriceSelectionModal
         open={isApproveDialogOpen}
-        title="Approve restaurant?"
+        title="Approve Restaurant"
         message={
           selectedRestaurant
-            ? `This will publish the restaurant: ${selectedRestaurant.name} to our website. Users will be able to view the menu on the VT Student Eats website.`
+            ? `Please select the price range for ${selectedRestaurant.name}. This will publish the restaurant to our website.`
             : ''
         }
         error={approveError}
+        selectedPrice={selectedPriceLevel}
+        onPriceChange={setSelectedPriceLevel}
         confirmLabel={isSubmitting ? 'Approving...' : 'Approve'}
         cancelLabel="Cancel"
         onConfirm={handleApproveConfirm}
