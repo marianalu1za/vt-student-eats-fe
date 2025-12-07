@@ -147,16 +147,6 @@ function GroupOrders() {
         <section className="group-orders-hero">
           <div className="group-orders-hero-top">
             <h2 className="group-orders-title">Group Ordering</h2>
-
-            <div className="group-orders-right">
-              <button
-                type="button"
-                className="group-orders-pill-button"
-              >
-                Group orders | joined
-              </button>
-              <div className="group-orders-avatar" aria-hidden="true"></div>
-            </div>
           </div>
 
           <button
