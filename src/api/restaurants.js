@@ -427,6 +427,9 @@ export async function updateRestaurant(id, restaurantData) {
     if (restaurantData.open_hours !== undefined) {
       apiPayload.open_hours = restaurantData.open_hours
     }
+    if (restaurantData.price_level !== undefined) {
+      apiPayload.price_level = restaurantData.price_level
+    }
     
     const response = await fetch(url, {
       method: 'PATCH',

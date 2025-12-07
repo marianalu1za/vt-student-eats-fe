@@ -74,7 +74,7 @@ function AdminDashboard() {
 
   return (
       <div className="admin-dashboard">
-      <Sidebar title="Admin Panel" menuItems={adminMenuItems} contentRef={contentRef} showBrand={true}/>
+      <Sidebar title="Admin Panel" menuItems={adminMenuItems} contentRef={contentRef} showBrand={true} brandLink="/restaurants"/>
       <div className="admin-content" ref={contentRef}>
         <Routes>
           <Route path="" element={<Navigate to="/admin/restaurants" replace />} />
