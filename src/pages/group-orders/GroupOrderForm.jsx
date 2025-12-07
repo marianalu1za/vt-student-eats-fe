@@ -16,7 +16,11 @@ function CreateGroupOrderForm({ onSubmit, onCancel }) {
     async function loadRestaurants() {
       try {
         const data = await fetchRestaurants()
-        setRestaurants(data)
+        // Filter to only show restaurants where is_active is true
+        const activeRestaurants = Array.isArray(data)
+          ? data.filter(restaurant => restaurant.is_active === true)
+          : []
+        setRestaurants(activeRestaurants)
       } catch (err) {
         console.error('Error loading restaurants', err)
         setError('Could not load restaurants. Please try again.')
