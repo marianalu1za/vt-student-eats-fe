@@ -161,7 +161,7 @@ function ExistingRestaurants() {
               <tr key={restaurant.id}>
                 <td>{restaurant.id}</td>
                 <td>{restaurant.name}</td>
-                <td>{restaurant.phone_number}</td>
+                <td>{restaurant.phone_number || 'N/A'}</td>
                 <td>{restaurant.owner || 'N/A'}</td>
                 <td>{restaurant.address || 'N/A'}</td>
                 <td>
