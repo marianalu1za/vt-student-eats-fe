@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createRestaurant } from '../../../api/restaurants'
+import { getAllRestaurantTagsWithIds, createRestaurantTag } from '../../../api/tags'
+import { joinTagToRestaurant } from '../../../api/tags-join'
 import { getCurrentUser } from '../../../api/auth'
 import './Steps.css'
 
@@ -124,8 +126,57 @@ function Review({ formData, updateFormData, navigate, clearFormData }) {
         throw new Error('Restaurant address is required.')
       }
       
+      // Handle tags: create missing tags and get their IDs
+      const tagNames = restaurantData.tags || []
+      const tagIds = []
+      
+      if (tagNames.length > 0) {
+        // Fetch all existing tags
+        const existingTags = await getAllRestaurantTagsWithIds()
+        const existingTagMap = new Map()
+        existingTags.forEach(tag => {
+          existingTagMap.set(tag.name.toLowerCase(), tag.id)
+        })
+        
+        // Process each tag: create if doesn't exist, then get ID
+        for (const tagName of tagNames) {
+          if (!tagName || !tagName.trim()) continue
+          
+          const tagNameLower = tagName.trim().toLowerCase()
+          let tagId = existingTagMap.get(tagNameLower)
+          
+          // Create tag if it doesn't exist
+          if (!tagId) {
+            try {
+              const createdTag = await createRestaurantTag(tagName.trim())
+              tagId = createdTag.id
+            } catch (tagError) {
+              console.error(`Failed to create tag "${tagName}":`, tagError)
+              // Continue with other tags even if one fails
+              continue
+            }
+          }
+          
+          if (tagId) {
+            tagIds.push(tagId)
+          }
+        }
+      }
+      
       // Create restaurant via API
-      await createRestaurant(restaurantData)
+      const createdRestaurant = await createRestaurant(restaurantData)
+      
+      // Join tags to restaurant
+      if (tagIds.length > 0 && createdRestaurant && createdRestaurant.id) {
+        for (const tagId of tagIds) {
+          try {
+            await joinTagToRestaurant(createdRestaurant.id, tagId)
+          } catch (joinError) {
+            console.error(`Failed to join tag ${tagId} to restaurant:`, joinError)
+            // Continue with other tags even if one fails
+          }
+        }
+      }
       
       // Clear form data after successful creation
       if (clearFormData) {

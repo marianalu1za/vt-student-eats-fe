@@ -7,9 +7,9 @@ import './RestaurantMap.css'
 import RestaurantCard from './components/RestaurantCard'
 import {
   fetchRestaurants,
-  transformRestaurantData,
-  getRestaurantTags
+  transformRestaurantData
 } from '../../api/restaurants.js'
+import { getRestaurantTags } from '../../api/tags.js'
 import SearchBar from './components/SearchBar.jsx'
 import FilterButton from './components/FilterButton.jsx'
 import CuisineFilter from './components/CuisineFilter.jsx'

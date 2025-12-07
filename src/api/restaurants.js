@@ -201,32 +201,6 @@ export function transformRestaurantData(apiRestaurants) {
   }));
 }
 
-export async function getRestaurantTags() {
-  const url = `${API_BASE_URL}/api/restaurant-tags/`;
-
-  try {
-    console.log("Fetching restaurant tags from:", url);
-
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("API Error Response:", errorText);
-      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    return data.map((tag) => tag.name);
-  } catch (error) {
-    console.error("Error fetching restaurant tags:", error);
-    throw error;
-  }
-}
 
 /**
  * Creates a new restaurant using POST request
