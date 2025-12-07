@@ -74,8 +74,7 @@ function ExistingRestaurants() {
   }
 
   const handleEditClick = (restaurant) => {
-    setSelectedRestaurant(restaurant)
-    setIsEditDialogOpen(true)
+    navigate(`/profile/manage-restaurant/${restaurant.id}`)
   }
 
   const handleEditSave = async (updated) => {

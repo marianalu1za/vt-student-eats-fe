@@ -38,10 +38,16 @@ function ProtectedRoute({ children, requiredRole = null, redirectTo = '/login', 
 
         // Check if user has the required role
         const roles = Array.isArray(user.roles) ? user.roles : [user.roles]
+        const isAdmin = roles.some(role => {
+          const roleStr = String(role).toLowerCase()
+          return roleStr.includes('admin')
+        })
         const hasRequiredRole = roles.some(role => {
           const roleStr = String(role).toLowerCase()
           
           if (requiredRole === 'restaurant_manager') {
+            // Admins can also access restaurant_manager routes
+            if (isAdmin) return true
             return roleStr.includes('restaurant') && roleStr.includes('manager')
           }
           
