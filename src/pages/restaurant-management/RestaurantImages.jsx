@@ -43,6 +43,11 @@ function RestaurantImages({ restaurantId }) {
     loadImages()
   }, [restaurantId])
 
+  const handleEditClick = () => {
+    // TODO: Implement edit images functionality
+    console.log('Edit images clicked')
+  }
+
   const handleAddClick = () => {
     setIsModalOpen(true)
     setSubmitError(null)
@@ -112,13 +117,22 @@ function RestaurantImages({ restaurantId }) {
             <h1>Restaurant Images</h1>
             <p>View all images for this restaurant</p>
           </div>
-          <button
-            className="admin-btn admin-btn-primary"
-            onClick={handleAddClick}
-            style={{ fontSize: '0.875rem', padding: '8px 16px' }}
-          >
-            Add New Image
-          </button>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <button
+              className="admin-btn admin-btn-secondary"
+              onClick={handleEditClick}
+              style={{ fontSize: '0.875rem', padding: '8px 16px' }}
+            >
+              Edit Images
+            </button>
+            <button
+              className="admin-btn admin-btn-primary"
+              onClick={handleAddClick}
+              style={{ fontSize: '0.875rem', padding: '8px 16px' }}
+            >
+              Add New Image
+            </button>
+          </div>
         </div>
       </div>
 
