@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { fetchRestaurantImages } from '../../api/restaurants'
 import { createRestaurantImage } from '../../api/images'
 import AddImageModal from './components/AddImageModal'
+import RestaurantImageCard from './components/RestaurantImageCard'
 import ErrorPopup from '../../components/common/ErrorPopup'
 import ConfirmationMessage from '../../components/common/ConfirmationMessage'
 import './RestaurantImages.css'
@@ -133,27 +134,7 @@ function RestaurantImages({ restaurantId }) {
             </div>
             <div className="restaurant-images-grid">
               {images.map((image) => (
-                <div key={image.id} className="restaurant-image-item">
-                  <div className="image-wrapper">
-                    <img 
-                      src={image.image_url} 
-                      alt={`Restaurant image ${image.id}`}
-                      onError={(e) => {
-                        e.target.style.display = 'none'
-                        e.target.nextSibling.style.display = 'flex'
-                      }}
-                    />
-                    <div className="image-error" style={{ display: 'none' }}>
-                      Failed to load image
-                    </div>
-                  </div>
-                  <div className="image-info">
-                    <div className="image-detail">
-                      <span className="image-label">Sort Order:</span>
-                      <span className="image-value">{image.sort_order}</span>
-                    </div>
-                  </div>
-                </div>
+                <RestaurantImageCard key={image.id} image={image} />
               ))}
             </div>
           </div>
