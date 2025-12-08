@@ -909,3 +909,51 @@ export async function deleteMenuItem(id) {
     throw error
   }
 }
+
+/**
+ * Fetches restaurant images for a specific restaurant
+ * @param {string|number} restaurantId - The restaurant ID
+ * @returns {Promise<Array>} Array of restaurant image objects with id, image_url, sort_order, and restaurant
+ * @throws {Error} If images are not found or other HTTP errors occur
+ */
+export async function fetchRestaurantImages(restaurantId) {
+  const url = `${API_BASE_URL}/api/restaurant-images/?restaurant_id=${restaurantId}`
+  
+  try {
+    console.log('Fetching restaurant images from:', url)
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('API Error Response:', errorText)
+      
+      if (response.status === 404) {
+        throw new Error(`Restaurant images not found: ${errorText}`)
+      }
+      
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`)
+    }
+
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error('Error fetching restaurant images:', error)
+    
+    // Provide more specific error messages
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error(
+        `Failed to connect to backend API at ${url}. ` +
+        `Please ensure the backend server is running at http://localhost:8000. ` +
+        `This might be a CORS issue or the server is not running.`
+      )
+    }
+    
+    throw error
+  }
+}
