@@ -75,7 +75,8 @@ export async function leaveGroupOrder(participantId) {
   const url = `${API_BASE_URL}/api/group-order-participants/${participantId}/`
 
   try {
-    const token = await getCsrfToken()
+    // Force refresh CSRF token to ensure we have a valid one
+    const token = await getCsrfToken(true)
 
     console.log('Leaving group order, participant:', participantId)
 
