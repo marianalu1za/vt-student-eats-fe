@@ -140,3 +140,92 @@ export async function createRestaurantImage(imageData) {
   }
 }
 
+/**
+ * Deletes a restaurant image by ID
+ * @param {string|number} imageId - The restaurant image ID to delete
+ * @returns {Promise<void>}
+ * @throws {Error} If deletion fails or image is not found
+ */
+export async function deleteRestaurantImage(imageId) {
+  const url = `${API_BASE_URL}/api/restaurant-images/${imageId}/`
+  
+  try {
+    // Force refresh CSRF token to ensure we have a valid one
+    const token = await getCsrfToken(true)
+    
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'X-CSRFToken': token,
+      },
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('API Error Response:', errorText)
+      
+      let errorData = {}
+      let errorMessage = `HTTP error! status: ${response.status}`
+      try {
+        errorData = JSON.parse(errorText)
+        errorMessage = errorData.message || errorData.error || errorData.detail || errorMessage
+      } catch {
+        errorMessage = errorText || errorMessage
+      }
+
+      if (response.status === 403 && (errorMessage.includes('CSRF') || errorMessage.includes('csrf'))) {
+        console.log('CSRF token error detected, clearing cache and retrying...')
+        clearCsrfTokenCache()
+
+        const freshToken = await getCsrfToken(true)
+        const retryResponse = await fetch(url, {
+          method: 'DELETE',
+          headers: {
+            'X-CSRFToken': freshToken,
+          },
+          credentials: 'include',
+        })
+
+        if (!retryResponse.ok) {
+          const retryErrorText = await retryResponse.text()
+          let retryErrorMessage = `HTTP error! status: ${retryResponse.status}`
+          try {
+            const retryErrorData = JSON.parse(retryErrorText)
+            retryErrorMessage = retryErrorData.message || retryErrorData.error || retryErrorData.detail || retryErrorMessage
+          } catch {
+            retryErrorMessage = retryErrorText || retryErrorMessage
+          }
+          throw new Error(retryErrorMessage)
+        }
+
+        return
+      }
+      
+      if (response.status === 404) {
+        throw new Error(`Image not found: ${errorMessage}`)
+      }
+      
+      throw new Error(errorMessage)
+    }
+
+    // DELETE requests may not return a body
+    if (response.status === 204 || response.status === 200) {
+      return
+    }
+  } catch (error) {
+    console.error('Error deleting restaurant image:', error)
+    
+    // Provide more specific error messages
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error(
+        `Failed to connect to backend API at ${url}. ` +
+        `Please ensure the backend server is running at http://localhost:8000. ` +
+        `This might be a CORS issue or the server is not running.`
+      )
+    }
+    
+    throw error
+  }
+}
+
