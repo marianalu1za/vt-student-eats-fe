@@ -11,6 +11,7 @@ function MyProfile() {
   const [error, setError] = useState(null)
   const [isEditing, setIsEditing] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState(null)
+  const [avatarFile, setAvatarFile] = useState(null)
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -37,36 +38,45 @@ function MyProfile() {
       setError(null)
       const data = await getCurrentUser()
       setProfile(data)
-      setFormData({
+      
+      // Check if user is a restaurant manager
+      const roles = Array.isArray(data.roles) ? data.roles : [data.roles]
+      const isRestaurantMgr = roles.some(role => {
+        const roleStr = String(role).toLowerCase()
+        return roleStr.includes('restaurant') && roleStr.includes('manager')
+      })
+      
+      const baseFormData = {
         first_name: data.first_name || '',
         last_name: data.last_name || '',
         email: data.email || '',
         phone: data.phone || '',
         show_phone: data.show_phone || false,
-        social_media: data.social_media || '',
-        show_social_media: data.show_social_media || false,
-        major: data.major || '',
         email_notifications: data.email_notifications !== undefined ? data.email_notifications : true,
         sms_notifications: data.sms_notifications || false,
         theme: data.theme || 'light',
-      })
-      setOriginalData({
-        first_name: data.first_name || '',
-        last_name: data.last_name || '',
-        email: data.email || '',
-        phone: data.phone || '',
-        show_phone: data.show_phone || false,
-        social_media: data.social_media || '',
-        show_social_media: data.show_social_media || false,
-        major: data.major || '',
-        email_notifications: data.email_notifications !== undefined ? data.email_notifications : true,
-        sms_notifications: data.sms_notifications || false,
-        theme: data.theme || 'light',
-      })
+      }
+      
+      // Only include social_media and major for non-restaurant managers
+      if (!isRestaurantMgr) {
+        baseFormData.social_media = data.social_media || ''
+        baseFormData.show_social_media = data.show_social_media || false
+        baseFormData.major = data.major || ''
+      } else {
+        baseFormData.social_media = ''
+        baseFormData.show_social_media = false
+        baseFormData.major = ''
+      }
+      
+      setFormData(baseFormData)
+      setOriginalData({ ...baseFormData })
       // Load avatar if exists
       if (data.avatar_url) {
         setAvatarPreview(data.avatar_url)
+      } else {
+        setAvatarPreview(null)
       }
+      setAvatarFile(null) // Clear any selected file
     } catch (err) {
       setError(err.message || 'Failed to load profile')
       console.error('Error loading profile:', err)
@@ -115,6 +125,15 @@ function MyProfile() {
     return role
   }
 
+  const isRestaurantManager = () => {
+    if (!profile?.roles) return false
+    const roles = Array.isArray(profile.roles) ? profile.roles : [profile.roles]
+    return roles.some(role => {
+      const roleStr = String(role).toLowerCase()
+      return roleStr.includes('restaurant') && roleStr.includes('manager')
+    })
+  }
+
   const handleEdit = () => {
     setIsEditing(true)
     setValidationErrors({})
@@ -126,6 +145,7 @@ function MyProfile() {
       setFormData(originalData)
     }
     setAvatarPreview(profile?.avatar_url || null)
+    setAvatarFile(null) // Clear selected file
     setValidationErrors({})
   }
 
@@ -155,18 +175,29 @@ function MyProfile() {
 
     try {
       setError(null)
-      const updatedProfile = await updateUserProfile({
+      const profileUpdateData = {
         first_name: formData.first_name,
         last_name: formData.last_name,
         phone: formData.phone,
         show_phone: formData.show_phone,
-        social_media: formData.social_media,
-        show_social_media: formData.show_social_media,
-        major: formData.major,
         email_notifications: formData.email_notifications,
         sms_notifications: formData.sms_notifications,
         theme: formData.theme,
-      })
+      }
+      
+      // Only include social_media and major for non-restaurant managers
+      if (!isRestaurantManager()) {
+        profileUpdateData.social_media = formData.social_media
+        profileUpdateData.show_social_media = formData.show_social_media
+        profileUpdateData.major = formData.major
+      }
+      
+      // Include avatar file if one was selected
+      if (avatarFile) {
+        profileUpdateData.avatar = avatarFile
+      }
+      
+      const updatedProfile = await updateUserProfile(profileUpdateData)
       setProfile(updatedProfile)
       // Reconstruct formData and originalData from server response to stay in sync
       const syncedFormData = {
@@ -175,15 +206,30 @@ function MyProfile() {
         email: updatedProfile.email || '',
         phone: updatedProfile.phone || '',
         show_phone: updatedProfile.show_phone || false,
-        social_media: updatedProfile.social_media || '',
-        show_social_media: updatedProfile.show_social_media || false,
-        major: updatedProfile.major || '',
         email_notifications: updatedProfile.email_notifications !== undefined ? updatedProfile.email_notifications : true,
         sms_notifications: updatedProfile.sms_notifications || false,
         theme: updatedProfile.theme || 'light',
       }
+      
+      // Only include social_media and major for non-restaurant managers
+      if (!isRestaurantManager()) {
+        syncedFormData.social_media = updatedProfile.social_media || ''
+        syncedFormData.show_social_media = updatedProfile.show_social_media || false
+        syncedFormData.major = updatedProfile.major || ''
+      } else {
+        syncedFormData.social_media = ''
+        syncedFormData.show_social_media = false
+        syncedFormData.major = ''
+      }
       setFormData(syncedFormData)
       setOriginalData(syncedFormData)
+      // Update avatar preview with the new URL from server
+      if (updatedProfile.avatar_url) {
+        setAvatarPreview(updatedProfile.avatar_url)
+      } else {
+        setAvatarPreview(null)
+      }
+      setAvatarFile(null) // Clear selected file after successful upload
       // Update stored user data in localStorage/sessionStorage to sync with ProfileButton
       storeUser(updatedProfile)
       setIsEditing(false)
@@ -229,14 +275,16 @@ function MyProfile() {
         setError('Image size must be less than 5MB')
         return
       }
+      // Store the file for upload
+      setAvatarFile(file)
       // Create preview
       const reader = new FileReader()
       reader.onloadend = () => {
         setAvatarPreview(reader.result)
       }
       reader.readAsDataURL(file)
-      // TODO: Upload to backend when endpoint is ready
-      console.log('Avatar file selected (upload not yet implemented):', file.name)
+      // Clear any previous errors
+      setError(null)
     }
   }
 
@@ -244,13 +292,15 @@ function MyProfile() {
     // Generate a simple colored avatar based on initials
     // This is a stub - in production, you might use a service like DiceBear
     setAvatarPreview(null)
+    setAvatarFile(null) // Clear any selected file
+    // Note: To actually remove the avatar, we'd need to send a delete request or null value
+    // For now, this just clears the preview
     console.log('Generate avatar clicked (not yet implemented)')
   }
 
   const formatAccountCreated = () => {
-    // Stub - this would come from backend
-    if (profile?.date_joined || profile?.created_at) {
-      const date = new Date(profile.date_joined || profile.created_at)
+    if (profile?.date_joined) {
+      const date = new Date(profile.date_joined)
       return date.toLocaleString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -517,61 +567,65 @@ function MyProfile() {
             )}
           </div>
 
-          <div className="profile-field">
-            <div className="profile-field-header">
-              <label htmlFor="social_media">Social Media Link</label>
-              {isEditing && (
-                <label className="profile-toggle-label">
+          {!isRestaurantManager() && (
+            <>
+              <div className="profile-field">
+                <div className="profile-field-header">
+                  <label htmlFor="social_media">Social Media Link</label>
+                  {isEditing && (
+                    <label className="profile-toggle-label">
+                      <input
+                        type="checkbox"
+                        name="show_social_media"
+                        checked={formData.show_social_media}
+                        onChange={handleChange}
+                      />
+                      <span>Show publicly</span>
+                    </label>
+                  )}
+                </div>
+                {isEditing ? (
                   <input
-                    type="checkbox"
-                    name="show_social_media"
-                    checked={formData.show_social_media}
+                    id="social_media"
+                    name="social_media"
+                    type="url"
+                    value={formData.social_media}
                     onChange={handleChange}
+                    placeholder="https://linkedin.com/in/yourprofile"
                   />
-                  <span>Show publicly</span>
-                </label>
-              )}
-            </div>
-            {isEditing ? (
-              <input
-                id="social_media"
-                name="social_media"
-                type="url"
-                value={formData.social_media}
-                onChange={handleChange}
-                placeholder="https://linkedin.com/in/yourprofile"
-              />
-            ) : (
-              <div className="profile-field-value">
-                {profile?.social_media ? (
-                  <a href={profile.social_media} target="_blank" rel="noopener noreferrer" className="profile-link">
-                    {profile.social_media}
-                  </a>
                 ) : (
-                  '—'
-                )}
-                {profile?.show_social_media && profile?.social_media && (
-                  <span className="profile-field-badge">Public</span>
+                  <div className="profile-field-value">
+                    {profile?.social_media ? (
+                      <a href={profile.social_media} target="_blank" rel="noopener noreferrer" className="profile-link">
+                        {profile.social_media}
+                      </a>
+                    ) : (
+                      '—'
+                    )}
+                    {profile?.show_social_media && profile?.social_media && (
+                      <span className="profile-field-badge">Public</span>
+                    )}
+                  </div>
                 )}
               </div>
-            )}
-          </div>
 
-          <div className="profile-field">
-            <label htmlFor="major">Major</label>
-            {isEditing ? (
-              <input
-                id="major"
-                name="major"
-                type="text"
-                value={formData.major}
-                onChange={handleChange}
-                placeholder="Computer Science"
-              />
-            ) : (
-              <div className="profile-field-value">{profile?.major || '—'}</div>
-            )}
-          </div>
+              <div className="profile-field">
+                <label htmlFor="major">Major</label>
+                {isEditing ? (
+                  <input
+                    id="major"
+                    name="major"
+                    type="text"
+                    value={formData.major}
+                    onChange={handleChange}
+                    placeholder="Computer Science"
+                  />
+                ) : (
+                  <div className="profile-field-value">{profile?.major || '—'}</div>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {error && isEditing && (
