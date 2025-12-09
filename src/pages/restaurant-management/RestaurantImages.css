@@ -1,0 +1,39 @@
+.restaurant-images-container {
+  padding: 20px;
+}
+
+.restaurant-images-header {
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.images-count {
+  margin: 0;
+  font-size: 1rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.restaurant-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.restaurant-images-empty {
+  padding: 40px;
+  text-align: center;
+  color: #6c757d;
+}
+
+.restaurant-images-empty p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.error-message {
+  color: #c1121f;
+  margin-top: 8px;
+}
+

@@ -4,6 +4,7 @@ import Sidebar from '../../components/common/Sidebar'
 import RestaurantProfile from './RestaurantProfile'
 import EditMenu from './EditMenu'
 import DiscountManagement from './DiscountManagement'
+import RestaurantImages from './RestaurantImages'
 import { fetchRestaurant } from '../../api/restaurants'
 import { getCurrentUser } from '../../api/auth'
 import './ManageRestaurantLayout.css'
@@ -112,6 +113,11 @@ function ManageRestaurantLayout() {
       label: 'Discount Management',
     },
     {
+      path: `/profile/manage-restaurant/${restaurantId}/images`,
+      icon: '🖼️',
+      label: 'Restaurant Images',
+    },
+    {
       icon: '👁️',
       label: 'View Restaurant',
       onClick: () => navigate(`/restaurants/${restaurantId}`),
@@ -161,6 +167,7 @@ function ManageRestaurantLayout() {
           <Route path="profile" element={<RestaurantProfile restaurantId={restaurantId} restaurant={restaurant} onRestaurantUpdate={setRestaurant} />} />
           <Route path="menu" element={<EditMenu restaurantId={restaurantId} restaurant={restaurant} />} />
           <Route path="discounts" element={<DiscountManagement restaurantId={restaurantId} restaurant={restaurant} />} />
+          <Route path="images" element={<RestaurantImages restaurantId={restaurantId} />} />
           <Route path="" element={<Navigate to={`/profile/manage-restaurant/${restaurantId}/profile`} replace />} />
           <Route path="*" element={<Navigate to={`/profile/manage-restaurant/${restaurantId}/profile`} replace />} />
         </Routes>
