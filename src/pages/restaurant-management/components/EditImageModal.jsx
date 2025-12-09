@@ -38,7 +38,9 @@ function EditImageModal({
   const validateForm = () => {
     const newErrors = {}
     
-    if (sortOrder && sortOrder.trim()) {
+    if (!sortOrder || !sortOrder.trim()) {
+      newErrors.sort_order = 'Sort order is required'
+    } else {
       const sortOrderNum = parseInt(sortOrder, 10)
       if (isNaN(sortOrderNum)) {
         newErrors.sort_order = 'Sort order must be a number'
@@ -56,9 +58,14 @@ function EditImageModal({
       return
     }
     
+    // Always send a valid integer, default to 0 if empty
+    const sortOrderValue = sortOrder && sortOrder.trim() 
+      ? parseInt(sortOrder, 10) 
+      : (image.sort_order ?? 0)
+    
     onUpdate?.({
       imageId: image.id,
-      sort_order: sortOrder ? parseInt(sortOrder, 10) : undefined,
+      sort_order: sortOrderValue,
     })
   }
 
@@ -92,7 +99,7 @@ function EditImageModal({
         <form className="edit-image-modal-form" onSubmit={handleUpdate}>
           <div className="edit-image-modal-fields">
             <label className="edit-image-modal-field">
-              <span>Sort Order</span>
+              <span>Sort Order <span className="required-asterisk">*</span></span>
               <input
                 type="number"
                 value={sortOrder}
@@ -101,6 +108,7 @@ function EditImageModal({
                 placeholder="0"
                 min="-2147483648"
                 max="2147483647"
+                required
                 className={errors.sort_order ? 'error' : ''}
               />
               {errors.sort_order && (

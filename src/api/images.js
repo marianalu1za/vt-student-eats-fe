@@ -151,8 +151,20 @@ export async function updateRestaurantImage(imageId, updateData) {
   const url = `${API_BASE_URL}/api/restaurant-images/${imageId}/`
   
   try {
+    // Ensure sort_order is always a valid integer (never null/undefined)
+    const sanitizedData = { ...updateData }
+    if ('sort_order' in sanitizedData) {
+      if (sanitizedData.sort_order == null) {
+        throw new Error('sort_order cannot be null')
+      }
+      sanitizedData.sort_order = parseInt(sanitizedData.sort_order, 10)
+      if (isNaN(sanitizedData.sort_order)) {
+        throw new Error('sort_order must be a valid integer')
+      }
+    }
+    
     console.log('Updating restaurant image at:', url)
-    console.log('Update data:', updateData)
+    console.log('Update data:', sanitizedData)
     const token = await getCsrfToken(true)
     
     const response = await fetch(url, {
@@ -162,7 +174,7 @@ export async function updateRestaurantImage(imageId, updateData) {
         'X-CSRFToken': token,
       },
       credentials: 'include',
-      body: JSON.stringify(updateData),
+      body: JSON.stringify(sanitizedData),
     })
 
     if (!response.ok) {

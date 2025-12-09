@@ -68,13 +68,18 @@ function RestaurantImages({ restaurantId }) {
       setIsUpdating(true)
       setEditError(null)
       
-      await updateRestaurantImage(updateData.imageId, { sort_order: updateData.sort_order })
+      // Ensure sort_order is always a valid integer (never null/undefined)
+      const sortOrderValue = updateData.sort_order != null 
+        ? parseInt(updateData.sort_order, 10) 
+        : (selectedImage.sort_order ?? 0)
+      
+      await updateRestaurantImage(updateData.imageId, { sort_order: sortOrderValue })
       
       // Update local state and re-sort
       setImages(prevImages => {
         const updated = prevImages.map(img => 
           img.id === updateData.imageId 
-            ? { ...img, sort_order: updateData.sort_order } 
+            ? { ...img, sort_order: sortOrderValue } 
             : img
         )
         return [...updated].sort((a, b) => a.sort_order - b.sort_order)
