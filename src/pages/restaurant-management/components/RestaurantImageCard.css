@@ -4,11 +4,13 @@
   overflow: hidden;
   background: #fff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.2s, transform 0.2s;
+  cursor: pointer;
 }
 
 .restaurant-image-item:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
 }
 
 .image-wrapper {
@@ -20,35 +22,6 @@
   align-items: center;
   justify-content: center;
   position: relative;
-}
-
-.image-delete-btn {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: rgba(193, 18, 31, 0.9);
-  color: white;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 10;
-  transition: background-color 0.2s, transform 0.2s;
-  font-size: 14px;
-  padding: 0;
-}
-
-.image-delete-btn:hover {
-  background-color: rgba(193, 18, 31, 1);
-  transform: scale(1.1);
-}
-
-.image-delete-btn:active {
-  transform: scale(0.95);
 }
 
 .image-wrapper img {

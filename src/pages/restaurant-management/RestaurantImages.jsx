@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { fetchRestaurantImages } from '../../api/restaurants'
-import { createRestaurantImage, deleteRestaurantImage } from '../../api/images'
+import { createRestaurantImage, deleteRestaurantImage, updateRestaurantImage } from '../../api/images'
 import AddImageModal from './components/AddImageModal'
+import EditImageModal from './components/EditImageModal'
 import RestaurantImageCard from './components/RestaurantImageCard'
-import ConfirmDialog from '../../components/common/ConfirmDialog'
 import ErrorPopup from '../../components/common/ErrorPopup'
 import ConfirmationMessage from '../../components/common/ConfirmationMessage'
 import './RestaurantImages.css'
@@ -18,12 +18,11 @@ function RestaurantImages({ restaurantId }) {
   const [showErrorPopup, setShowErrorPopup] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const [showSuccessPopup, setShowSuccessPopup] = useState(false)
-  const [isEditMode, setIsEditMode] = useState(false)
-  const [selectedImageToDelete, setSelectedImageToDelete] = useState(null)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [selectedImage, setSelectedImage] = useState(null)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [deleteError, setDeleteError] = useState(null)
-  const [showDeleteErrorPopup, setShowDeleteErrorPopup] = useState(false)
+  const [editError, setEditError] = useState(null)
 
   const loadImages = async () => {
     if (!restaurantId) {
@@ -50,32 +49,69 @@ function RestaurantImages({ restaurantId }) {
     loadImages()
   }, [restaurantId])
 
-  const handleEditClick = () => {
-    setIsEditMode(!isEditMode)
+  const handleImageClick = (image) => {
+    setSelectedImage(image)
+    setIsEditModalOpen(true)
+    setEditError(null)
   }
 
-  const handleDeleteImage = (imageId) => {
-    const image = images.find(img => img.id === imageId)
-    setSelectedImageToDelete(image)
-    setIsDeleteDialogOpen(true)
-    setDeleteError(null)
+  const handleEditModalCancel = () => {
+    setIsEditModalOpen(false)
+    setSelectedImage(null)
+    setEditError(null)
   }
 
-  const handleDeleteConfirm = async () => {
-    if (!selectedImageToDelete || isDeleting) return
+  const handleUpdateImage = async (updateData) => {
+    if (!selectedImage || isUpdating) return
+
+    try {
+      setIsUpdating(true)
+      setEditError(null)
+      
+      await updateRestaurantImage(updateData.imageId, { sort_order: updateData.sort_order })
+      
+      // Update local state and re-sort
+      setImages(prevImages => {
+        const updated = prevImages.map(img => 
+          img.id === updateData.imageId 
+            ? { ...img, sort_order: updateData.sort_order } 
+            : img
+        )
+        return [...updated].sort((a, b) => a.sort_order - b.sort_order)
+      })
+      
+      setSuccessMessage('Image updated successfully!')
+      setShowSuccessPopup(true)
+      setIsEditModalOpen(false)
+      setSelectedImage(null)
+    } catch (err) {
+      console.error('Failed to update image:', err)
+      let errorMessage = err.message || 'Failed to update image'
+      errorMessage = errorMessage.replace(/<[^>]*>/g, '').trim()
+      if (errorMessage.length > 500) {
+        errorMessage = errorMessage.substring(0, 500) + '...'
+      }
+      setEditError(errorMessage)
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleDeleteImage = async (imageId) => {
+    if (isDeleting) return
 
     try {
       setIsDeleting(true)
-      setDeleteError(null)
+      setEditError(null)
       
-      await deleteRestaurantImage(selectedImageToDelete.id)
+      await deleteRestaurantImage(imageId)
       
       // Remove from local state
-      setImages(prevImages => prevImages.filter(img => img.id !== selectedImageToDelete.id))
+      setImages(prevImages => prevImages.filter(img => img.id !== imageId))
       setSuccessMessage('Image deleted successfully!')
       setShowSuccessPopup(true)
-      setIsDeleteDialogOpen(false)
-      setSelectedImageToDelete(null)
+      setIsEditModalOpen(false)
+      setSelectedImage(null)
     } catch (err) {
       console.error('Failed to delete image:', err)
       let errorMessage = err.message || 'Failed to delete image'
@@ -83,18 +119,10 @@ function RestaurantImages({ restaurantId }) {
       if (errorMessage.length > 500) {
         errorMessage = errorMessage.substring(0, 500) + '...'
       }
-      setDeleteError(errorMessage)
-      setShowDeleteErrorPopup(true)
-      // Keep dialog open to show error
+      setEditError(errorMessage)
     } finally {
       setIsDeleting(false)
     }
-  }
-
-  const handleDeleteCancel = () => {
-    setIsDeleteDialogOpen(false)
-    setSelectedImageToDelete(null)
-    setDeleteError(null)
   }
 
   const handleAddClick = () => {
@@ -168,13 +196,6 @@ function RestaurantImages({ restaurantId }) {
           </div>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             <button
-              className={`admin-btn ${isEditMode ? 'admin-btn-primary' : 'admin-btn-secondary'}`}
-              onClick={handleEditClick}
-              style={{ fontSize: '0.875rem', padding: '8px 16px' }}
-            >
-              {isEditMode ? 'Done Editing' : 'Edit Images'}
-            </button>
-            <button
               className="admin-btn admin-btn-primary"
               onClick={handleAddClick}
               style={{ fontSize: '0.875rem', padding: '8px 16px' }}
@@ -200,8 +221,7 @@ function RestaurantImages({ restaurantId }) {
                 <RestaurantImageCard 
                   key={image.id} 
                   image={image}
-                  isEditMode={isEditMode}
-                  onDelete={handleDeleteImage}
+                  onClick={() => handleImageClick(image)}
                 />
               ))}
             </div>
@@ -218,22 +238,23 @@ function RestaurantImages({ restaurantId }) {
         error={submitError}
       />
 
+      <EditImageModal
+        open={isEditModalOpen}
+        image={selectedImage}
+        onUpdate={handleUpdateImage}
+        onDelete={handleDeleteImage}
+        onCancel={handleEditModalCancel}
+        isUpdating={isUpdating}
+        isDeleting={isDeleting}
+        error={editError}
+      />
+
       {showErrorPopup && submitError && (
         <ErrorPopup
           message={submitError}
           onClose={() => {
             setShowErrorPopup(false)
             setSubmitError(null)
-          }}
-        />
-      )}
-
-      {showDeleteErrorPopup && deleteError && (
-        <ErrorPopup
-          message={deleteError}
-          onClose={() => {
-            setShowDeleteErrorPopup(false)
-            setDeleteError(null)
           }}
         />
       )}
@@ -247,21 +268,6 @@ function RestaurantImages({ restaurantId }) {
           }}
         />
       )}
-
-      <ConfirmDialog
-        open={isDeleteDialogOpen}
-        title="Delete image?"
-        message={
-          selectedImageToDelete
-            ? `Are you sure you want to delete this image? This action cannot be undone.`
-            : ''
-        }
-        error={deleteError}
-        confirmLabel={isDeleting ? 'Deleting...' : 'Delete'}
-        cancelLabel="Cancel"
-        onConfirm={handleDeleteConfirm}
-        onCancel={handleDeleteCancel}
-      />
     </div>
   )
 }

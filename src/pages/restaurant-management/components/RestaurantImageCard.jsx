@@ -1,25 +1,9 @@
 import './RestaurantImageCard.css'
 
-function RestaurantImageCard({ image, isEditMode = false, onDelete }) {
-  const handleDeleteClick = (e) => {
-    e.stopPropagation()
-    if (onDelete) {
-      onDelete(image.id)
-    }
-  }
-
+function RestaurantImageCard({ image, onClick }) {
   return (
-    <div className="restaurant-image-item">
+    <div className="restaurant-image-item" onClick={onClick}>
       <div className="image-wrapper">
-        {isEditMode && (
-          <button
-            className="image-delete-btn"
-            onClick={handleDeleteClick}
-            aria-label="Delete image"
-          >
-            <i className="fa-solid fa-xmark"></i>
-          </button>
-        )}
         <img 
           src={image.image_url} 
           alt={`Restaurant image ${image.id}`}
