@@ -197,7 +197,7 @@ function RestaurantImages({ restaurantId }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <h1>Restaurant Images</h1>
-            <p>View all images for this restaurant</p>
+            <p>View all images for this restaurant. Images are displayed in ascending order based on sort order.</p>
           </div>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             <button
