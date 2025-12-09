@@ -141,6 +141,110 @@ export async function createRestaurantImage(imageData) {
 }
 
 /**
+ * Updates a restaurant image (typically used to update sort_order)
+ * @param {string|number} imageId - The restaurant image ID to update
+ * @param {Object} updateData - The data to update (e.g., { sort_order: 1 })
+ * @returns {Promise<Object>} Updated restaurant image object
+ * @throws {Error} If update fails or image is not found
+ */
+export async function updateRestaurantImage(imageId, updateData) {
+  const url = `${API_BASE_URL}/api/restaurant-images/${imageId}/`
+  
+  try {
+    console.log('Updating restaurant image at:', url)
+    console.log('Update data:', updateData)
+    const token = await getCsrfToken(true)
+    
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': token,
+      },
+      credentials: 'include',
+      body: JSON.stringify(updateData),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('API Error Response:', errorText)
+      
+      let errorData = {}
+      let errorMessage = `HTTP error! status: ${response.status}`
+      try {
+        errorData = JSON.parse(errorText)
+        errorMessage = errorData.message || errorData.error || errorData.detail || errorMessage
+        
+        if (typeof errorData === 'object' && !errorData.message && !errorData.error && !errorData.detail) {
+          const fieldErrors = []
+          for (const [field, errors] of Object.entries(errorData)) {
+            if (Array.isArray(errors) && errors.length > 0) {
+              fieldErrors.push(`${field}: ${errors.join(', ')}`)
+            }
+          }
+          if (fieldErrors.length > 0) {
+            errorMessage = fieldErrors.join('\n')
+          }
+        }
+      } catch {
+        errorMessage = errorText || errorMessage
+      }
+
+      if (response.status === 403 && (errorMessage.includes('CSRF') || errorMessage.includes('csrf'))) {
+        console.log('CSRF token error detected, clearing cache and retrying...')
+        clearCsrfTokenCache()
+
+        const freshToken = await getCsrfToken(true)
+        const retryResponse = await fetch(url, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': freshToken,
+          },
+          credentials: 'include',
+          body: JSON.stringify(updateData),
+        })
+
+        if (!retryResponse.ok) {
+          const retryErrorText = await retryResponse.text()
+          let retryErrorMessage = `HTTP error! status: ${retryResponse.status}`
+          try {
+            const retryErrorData = JSON.parse(retryErrorText)
+            retryErrorMessage = retryErrorData.message || retryErrorData.error || retryErrorData.detail || retryErrorMessage
+          } catch {
+            retryErrorMessage = retryErrorText || retryErrorMessage
+          }
+          throw new Error(retryErrorMessage)
+        }
+
+        return await retryResponse.json()
+      }
+      
+      if (response.status === 404) {
+        throw new Error(`Image not found: ${errorMessage}`)
+      }
+      
+      throw new Error(errorMessage)
+    }
+
+    return await response.json()
+  } catch (error) {
+    console.error('Error updating restaurant image:', error)
+    
+    // Provide more specific error messages
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error(
+        `Failed to connect to backend API at ${url}. ` +
+        `Please ensure the backend server is running at http://localhost:8000. ` +
+        `This might be a CORS issue or the server is not running.`
+      )
+    }
+    
+    throw error
+  }
+}
+
+/**
  * Deletes a restaurant image by ID
  * @param {string|number} imageId - The restaurant image ID to delete
  * @returns {Promise<void>}
