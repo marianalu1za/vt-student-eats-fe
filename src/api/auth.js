@@ -220,78 +220,219 @@ export async function getCurrentUser() {
 /**
  * Updates the current authenticated user's profile information
  * @param {Object} profileData - Profile data to update
- * @param {string} profileData.first_name - User's first name
- * @param {string} profileData.last_name - User's last name
+ * @param {string} [profileData.first_name] - User's first name
+ * @param {string} [profileData.last_name] - User's last name
+ * @param {string} [profileData.phone] - User's phone number
+ * @param {boolean} [profileData.show_phone] - Whether to show phone publicly
+ * @param {string} [profileData.social_media] - User's social media URL
+ * @param {boolean} [profileData.show_social_media] - Whether to show social media publicly
+ * @param {string} [profileData.major] - User's major
+ * @param {boolean} [profileData.email_notifications] - Email notification preference
+ * @param {boolean} [profileData.sms_notifications] - SMS notification preference
+ * @param {string} [profileData.theme] - Theme preference (light, dark, auto)
+ * @param {File} [profileData.avatar] - Avatar image file to upload
  * @returns {Promise<Object>} Updated user data
  */
 export async function updateUserProfile(profileData) {
+  const url = `${ACCOUNTS_API_BASE}/me/`
+  
   try {
+    console.log('Updating user profile at:', url)
+    
     // Force refresh CSRF token to ensure we have a valid one
     const token = await getCsrfToken(true)
 
-    const response = await fetch(`${ACCOUNTS_API_BASE}/me/`, {
-      method: 'PATCH',
-      headers: {
+    // Check if avatar file is present - if so, use FormData, otherwise use JSON
+    const hasAvatarFile = profileData.avatar instanceof File
+    
+    let body
+    let headers
+    
+    if (hasAvatarFile) {
+      // Use FormData for multipart/form-data when avatar is present
+      const formData = new FormData()
+      
+      // Add all defined fields to FormData
+      if (profileData.first_name !== undefined) {
+        formData.append('first_name', profileData.first_name)
+      }
+      if (profileData.last_name !== undefined) {
+        formData.append('last_name', profileData.last_name)
+      }
+      if (profileData.phone !== undefined) {
+        formData.append('phone', profileData.phone || '')
+      }
+      if (profileData.show_phone !== undefined) {
+        formData.append('show_phone', profileData.show_phone)
+      }
+      if (profileData.social_media !== undefined) {
+        formData.append('social_media', profileData.social_media || '')
+      }
+      if (profileData.show_social_media !== undefined) {
+        formData.append('show_social_media', profileData.show_social_media)
+      }
+      if (profileData.major !== undefined) {
+        formData.append('major', profileData.major || '')
+      }
+      if (profileData.email_notifications !== undefined) {
+        formData.append('email_notifications', profileData.email_notifications)
+      }
+      if (profileData.sms_notifications !== undefined) {
+        formData.append('sms_notifications', profileData.sms_notifications)
+      }
+      if (profileData.theme !== undefined) {
+        formData.append('theme', profileData.theme)
+      }
+      if (profileData.avatar) {
+        formData.append('avatar', profileData.avatar)
+      }
+      
+      body = formData
+      // Don't set Content-Type header for FormData - browser will set it with boundary
+      headers = {
+        'X-CSRFToken': token,
+      }
+    } else {
+      // Use JSON for regular updates
+      const apiPayload = {}
+      
+      if (profileData.first_name !== undefined) {
+        apiPayload.first_name = profileData.first_name
+      }
+      if (profileData.last_name !== undefined) {
+        apiPayload.last_name = profileData.last_name
+      }
+      if (profileData.phone !== undefined) {
+        apiPayload.phone = profileData.phone || null
+      }
+      if (profileData.show_phone !== undefined) {
+        apiPayload.show_phone = Boolean(profileData.show_phone)
+      }
+      if (profileData.social_media !== undefined) {
+        apiPayload.social_media = profileData.social_media || null
+      }
+      if (profileData.show_social_media !== undefined) {
+        apiPayload.show_social_media = Boolean(profileData.show_social_media)
+      }
+      if (profileData.major !== undefined) {
+        apiPayload.major = profileData.major || null
+      }
+      if (profileData.email_notifications !== undefined) {
+        apiPayload.email_notifications = Boolean(profileData.email_notifications)
+      }
+      if (profileData.sms_notifications !== undefined) {
+        apiPayload.sms_notifications = Boolean(profileData.sms_notifications)
+      }
+      if (profileData.theme !== undefined) {
+        apiPayload.theme = profileData.theme
+      }
+      
+      body = JSON.stringify(apiPayload)
+      headers = {
         'Content-Type': 'application/json',
         'X-CSRFToken': token,
-      },
-      credentials: 'include', // Include cookies for session-based auth
-      body: JSON.stringify(profileData),
+      }
+    }
+    
+    const response = await fetch(url, {
+      method: 'PATCH',
+      headers: headers,
+      credentials: 'include',
+      body: body,
     })
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      const errorMessage = errorData.detail || errorData.message || errorData.error || `Failed to update profile: ${response.status}`
+      const contentType = response.headers.get('content-type')
+      let errorText = await response.text()
+      console.error('API Error Response:', errorText)
+      
+      // Try to parse error as JSON for better error messages
+      let errorData = {}
+      let errorMessage = `HTTP error! status: ${response.status}`
+      try {
+        errorData = JSON.parse(errorText)
+        errorMessage = errorData.message || errorData.error || errorData.detail || errorMessage
+      } catch {
+        // If not JSON, use the text as-is
+        errorMessage = errorText || errorMessage
+      }
 
       // If CSRF token error, clear cache and retry once
-      if (response.status === 403 && errorMessage.includes('CSRF')) {
+      if (response.status === 403 && (errorMessage.includes('CSRF') || errorMessage.includes('csrf'))) {
         console.log('CSRF token error detected, clearing cache and retrying...')
         clearCsrfTokenCache()
 
         // Retry with a fresh token
         const freshToken = await getCsrfToken(true)
-        const retryResponse = await fetch(`${ACCOUNTS_API_BASE}/me/`, {
+        const retryHeaders = { ...headers, 'X-CSRFToken': freshToken }
+        const retryResponse = await fetch(url, {
           method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': freshToken,
-          },
+          headers: retryHeaders,
           credentials: 'include',
-          body: JSON.stringify(profileData),
+          body: body,
         })
 
         if (!retryResponse.ok) {
-          const retryErrorData = await retryResponse.json().catch(() => ({}))
-          const retryErrorMessage = retryErrorData.detail || retryErrorData.message || retryErrorData.error || `Failed to update profile: ${retryResponse.status}`
-          const error = new Error(retryErrorMessage)
-          error.statusCode = retryResponse.status
-          throw error
+          const retryErrorText = await retryResponse.text()
+          let retryErrorMessage = `HTTP error! status: ${retryResponse.status}`
+          try {
+            const retryErrorData = JSON.parse(retryErrorText)
+            retryErrorMessage = retryErrorData.message || retryErrorData.error || retryErrorData.detail || retryErrorMessage
+          } catch {
+            retryErrorMessage = retryErrorText || retryErrorMessage
+          }
+          throw new Error(retryErrorMessage)
         }
 
         return await retryResponse.json()
       }
-
+      
+      // Check if response is HTML (Django error page)
+      if (contentType && contentType.includes('text/html')) {
+        // Extract a meaningful error message from HTML if possible
+        const titleMatch = errorText.match(/<title>(.*?)<\/title>/i)
+        const errorTitle = titleMatch ? titleMatch[1] : 'Server Error'
+        
+        // Check for common Django errors
+        if (errorText.includes('no such column') || (errorText.includes('column') && errorText.includes('does not exist'))) {
+          throw new Error('Database schema error. Please run database migrations.')
+        } else if (errorText.includes('OperationalError') || errorText.includes('DatabaseError')) {
+          throw new Error('Database error occurred. Please check the backend logs.')
+        } else {
+          throw new Error(`Server error: ${errorTitle}. Please check the backend logs for details.`)
+        }
+      }
+      
       // Handle field-specific validation errors
       if (typeof errorData === 'object' && !errorData.message && !errorData.error && !errorData.detail) {
         const fieldErrors = []
         for (const [field, errors] of Object.entries(errorData)) {
           if (Array.isArray(errors) && errors.length > 0) {
-            fieldErrors.push(`${errors.join(', ')}`)
+            fieldErrors.push(`${field}: ${errors.join(', ')}`)
           }
         }
         if (fieldErrors.length > 0) {
-          throw new Error(fieldErrors.join('\n'))
+          errorMessage = fieldErrors.join('\n')
         }
       }
-
-      const error = new Error(errorMessage)
-      error.statusCode = response.status
-      throw error
+      
+      throw new Error(errorMessage)
     }
 
-    return await response.json()
+    const data = await response.json()
+    return data
   } catch (error) {
     console.error('Error updating user profile:', error)
+    
+    // Provide more specific error messages
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      throw new Error(
+        `Failed to connect to backend API at ${url}. ` +
+        `Please ensure the backend server is running at http://localhost:8000. ` +
+        `This might be a CORS issue or the server is not running.`
+      )
+    }
+    
     throw error
   }
 }

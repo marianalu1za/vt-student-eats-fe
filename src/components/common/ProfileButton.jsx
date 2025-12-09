@@ -13,11 +13,13 @@ function ProfileButton({
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef(null)
   const [currentUser, setCurrentUser] = useState(() => user || getStoredUser())
+  const [avatarError, setAvatarError] = useState(false)
 
   // Update user when prop changes
   useEffect(() => {
     if (user) {
       setCurrentUser(user)
+      setAvatarError(false) // Reset avatar error when user changes
     }
   }, [user])
 
@@ -27,11 +29,13 @@ function ProfileButton({
       // Update from event detail if available (from custom event)
       if (event.detail) {
         setCurrentUser(event.detail)
+        setAvatarError(false) // Reset error when profile updates
       } else {
         // For storage events, re-read from localStorage
         const updatedUser = getStoredUser()
         if (updatedUser) {
           setCurrentUser(updatedUser)
+          setAvatarError(false) // Reset error when profile updates
         }
       }
     }
@@ -42,6 +46,7 @@ function ProfileButton({
         const updatedUser = getStoredUser()
         if (updatedUser) {
           setCurrentUser(updatedUser)
+          setAvatarError(false) // Reset error when profile updates
         }
       }
     }
@@ -94,6 +99,9 @@ function ProfileButton({
   
   // Display the formatted original role, or default to "User"
   const displayRole = formatRole(roleString || 'User')
+
+  // Get avatar URL if available
+  const avatarUrl = currentUser?.avatar_url && !avatarError ? currentUser.avatar_url : null
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -150,9 +158,21 @@ function ProfileButton({
         aria-label={label}
         aria-expanded={isOpen}
       >
-        <span className="profile-button-icon" aria-hidden="true">
-          {icon}
-        </span>
+        {avatarUrl ? (
+          <img 
+            src={avatarUrl} 
+            alt={userName || 'Profile'} 
+            className="profile-button-avatar"
+            onError={() => {
+              // Fallback to default icon if image fails to load
+              setAvatarError(true)
+            }}
+          />
+        ) : (
+          <span className="profile-button-icon" aria-hidden="true">
+            {icon}
+          </span>
+        )}
       </button>
       
       {isOpen && (
