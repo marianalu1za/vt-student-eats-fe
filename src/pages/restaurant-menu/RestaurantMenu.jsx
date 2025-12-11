@@ -586,9 +586,9 @@ function RestaurantMenu() {
                 >
                   Discount Info
                 </button>
-                <button className="action-button group-order-button">
+                <Link to="/group-orders" className="action-button group-order-button">
                   Try our group ordering feature!
-                </button>
+                </Link>
               </div>
             </div>
           </div>
